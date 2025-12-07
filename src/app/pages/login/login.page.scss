@@ -1,0 +1,345 @@
+// Paleta de colores Cautelapp
+$dark-blue: #002333;      // Azul oscuro principal
+$teal: #159A9C;           // Celeste/teal para acentos
+$light-gray: #B4BEC9;     // Gris claro
+$light-mint: #DEEFE7;     // Verde agua claro
+$white: #FFFFFF;          // Blanco
+$text: #1A202C;           // Texto principal oscuro
+$text-light: #4A5568;     // Texto secundario
+$muted: #718096;          // Texto apagado
+$border: #E2E8F0;         // Borde claro
+$border-focus: #B4BEC9;   // Borde en foco
+$error: #DC2626;          // Rojo para errores
+$success: #159A9C;        // Teal para éxito
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+.login {
+  --background: #{$white};
+}
+
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  gap: 24px;
+}
+
+.brand {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.brand-circle {
+  width: 110px;
+  height: 110px;
+  border-radius: 30px;
+  background: $dark-blue;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: $shadow-lg;
+}
+
+.brand-logo {
+  width: 74px;
+  max-width: 65vw;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  background: $white;
+  border: 1px solid $border;
+  border-radius: 20px;
+  padding: 32px 24px;
+  box-shadow: $shadow-lg;
+  animation: fadeInUp 0.6s ease-out;
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+}
+
+.title {
+  margin: 0 0 24px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  color: $text;
+  letter-spacing: -0.5px;
+}
+
+.field {
+  margin-bottom: 20px;
+  --background: #{$white};
+  --color: #{$text};
+  --border-color: #{$border};
+  --border-color-focused: #{$teal};
+  --highlight-color-focused: #{$teal};
+  --highlight-color: #{$teal};
+  --placeholder-color: #{$muted};
+  --padding-start: 0;
+  --padding-bottom: 0;
+  --padding-top: 0;
+  transition: all 0.2s ease;
+
+  ion-label {
+    color: $dark-blue !important;
+    font-weight: 600 !important;
+    font-size: 20px !important;
+    margin-bottom: 10px !important;
+    letter-spacing: 0.8px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+
+    ion-icon {
+      color: $teal !important;
+      font-size: 20px !important;
+    }
+  }
+
+  &.ion-focused {
+    --border-color: #{$teal};
+  }
+
+  &.ion-invalid.ion-touched {
+    --border-color: #{$error};
+    --highlight-color-focused: #{$error};
+  }
+}
+
+// Eliminar regla global de ion-label ya que ahora está dentro de .field
+// ion-label { ... }
+
+ion-input {
+  --padding-start: 16px;
+  --padding-end: 48px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  border: 2px solid $light-gray;
+  border-radius: 12px;
+  font-size: 15px;
+  margin-top: 4px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: $border-focus;
+  }
+
+  &.ion-focused {
+    border-color: $teal;
+    box-shadow: 0 0 0 3px rgba(21, 154, 156, 0.15);
+  }
+
+  &.ion-invalid.ion-touched {
+    border-color: $error;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  }
+}
+
+.toggle-icon {
+  color: $dark-blue;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.6;
+  }
+}
+
+.forgot-section {
+  margin: 4px 0 16px;
+  text-align: center;
+}
+
+.remember-section {
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+
+  ion-checkbox {
+    font-size: 14px;
+    font-weight: 500;
+    color: $text;
+    --size: 20px;
+    --checkbox-background-checked: #{$teal};
+    --border-color: #{$light-gray};
+    --border-color-checked: #{$teal};
+  }
+}
+
+.primary {
+  --background: #{$dark-blue};
+  --background-hover: #001a24;
+  --background-activated: #001a24;
+  --color: #{$white};
+  --border-radius: 12px;
+  --box-shadow: #{$shadow-md};
+  margin-top: 12px;
+  height: 48px;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.3px;
+  text-transform: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:not([disabled]):hover {
+    transform: translateY(-1px);
+    --box-shadow: #{$shadow-lg};
+  }
+
+  &:not([disabled]):active {
+    transform: translateY(0);
+  }
+
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.aux {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
+  color: $muted;
+}
+
+.link {
+  background: transparent;
+  border: none;
+  color: $teal;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: $dark-blue;
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $teal;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+.link.small {
+  font-size: 13px;
+}
+
+.meta {
+  --background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 12px;
+  padding: 0;
+
+  ion-checkbox {
+    font-size: 14px;
+    --size: 20px;
+    --checkbox-background-checked: #{$teal};
+    --border-color: #{$light-gray};
+    --border-color-checked: #{$teal};
+  }
+}
+
+.error {
+  margin: -10px 0 12px 4px;
+  color: $error;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: shake 0.4s ease;
+
+  &::before {
+    content: '⚠';
+    font-size: 14px;
+  }
+}
+
+// Animaciones
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+// Responsividad mejorada
+@media (min-width: 640px) {
+  .brand-circle {
+    width: 120px;
+    height: 120px;
+  }
+
+  .brand-logo {
+    width: 82px;
+  }
+
+  .card {
+    padding: 36px 28px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+}
+
+@media (min-width: 768px) {
+  .layout {
+    padding: 40px 24px;
+  }
+
+  .card {
+    padding: 40px 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    padding: 48px 32px;
+  }
+}

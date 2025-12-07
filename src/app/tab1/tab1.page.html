@@ -1,0 +1,109 @@
+<!-- HEADER SUPERIOR -->
+<div class="header">
+  <div class="header-left">
+    <div class="titulo">Notificaciones</div>
+  </div>
+  <ion-button class="profile-btn" fill="clear" (click)="goToProfile()">
+    <ion-icon name="person-circle" class="profile-icon"></ion-icon>
+  </ion-button>
+</div>
+
+<ion-content class="fondo">
+
+  <!-- FILTROS -->
+  <div class="filtros">
+    <button class="filtro" [class.active]="filtroActivo === 'todas'" (click)="setFiltro('todas')">
+      <ion-icon name="notifications-outline"></ion-icon>
+      <p>Todas</p>
+    </button>
+    <button class="filtro" [class.active]="filtroActivo === 'emergencia'" (click)="setFiltro('emergencia')">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      <p>Emergencias</p>
+    </button>
+    <button class="filtro" [class.active]="filtroActivo === 'ayuda'" (click)="setFiltro('ayuda')">
+      <ion-icon name="help-circle-outline"></ion-icon>
+      <p>Ayuda</p>
+    </button>
+  </div>
+
+  <!-- LISTA DE NOTIFICACIONES -->
+  <div class="lista">
+
+    <!-- Hoy -->
+    <div class="fecha-separador">Hoy</div>
+
+    <div class="noti emergencia" (click)="marcarLeida(0)">
+      <div class="noti-header">
+        <div class="noti-info">
+          <div class="noti-titulo">
+            <span class="badge emergencia-badge">Emergencia</span>
+            <span class="tiempo">Hace 5 min</span>
+          </div>
+          <div class="usuario">María García</div>
+        </div>
+      </div>
+      <div class="noti-contenido">
+        <div class="descripcion">¡Papá se ha caído en el baño! Necesito ayuda urgente.</div>
+      </div>
+    </div>
+
+    <div class="noti ayuda" (click)="marcarLeida(1)">
+      <div class="noti-header">
+        <div class="noti-info">
+          <div class="noti-titulo">
+            <span class="badge ayuda-badge">Ayuda</span>
+            <span class="tiempo">Hace 15 min</span>
+          </div>
+          <div class="usuario">Pedro Martínez</div>
+        </div>
+      </div>
+      <div class="noti-contenido">
+        <div class="descripcion">Necesito ayuda para encontrar mis medicamentos.</div>
+      </div>
+    </div>
+
+    <!-- Ayer -->
+    <div class="fecha-separador">Ayer</div>
+
+    <div class="noti ayuda" (click)="marcarLeida(3)">
+      <div class="noti-header">
+        <div class="noti-info">
+          <div class="noti-titulo">
+            <span class="badge ayuda-badge">Ayuda</span>
+            <span class="tiempo">Ayer 18:30</span>
+          </div>
+          <div class="usuario">Ana López</div>
+        </div>
+      </div>
+      <div class="noti-contenido">
+        <div class="descripcion">¿Podrías ayudarme a recordar dónde dejé las llaves?</div>
+      </div>
+    </div>
+
+    <div class="noti emergencia" (click)="marcarLeida(4)">
+      <div class="noti-header">
+        <div class="noti-info">
+          <div class="noti-titulo">
+            <span class="badge emergencia-badge">Emergencia</span>
+            <span class="tiempo">Ayer 14:20</span>
+          </div>
+          <div class="usuario">Carlos Ruiz</div>
+        </div>
+      </div>
+      <div class="noti-contenido">
+        <div class="descripcion">Dolor en el pecho, llamen a emergencias.</div>
+      </div>
+    </div>
+
+    <!-- Estado vacío -->
+    @if (notificacionesFiltradas.length === 0) {
+      <div class="estado-vacio">
+        <ion-icon name="notifications-off-outline"></ion-icon>
+        <p>No hay notificaciones</p>
+        <span>Cuando recibas notificaciones aparecerán aquí</span>
+      </div>
+    }
+
+  </div>
+
+</ion-content>

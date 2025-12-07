@@ -1,0 +1,7 @@
+{
+  "name": "PIENSA-Cautelapp-Frontend",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}

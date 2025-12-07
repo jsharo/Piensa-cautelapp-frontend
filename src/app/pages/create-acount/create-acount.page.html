@@ -1,0 +1,196 @@
+<ion-content class="register">
+  <div class="layout">
+    <!-- Branding -->
+    <div class="brand">
+      <div class="brand-circle">
+        <img 
+          src="../../../assets/icon/cautelaft.png" 
+          alt="Logo de Cautelapp" 
+          class="brand-logo" 
+        />
+      </div>
+    </div>
+
+    <!-- Register Card -->
+    <div class="card">
+      <h1 class="title">Crear cuenta</h1>
+
+      <form (ngSubmit)="registrar()" #registerForm="ngForm">
+        <!-- Username Field -->
+        <ion-item 
+          class="field" 
+          lines="none"
+          [class.ion-invalid]="usernameError"
+          [class.ion-touched]="username.length > 0"
+        >
+          <ion-label position="stacked">
+            <ion-icon name="person-outline" slot="start"></ion-icon>
+            Nombre de Usuario
+          </ion-label>
+          <ion-input
+            type="text"
+            name="username"
+            placeholder="Tu nombre de usuario"
+            [(ngModel)]="username"
+            autocomplete="username"
+            required
+            (ionInput)="validateUsername()"
+            (ionBlur)="validateUsername()"
+            aria-label="Nombre de usuario"
+            aria-describedby="username-error"
+          ></ion-input>
+        </ion-item>
+        @if (usernameError) {
+          <p
+            id="username-error"
+            class="error"
+            role="alert"
+          >{{ usernameError }}</p>
+        }
+
+        <!-- Email Field -->
+        <ion-item 
+          class="field" 
+          lines="none"
+          [class.ion-invalid]="emailError"
+          [class.ion-touched]="email.length > 0"
+        >
+          <ion-label position="stacked">
+            <ion-icon name="mail-outline" slot="start"></ion-icon>
+            Correo electrónico
+          </ion-label>
+          <ion-input
+            type="email"
+            name="email"
+            placeholder="tu@correo.com"
+            [(ngModel)]="email"
+            inputmode="email"
+            autocomplete="email"
+            required
+            (ionInput)="validateEmail()"
+            (ionBlur)="validateEmail()"
+            aria-label="Correo electrónico"
+            aria-describedby="email-error"
+          ></ion-input>
+        </ion-item>
+        @if (emailError) {
+          <p
+            id="email-error"
+            class="error"
+            role="alert"
+          >{{ emailError }}</p>
+        }
+
+        <!-- Password Field -->
+        <ion-item 
+          class="field" 
+          lines="none"
+          [class.ion-invalid]="passwordError"
+          [class.ion-touched]="password.length > 0"
+        >
+          <ion-label position="stacked">
+            <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
+            Contraseña
+          </ion-label>
+          <ion-input
+            [type]="passwordVisible ? 'text' : 'password'"
+            name="password"
+            placeholder="••••••••"
+            [(ngModel)]="password"
+            autocomplete="new-password"
+            required
+            minlength="6"
+            (ionInput)="validatePassword()"
+            (ionBlur)="validatePassword()"
+            aria-label="Contraseña"
+            aria-describedby="password-error"
+          >
+            <ion-icon 
+              slot="end"
+              [name]="passwordVisible ? 'eye-off-outline' : 'eye-outline'"
+              class="toggle-icon"
+              (click)="togglePassword()"
+              [attr.aria-label]="passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            ></ion-icon>
+          </ion-input>
+        </ion-item>
+        @if (passwordError) {
+          <p
+            id="password-error"
+            class="error"
+            role="alert"
+          >{{ passwordError }}</p>
+        }
+
+        <!-- Confirm Password Field -->
+        <ion-item 
+          class="field" 
+          lines="none"
+          [class.ion-invalid]="confirmPasswordError"
+          [class.ion-touched]="confirmPassword.length > 0"
+        >
+          <ion-label position="stacked">
+            <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
+            Confirmar Contraseña
+          </ion-label>
+          <ion-input
+            [type]="confirmPasswordVisible ? 'text' : 'password'"
+            name="confirmPassword"
+            placeholder="••••••••"
+            [(ngModel)]="confirmPassword"
+            autocomplete="new-password"
+            required
+            minlength="6"
+            (ionInput)="validateConfirmPassword()"
+            (ionBlur)="validateConfirmPassword()"
+            aria-label="Confirmar contraseña"
+            aria-describedby="confirm-password-error"
+          >
+            <ion-icon 
+              slot="end"
+              [name]="confirmPasswordVisible ? 'eye-off-outline' : 'eye-outline'"
+              class="toggle-icon"
+              (click)="toggleConfirmPassword()"
+              [attr.aria-label]="confirmPasswordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            ></ion-icon>
+          </ion-input>
+        </ion-item>
+        @if (confirmPasswordError) {
+          <p
+            id="confirm-password-error"
+            class="error"
+            role="alert"
+          >{{ confirmPasswordError }}</p>
+        }
+
+        <!-- Submit Button -->
+        <ion-button 
+          expand="block" 
+          class="primary" 
+          type="submit"
+          [disabled]="!canSubmit || loading"
+          aria-label="Crear cuenta"
+        >
+          @if (loading) {
+            <ion-spinner name="crescent"></ion-spinner>
+          } @else {
+            <span>Crear cuenta</span>
+          }
+        </ion-button>
+
+        <!-- Login Link -->
+        <p class="aux">
+          ¿Ya tienes cuenta?
+          <button 
+            type="button"
+            class="link" 
+            (click)="goLogin()"
+            aria-label="Iniciar sesión"
+          >
+            Iniciar sesión
+          </button>
+        </p>
+      </form>
+    </div>
+  </div>
+</ion-content>
