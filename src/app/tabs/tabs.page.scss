@@ -1,1 +1,187 @@
+@use 'sass:color';
 
+// Paleta Cautelapp
+$dark-blue: #002333;
+$teal: #159A9C;
+$light-gray: #B4BEC9;
+$light-mint: #DEEFE7;
+$white: #FFFFFF;
+
+/* Tab Bar - Transparent with Gradient - Professional */
+.transparent-tab-bar {
+    --background: transparent !important;
+    --border: 0 !important;
+    background: linear-gradient(to top, rgba($white, 1) 0%, rgba($white, 0.9) 30%, transparent 100%) !important;
+    border-top: none !important;
+    height: 70px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    animation: slideUp 0.4s ease-out;
+}
+
+/* Tab Buttons - Circular White Design */
+ion-tab-button {
+    --background: transparent;
+    --background-focused: transparent;
+    --color: $dark-blue;
+    --color-selected: $white;
+    --ripple-color: transparent;
+    background: transparent;
+    border: none;
+    position: relative;
+    max-width: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Hide default Ionic indicator */
+    &::before {
+        display: none;
+    }
+
+    /* Circular button container - Larger for better touch */
+    &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 44px;
+        height: 44px;
+        background: $white;
+        border-radius: 50%;
+        border: 1px solid rgba($light-gray, 0.9);
+        box-shadow: 0 4px 12px rgba(0, 35, 51, 0.12);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: -1;
+    }
+
+    /* Selected state - Teal circle */
+    &.tab-selected::after {
+        background: linear-gradient(135deg, $teal 0%, color.adjust($teal, $lightness: -8%) 100%);
+        box-shadow: 0 6px 16px rgba($teal, 0.35),
+            0 2px 8px rgba($teal, 0.2);
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+
+    /* Icon styling - Centered in button */
+    ion-icon {
+        font-size: 28px;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6B7280; // Darker gray for better visibility
+    }
+
+    /* Label styling - Below the button container */
+    ion-label {
+        font-size: 10px;
+        font-weight: 600;
+        margin-top: 0;
+        opacity: 1;
+        color: $dark-blue;
+        white-space: nowrap;
+        transition: all 0.3s ease;
+        z-index: 1;
+        display: block;
+        position: absolute;
+        bottom: -16px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    /* Show label on selected tab */
+    &.tab-selected ion-label {
+        opacity: 1;
+        color: $teal;
+        font-weight: 700;
+    }
+
+    /* White icon on selected tab */
+    &.tab-selected ion-icon {
+        color: $white;
+    }
+
+    /* Subtle indicator dot for selected tab */
+    &.tab-selected::before {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        background: $teal;
+        border-radius: 50%;
+        z-index: 10;
+    }
+}
+
+/* Responsive adjustments */
+@media (min-width: 640px) {
+    ion-tab-bar {
+        height: 75px;
+
+        &::before {
+            height: 110px;
+        }
+    }
+
+    ion-tab-button {
+        &::after {
+            width: 60px;
+            height: 60px;
+        }
+
+        ion-icon {
+            font-size: 30px;
+        }
+
+        ion-label {
+            font-size: 12px;
+            bottom: -20px;
+        }
+    }
+}
+
+@media (min-width: 1024px) {
+    ion-tab-bar {
+        height: 80px;
+
+        &::before {
+            height: 120px;
+        }
+    }
+
+    ion-tab-button {
+        &::after {
+            width: 64px;
+            height: 64px;
+        }
+
+        ion-icon {
+            font-size: 32px;
+        }
+
+        ion-label {
+            font-size: 13px;
+            bottom: -22px;
+        }
+    }
+}
+
+/* Slide-up animation for tab bar entry */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

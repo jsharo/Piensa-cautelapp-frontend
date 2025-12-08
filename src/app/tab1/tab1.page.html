@@ -16,7 +16,7 @@
       </ion-menu-toggle>
     </ion-list>
   </ion-content>
-  </ion-menu>
+</ion-menu>
 
 <div class="header">
   <div class="header-left">
@@ -32,23 +32,20 @@
   <!-- the rest of Tab1 content goes here; existing markup continues below -->
 </div>
 
-<ion-content class="fondo">
+<ion-content class="fondo" [fullscreen]="true">
 
   <!-- FILTROS -->
-  <div class="filtros">
-    <button class="filtro" [class.active]="filtroActivo === 'todas'" (click)="setFiltro('todas')">
-      <ion-icon name="notifications-outline"></ion-icon>
-      <p>Todas</p>
-    </button>
-    <button class="filtro" [class.active]="filtroActivo === 'emergencia'" (click)="setFiltro('emergencia')">
-      <ion-icon name="alert-circle-outline"></ion-icon>
-      <p>Emergencias</p>
-    </button>
-    <button class="filtro" [class.active]="filtroActivo === 'ayuda'" (click)="setFiltro('ayuda')">
-      <ion-icon name="help-circle-outline"></ion-icon>
-      <p>Ayuda</p>
-    </button>
-  </div>
+  <ion-segment class="filtros" [value]="filtroActivo" (ionChange)="setFiltro($event.detail.value)">
+    <ion-segment-button value="todas">
+      <ion-label>Todas</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="emergencia">
+      <ion-label>Emergencias</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="ayuda">
+      <ion-label>Ayuda</ion-label>
+    </ion-segment-button>
+  </ion-segment>
 
   <!-- LISTA DE NOTIFICACIONES -->
   <div class="lista">
@@ -121,11 +118,11 @@
 
     <!-- Estado vacío -->
     @if (notificacionesFiltradas.length === 0) {
-      <div class="estado-vacio">
-        <ion-icon name="notifications-off-outline"></ion-icon>
-        <p>No hay notificaciones</p>
-        <span>Cuando recibas notificaciones aparecerán aquí</span>
-      </div>
+    <div class="estado-vacio">
+      <ion-icon name="notifications-off-outline"></ion-icon>
+      <p>No hay notificaciones</p>
+      <span>Cuando recibas notificaciones aparecerán aquí</span>
+    </div>
     }
 
   </div>

@@ -12,6 +12,12 @@ $blue-info: #007aff;
 
 .fondo {
   --background: #{$light-mint};
+  --padding-bottom: 60px; // Add padding to prevent content from being hidden behind tab bar
+}
+
+// Ensure content extends behind tab bar
+ion-content {
+  --padding-bottom: 60px;
 }
 
 /* Header superior */
@@ -26,9 +32,10 @@ $blue-info: #007aff;
   box-shadow: 0 2px 8px rgba(0, 35, 51, 0.15);
   position: sticky;
 
-.menu-toggle {
-  color: $white;
-}
+  .menu-toggle {
+    color: $white;
+  }
+
   top: 0;
   z-index: 100;
 }
@@ -59,57 +66,174 @@ $blue-info: #007aff;
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 /* profile button removed */
 
 /* Filtros */
+/* Filtros (ion-segment) - Enhanced Design */
 .filtros {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  padding: 16px 20px;
+  padding: 16px 16px;
 }
 
-.filtro {
+ion-segment.filtros {
+  --background: transparent;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: $white;
-  border: 2px solid rgba($teal, 0.3);
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-  color: $dark-blue;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  
-  ion-icon {
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-  
-  p {
-    margin: 0;
+  gap: 10px;
+  /* spacing between buttons */
+}
+
+ion-segment-button {
+  --background: transparent;
+  --border-color: transparent;
+  --color: #{$dark-blue};
+  --indicator-color: transparent;
+  /* remove moving bottom line */
+  --border-radius: 24px;
+  /* more rounded corners */
+  --background-checked: #{$teal};
+  --color-checked: #{$white};
+  --border-color-checked: #{$teal};
+  --padding-start: 0;
+  --padding-end: 0;
+  text-align: center;
+  display: flex !important;
+  align-items: center !important;
+  /* vertical centering */
+  justify-content: center !important;
+  /* horizontal centering */
+  height: 48px;
+  /* slightly larger touch target */
+  min-width: 90px;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 35, 51, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid rgba($teal, 0.25);
+
+  /* Ensure the button content wrapper is centered */
+  .button-native {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
     padding: 0;
-    line-height: 1;
+    background: transparent;
   }
-  
-  &:hover {
-    background: rgba($teal, 0.1);
-    transform: translateY(-2px);
+
+  /* Subtle gradient background for unselected state - removed for transparent look */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
   }
-  
-  &.active {
-    background: $teal;
-    color: $white;
-    border-color: $teal;
-    box-shadow: 0 4px 12px rgba($teal, 0.3);
+
+  /* Ripple effect on click */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba($teal, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+    z-index: 0;
+  }
+
+  &:active::after {
+    width: 200px;
+    height: 200px;
+  }
+
+  /* Selected state with gradient */
+  &[aria-selected="true"] {
+    background: linear-gradient(135deg, $teal 0%, color.adjust($teal, $lightness: -8%) 100%);
+    box-shadow: 0 4px 16px rgba($teal, 0.35),
+      0 2px 8px rgba($teal, 0.2),
+      inset 0 1px 0 rgba(white, 0.2);
+    border-color: color.adjust($teal, $lightness: -10%);
+    transform: translateY(-2px) scale(1.02);
+
+    &::before {
+      opacity: 0;
+    }
+
+    ion-icon {
+      animation: iconBounce 0.5s ease;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    ion-label {
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+  }
+
+
+}
+
+ion-segment-button ion-icon {
+  font-size: 20px;
+  margin-right: 6px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+}
+
+ion-segment-button ion-label {
+  margin: 0;
+  text-transform: lowercase;
+  /* make all letters lowercase */
+  position: relative;
+  z-index: 1;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+ion-segment-button ion-label::first-letter {
+  text-transform: uppercase;
+  /* capitalize only the first letter */
+}
+
+/* Icon bounce animation */
+@keyframes iconBounce {
+
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+
+  25% {
+    transform: scale(1.2) rotate(-5deg);
+  }
+
+  50% {
+    transform: scale(1.1) rotate(5deg);
+  }
+
+  75% {
+    transform: scale(1.15) rotate(-3deg);
   }
 }
 
@@ -135,21 +259,12 @@ $blue-info: #007aff;
   transition: all 0.3s ease;
   width: 100%;
   justify-content: center;
-  
+
   ion-icon {
     font-size: 20px;
   }
-  
-  &:hover {
-    background: $teal;
-    color: $white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba($teal, 0.3);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
+
+
 }
 
 /* Lista de notificaciones */
@@ -183,7 +298,7 @@ $blue-info: #007aff;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -192,27 +307,20 @@ $blue-info: #007aff;
     bottom: 0;
     width: 4px;
   }
-  
+
   &.emergencia::before {
     background: $red-emergency;
   }
-  
+
   &.ayuda::before {
     background: $teal;
   }
-  
+
   &.info::before {
     background: $blue-info;
   }
-  
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0, 35, 51, 0.12);
-  }
-  
-  &:active {
-    transform: translateY(-1px);
-  }
+
+
 }
 
 .noti-header {
@@ -230,20 +338,20 @@ $blue-info: #007aff;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  
+
   ion-icon {
     font-size: 24px;
     color: $white;
   }
-  
+
   &.emergencia-avatar {
     background: linear-gradient(135deg, $red-emergency, color.adjust($red-emergency, $lightness: -10%));
   }
-  
+
   &.ayuda-avatar {
     background: linear-gradient(135deg, $teal, color.adjust($teal, $lightness: -10%));
   }
-  
+
   &.info-avatar {
     background: linear-gradient(135deg, $blue-info, color.adjust($blue-info, $lightness: -10%));
   }
@@ -271,17 +379,17 @@ $blue-info: #007aff;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  
+
   &.emergencia-badge {
     background: rgba($red-emergency, 0.15);
     color: $red-emergency;
   }
-  
+
   &.ayuda-badge {
     background: rgba($teal, 0.15);
     color: $teal;
   }
-  
+
   &.info-badge {
     background: rgba($blue-info, 0.15);
     color: $blue-info;
@@ -345,7 +453,7 @@ $blue-info: #007aff;
   gap: 6px;
   font-size: 13px;
   color: $light-gray;
-  
+
   ion-icon {
     font-size: 16px;
     color: $teal;
@@ -364,36 +472,22 @@ $blue-info: #007aff;
   cursor: pointer;
   transition: all 0.3s ease;
   color: $white;
-  
+
   ion-icon {
     font-size: 18px;
   }
-  
+
   &.emergencia-btn {
     background: linear-gradient(135deg, $red-emergency, color.adjust($red-emergency, $lightness: -5%));
     box-shadow: 0 4px 12px rgba($red-emergency, 0.3);
-    
-    &:hover {
-      background: linear-gradient(135deg, color.adjust($red-emergency, $lightness: -5%), color.adjust($red-emergency, $lightness: -10%));
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba($red-emergency, 0.4);
-    }
   }
-  
+
   &.ayuda-btn {
     background: linear-gradient(135deg, $teal, color.adjust($teal, $lightness: -5%));
     box-shadow: 0 4px 12px rgba($teal, 0.3);
-    
-    &:hover {
-      background: linear-gradient(135deg, color.adjust($teal, $lightness: -5%), color.adjust($teal, $lightness: -10%));
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba($teal, 0.4);
-    }
   }
-  
-  &:active {
-    transform: translateY(0);
-  }
+
+
 }
 
 .etiquetas {
@@ -424,7 +518,7 @@ $blue-info: #007aff;
   font-size: 13px;
   font-weight: 600;
   color: $green-success;
-  
+
   ion-icon {
     font-size: 18px;
   }
@@ -434,20 +528,20 @@ $blue-info: #007aff;
 .estado-vacio {
   text-align: center;
   padding: 60px 20px;
-  
+
   ion-icon {
     font-size: 80px;
     color: $light-gray;
     margin-bottom: 16px;
   }
-  
+
   p {
     font-size: 18px;
     font-weight: 600;
     color: $dark-blue;
     margin: 0 0 8px 0;
   }
-  
+
   span {
     font-size: 14px;
     color: $light-gray;
@@ -466,15 +560,21 @@ $blue-info: #007aff;
 
   .filtros {
     padding: 20px 32px;
-    gap: 16px;
   }
 
-  .filtro {
-    padding: 10px 20px;
-    font-size: 15px;
-    
+  ion-segment.filtros {
+    gap: 14px;
+  }
+
+  ion-segment-button {
+    height: 52px;
+
     ion-icon {
-      font-size: 20px;
+      font-size: 22px;
+    }
+
+    ion-label {
+      font-size: 15px;
     }
   }
 
@@ -495,7 +595,7 @@ $blue-info: #007aff;
   .avatar {
     width: 48px;
     height: 48px;
-    
+
     ion-icon {
       font-size: 26px;
     }
@@ -532,12 +632,24 @@ $blue-info: #007aff;
 
   .filtros {
     padding: 24px 48px;
-    gap: 20px;
   }
 
-  .filtro {
-    padding: 12px 24px;
-    font-size: 16px;
+  ion-segment.filtros {
+    gap: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  ion-segment-button {
+    height: 56px;
+
+    ion-icon {
+      font-size: 24px;
+    }
+
+    ion-label {
+      font-size: 16px;
+    }
   }
 
   .acciones {
@@ -563,7 +675,7 @@ $blue-info: #007aff;
   .avatar {
     width: 52px;
     height: 52px;
-    
+
     ion-icon {
       font-size: 28px;
     }

@@ -17,6 +17,8 @@ interface Notificacion {
   etiquetas?: string[];
 }
 
+type Filtro = 'todas' | 'emergencia' | 'ayuda';
+
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
@@ -25,7 +27,7 @@ interface Notificacion {
   imports: [IonicModule, CommonModule],
 })
 export class Tab1Page implements OnInit {
-  filtroActivo: string = 'todas';
+  filtroActivo: Filtro = 'todas';
   
   notificaciones: Notificacion[] = [
     {
@@ -79,11 +81,19 @@ export class Tab1Page implements OnInit {
     return this.notificaciones.filter(n => n.tipo === this.filtroActivo);
   }
 
-  setFiltro(filtro: string) {
-    this.filtroActivo = filtro;
+  setFiltro(filtro: string | number | null | undefined) {
+    const val = filtro == null ? 'todas' : String(filtro);
+    if (val === 'todas' || val === 'emergencia' || val === 'ayuda') {
+      this.filtroActivo = val as Filtro;
+    } else {
+      this.filtroActivo = 'todas';
+    }
   }
 
   marcarLeida(index: number) {
+    if (index < 0 || index >= this.notificaciones.length) {
+      return;
+    }
     this.notificaciones[index].leida = true;
   }
 
