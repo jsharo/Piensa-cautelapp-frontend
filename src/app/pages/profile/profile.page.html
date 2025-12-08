@@ -1,0 +1,30 @@
+<ion-content class="profile">
+  <div class="layout">
+    <div class="card" *ngIf="!loading && user; else loadingTpl">
+      <h1 class="title">Mi Perfil</h1>
+      <div class="row">
+        <div class="label">Nombre</div>
+        <div class="value">{{ user.nombre }}</div>
+      </div>
+      <div class="row">
+        <div class="label">Correo</div>
+        <div class="value">{{ user.email }}</div>
+      </div>
+      <div class="row">
+        <div class="label">Rol</div>
+        <div class="value">{{ user.rol?.nombre_rol || '—' }}</div>
+      </div>
+
+      <ion-button expand="block" class="logout" (click)="logout()">
+        Cerrar sesión
+      </ion-button>
+    </div>
+
+    <ng-template #loadingTpl>
+      <div class="card">
+        <h1 class="title">Cargando perfil…</h1>
+        <ion-spinner name="crescent"></ion-spinner>
+      </div>
+    </ng-template>
+  </div>
+</ion-content>

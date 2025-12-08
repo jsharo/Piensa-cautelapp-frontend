@@ -25,6 +25,10 @@ $blue-info: #007aff;
   padding: 0 20px;
   box-shadow: 0 2px 8px rgba(0, 35, 51, 0.15);
   position: sticky;
+
+.menu-toggle {
+  color: $white;
+}
   top: 0;
   z-index: 100;
 }
@@ -59,18 +63,7 @@ $blue-info: #007aff;
   50% { transform: scale(1.1); }
 }
 
-.profile-btn {
-  --color: #ffffff;
-  --background-hover: rgba(255, 255, 255, 0.1);
-  min-width: 44px;
-  min-height: 44px;
-  margin: 0;
-  
-  .profile-icon {
-    font-size: 32px;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-  }
-}
+/* profile button removed */
 
 /* Filtros */
 .filtros {
@@ -327,6 +320,15 @@ $blue-info: #007aff;
   font-size: 15px;
   line-height: 1.5;
   margin-bottom: 12px;
+
+  .header-right .profile-btn {
+    color: #ffffff;
+  }
+
+  .header-right .profile-icon {
+    font-size: 24px;
+    color: #ffffff;
+  }
 }
 
 .noti-footer {

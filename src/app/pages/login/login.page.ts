@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { IonicModule, NavController, ToastController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -22,7 +23,8 @@ export class LoginPage implements OnInit {
 
   constructor(
     private navCtrl: NavController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -102,22 +104,40 @@ export class LoginPage implements OnInit {
 
     this.loading = true;
 
-    // Simulación de login; aquí iría la llamada real al API
-    setTimeout(async () => {
-      this.loading = false;
-
-      // Guardar sesión si el usuario lo pidió
-      if (this.remember) {
-        localStorage.setItem('rememberSession', 'true');
-        localStorage.setItem('userEmail', this.email);
+    // Llamada real al API
+    this.authService.login({
+      email: this.email,
+      contrasena: this.password,
+      remember: this.remember
+    }).subscribe({
+      next: async (response) => {
+        this.loading = false;
+        
+        // Login exitoso
+        await this.showToast('¡Bienvenido! Iniciando sesión...', 'success');
+        
+        // Navegar a tabs
+        setTimeout(() => {
+          this.navCtrl.navigateRoot('/tabs', { replaceUrl: true });
+        }, 500);
+      },
+      error: async (error) => {
+        this.loading = false;
+        
+        // Manejo de errores específicos
+        let message = 'Error al iniciar sesión. Intenta de nuevo.';
+        
+        if (error.status === 401) {
+          message = 'Credenciales incorrectas. Verifica tu correo y contraseña.';
+        } else if (error.status === 0) {
+          message = 'No se puede conectar con el servidor. Verifica tu conexión.';
+        } else if (error.error?.message) {
+          message = error.error.message;
+        }
+        
+        await this.showToast(message, 'danger');
       }
-
-      // Login exitoso
-      await this.showToast('¡Bienvenido! Iniciando sesión...', 'success');
-      
-      // Navegar a tabs (automáticamente redirige a tab1)
-      this.navCtrl.navigateRoot('/tabs', { replaceUrl: true });
-    }, 1200);
+    });
   }
 
   goRegister() {

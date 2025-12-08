@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, NavController, ToastController } from '@ionic/angular';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-create-acount',
@@ -26,7 +27,8 @@ export class CreateAcountPage implements OnInit {
 
   constructor(
     private navCtrl: NavController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private authService: AuthService
   ) { }
 
   ngOnInit() {
@@ -166,26 +168,43 @@ export class CreateAcountPage implements OnInit {
 
     this.loading = true;
 
-    // Simulación de registro; aquí iría la llamada real al API
-    setTimeout(async () => {
-      this.loading = false;
-
-      // Simulación: 90% éxito, 10% error
-      const success = Math.random() > 0.1;
-
-      if (success) {
+    // Llamada real al API de registro
+    this.authService.register({
+      nombre: this.username,
+      email: this.email,
+      contrasena: this.password
+    }).subscribe({
+      next: async (response) => {
+        this.loading = false;
+        
         // Registro exitoso
         await this.showToast('¡Cuenta creada exitosamente! Iniciando sesión...', 'success');
         
         // Navegar a tabs después de crear cuenta
         setTimeout(() => {
           this.navCtrl.navigateRoot('/tabs', { replaceUrl: true });
-        }, 1000);
-      } else {
-        // Error de registro (ej: email ya existe)
-        await this.showToast('Este correo electrónico ya está registrado', 'danger');
+        }, 500);
+      },
+      error: async (error) => {
+        this.loading = false;
+        
+        // Manejo de errores específicos
+        let message = 'Error al crear la cuenta. Intenta de nuevo.';
+        
+        if (error.status === 409) {
+          message = 'Este correo electrónico ya está registrado';
+          this.emailError = message;
+        } else if (error.status === 400) {
+          message = 'Datos inválidos. Verifica los campos.';
+        } else if (error.status === 0) {
+          message = 'No se puede conectar con el servidor. Verifica tu conexión.';
+        } else if (error.error?.message) {
+          message = error.error.message;
+        }
+        
+        await this.showToast(message, 'danger');
       }
-    }, 1500);
+    });
   }
 
   goLogin() {

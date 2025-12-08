@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { NavController } from '@ionic/angular';
+import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 interface Notificacion {
   id: number;
@@ -64,7 +66,7 @@ export class Tab1Page implements OnInit {
     }
   ];
 
-  constructor(private navCtrl: NavController) {}
+  constructor(private navCtrl: NavController, private router: Router, private auth: AuthService) {}
 
   ngOnInit() {
     // Inicialización si es necesaria
@@ -90,7 +92,11 @@ export class Tab1Page implements OnInit {
   }
 
   goToProfile() {
-    // Navegar a perfil
-    this.navCtrl.navigateForward('/perfil');
+    this.router.navigate(['/profile']);
+  }
+
+  async logout() {
+    this.auth.logout();
+    this.router.navigate(['/login']);
   }
 }

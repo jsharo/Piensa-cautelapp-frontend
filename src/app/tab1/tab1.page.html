@@ -1,11 +1,35 @@
 <!-- HEADER SUPERIOR -->
+<ion-menu side="start" menuId="tab1-menu" contentId="tab1-content">
+  <ion-content>
+    <ion-list>
+      <ion-menu-toggle auto-hide="true">
+        <ion-item button detail="false" (click)="goToProfile()">
+          <ion-icon name="person-circle" slot="start"></ion-icon>
+          <ion-label>Perfil</ion-label>
+        </ion-item>
+      </ion-menu-toggle>
+      <ion-menu-toggle auto-hide="true">
+        <ion-item button detail="false" (click)="logout()">
+          <ion-icon name="log-out" slot="start"></ion-icon>
+          <ion-label>Cerrar sesión</ion-label>
+        </ion-item>
+      </ion-menu-toggle>
+    </ion-list>
+  </ion-content>
+  </ion-menu>
+
 <div class="header">
   <div class="header-left">
+    <ion-buttons>
+      <ion-menu-button class="menu-toggle" menu="tab1-menu"></ion-menu-button>
+    </ion-buttons>
     <div class="titulo">Notificaciones</div>
   </div>
-  <ion-button class="profile-btn" fill="clear" (click)="goToProfile()">
-    <ion-icon name="person-circle" class="profile-icon"></ion-icon>
-  </ion-button>
+  <div class="header-right"></div>
+</div>
+
+<div id="tab1-content">
+  <!-- the rest of Tab1 content goes here; existing markup continues below -->
 </div>
 
 <ion-content class="fondo">
