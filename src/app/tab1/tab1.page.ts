@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, NavController, ToastController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
-import { NavController } from '@ionic/angular';
-import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 interface Notificacion {
@@ -24,11 +24,20 @@ type Filtro = 'todas' | 'emergencia' | 'ayuda';
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule],
+  imports: [IonicModule, CommonModule, RouterLink, FormsModule],
 })
 export class Tab1Page implements OnInit {
   filtroActivo: Filtro = 'todas';
-  
+  user: any = null;
+
+  // Propiedades para el Modal de Edición
+  isModalOpen = false;
+  saving = false;
+  editData = {
+    nombre: '',
+    email: ''
+  };
+
   notificaciones: Notificacion[] = [
     {
       id: 1,
@@ -68,10 +77,76 @@ export class Tab1Page implements OnInit {
     }
   ];
 
-  constructor(private navCtrl: NavController, private router: Router, private auth: AuthService) {}
+  constructor(
+    private navCtrl: NavController,
+    private router: Router,
+    private auth: AuthService,
+    private toast: ToastController
+  ) { }
 
   ngOnInit() {
-    // Inicialización si es necesaria
+    this.loadUser();
+  }
+
+  loadUser() {
+    this.user = this.auth.getCurrentUser();
+    if (this.user) this.syncEditData();
+
+    this.auth.me().subscribe({
+      next: (u) => {
+        this.user = u;
+        this.syncEditData();
+      },
+      error: () => console.log('Error al cargar usuario en Tab1')
+    });
+  }
+
+  syncEditData() {
+    const currentUser = this.auth.getCurrentUser();
+    if (currentUser) {
+      this.user = currentUser;
+      this.editData.nombre = currentUser.nombre || '';
+      this.editData.email = currentUser.email || '';
+    }
+  }
+
+  openEditModal() {
+    this.syncEditData(); // Asegurar datos frescos
+    setTimeout(() => {
+      this.isModalOpen = true;
+    }, 50); // Pequeño delay para asegurar ciclo de detección de Angular
+  }
+
+  closeEditModal() {
+    this.isModalOpen = false;
+  }
+
+  async saveProfile() {
+    if (!this.user) return;
+
+    this.saving = true;
+    this.auth.updateUser(this.user.id_usuario, this.editData).subscribe({
+      next: (updated) => {
+        this.user = updated;
+        this.saving = false;
+        this.isModalOpen = false;
+        this.showToast('Perfil actualizado correctamente', 'success');
+      },
+      error: () => {
+        this.saving = false;
+        this.showToast('Error al actualizar el perfil', 'danger');
+      }
+    });
+  }
+
+  async showToast(message: string, color: string) {
+    const t = await this.toast.create({
+      message,
+      color,
+      duration: 2500,
+      position: 'top',
+    });
+    t.present();
   }
 
   get notificacionesFiltradas(): Notificacion[] {
@@ -99,10 +174,6 @@ export class Tab1Page implements OnInit {
 
   marcarTodasLeidas() {
     this.notificaciones.forEach(n => n.leida = true);
-  }
-
-  goToProfile() {
-    this.router.navigate(['/profile']);
   }
 
   async logout() {
