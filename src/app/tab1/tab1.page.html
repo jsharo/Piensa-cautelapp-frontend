@@ -133,12 +133,8 @@
   </ng-template>
 </ion-modal>
 
-
 <div id="tab1-content">
-  <!-- the rest of Tab1 content goes here; existing markup continues below -->
-</div>
-
-<ion-content class="fondo" [fullscreen]="true">
+  <ion-content class="fondo" [fullscreen]="true">
 
   <!-- FILTROS -->
   <ion-segment class="filtros" [value]="filtroActivo" (ionChange)="setFiltro($event.detail.value)">
@@ -234,3 +230,4 @@
   </div>
 
 </ion-content>
+</div>

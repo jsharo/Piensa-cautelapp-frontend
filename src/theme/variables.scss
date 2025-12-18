@@ -1,2 +1,21 @@
 // For information on how to create your own theme, please refer to:
 // https://ionicframework.com/docs/theming/
+
+/** Paleta de colores fija de Cautelapp **/
+:root {
+  --ion-background-color: #DEEFE7;
+  --ion-background-color-rgb: 222, 239, 231;
+  --ion-text-color: #002333;
+  --ion-text-color-rgb: 0, 35, 51;
+  
+  // Colores del tema
+  --ion-color-primary: #159A9C;
+  --ion-color-primary-rgb: 21, 154, 156;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  
+  // Fondo de componentes
+  --ion-item-background: #ffffff;
+  --ion-card-background: #ffffff;
+  --ion-toolbar-background: #002333;
+}

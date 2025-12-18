@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, NavController, ToastController } from '@ionic/angular';
@@ -9,7 +9,8 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './create-acount.page.html',
   styleUrls: ['./create-acount.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule]
+  imports: [IonicModule, CommonModule, FormsModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class CreateAcountPage implements OnInit {
 
@@ -32,13 +33,7 @@ export class CreateAcountPage implements OnInit {
   ) { }
 
   ngOnInit() {
-    // Auto-focus en el campo de username después de que la vista se cargue
-    setTimeout(() => {
-      const usernameInput = document.querySelector('ion-input[name="username"]');
-      if (usernameInput) {
-        (usernameInput as any).setFocus();
-      }
-    }, 300);
+    // Componente inicializado
   }
 
   get canSubmit(): boolean {

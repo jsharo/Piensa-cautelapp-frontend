@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { IonicModule, NavController, ToastController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 interface Notificacion {
@@ -24,7 +24,8 @@ type Filtro = 'todas' | 'emergencia' | 'ayuda';
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, RouterLink, FormsModule],
+  imports: [IonicModule, CommonModule, FormsModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class Tab1Page implements OnInit {
   filtroActivo: Filtro = 'todas';
