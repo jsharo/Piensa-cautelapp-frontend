@@ -321,7 +321,7 @@ ion-content {
 
 // POPOVER STYLES - PREMIUM REDESIGN (REFINDED UX)
 .profile-popover {
-  --width: 280px;
+  --width: 260px;
   --border-radius: 20px;
   --box-shadow: 0 15px 40px rgba(0, 20, 30, 0.25);
 }
@@ -330,11 +330,12 @@ ion-content {
   background: white;
   overflow: hidden;
   border-radius: 20px;
+  min-width: 260px;
 }
 
 .popover-header {
   background: linear-gradient(135deg, $dark-blue 0%, #004d66 100%);
-  padding: 15px 20px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -387,7 +388,7 @@ ion-content {
 }
 
 .popover-wrapper ion-list {
-  padding: 8px 10px;
+  padding: 12px 10px;
   background: white;
   margin: 0;
 

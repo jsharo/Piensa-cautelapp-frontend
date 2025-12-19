@@ -166,10 +166,14 @@ export class Tab1Page implements OnInit {
   }
 
   marcarLeida(index: number) {
-    if (index < 0 || index >= this.notificaciones.length) {
+    if (index < 0 || index >= this.notificacionesFiltradas.length) {
       return;
     }
-    this.notificaciones[index].leida = true;
+    const notiId = this.notificacionesFiltradas[index].id;
+    const notiIndex = this.notificaciones.findIndex(n => n.id === notiId);
+    if (notiIndex !== -1) {
+      this.notificaciones[notiIndex].leida = true;
+    }
   }
 
   marcarTodasLeidas() {

@@ -28,11 +28,6 @@
           <ion-label>Editar Perfil</ion-label>
         </ion-item>
 
-        <ion-item button>
-          <ion-icon name="location-outline" slot="start"></ion-icon>
-          <ion-label>Mis Ubicaciones</ion-label>
-        </ion-item>
-
         <ion-item button class="logout-item" (click)="logout()">
           <ion-icon name="log-out-outline" slot="start"></ion-icon>
           <ion-label>Cerrar Sesión</ion-label>
@@ -108,82 +103,32 @@
 
   <!-- LISTA DE NOTIFICACIONES -->
   <div class="lista">
-
-    <!-- Hoy -->
-    <div class="fecha-separador">Hoy</div>
-
-    <div class="noti emergencia" (click)="marcarLeida(0)">
-      <div class="noti-header">
-        <div class="noti-info">
-          <div class="noti-titulo">
-            <span class="badge emergencia-badge">Emergencia</span>
-            <span class="tiempo">Hace 5 min</span>
+    <!-- Mostrar notificaciones filtradas -->
+    <ng-container *ngIf="notificacionesFiltradas.length > 0">
+      <div *ngFor="let noti of notificacionesFiltradas; let i = index" 
+           [ngClass]="['noti', noti.tipo]" 
+           (click)="marcarLeida(i)">
+        <div class="noti-header">
+          <div class="noti-info">
+            <div class="noti-titulo">
+              <span [ngClass]="['badge', noti.tipo + '-badge']">{{ noti.tipo === 'emergencia' ? 'Emergencia' : 'Ayuda' }}</span>
+              <span class="tiempo">{{ noti.tiempo }}</span>
+            </div>
+            <div class="usuario">{{ noti.usuario }}</div>
           </div>
-          <div class="usuario">María García</div>
+        </div>
+        <div class="noti-contenido">
+          <div class="descripcion">{{ noti.descripcion }}</div>
         </div>
       </div>
-      <div class="noti-contenido">
-        <div class="descripcion">¡Papá se ha caído en el baño! Necesito ayuda urgente.</div>
-      </div>
-    </div>
-
-    <div class="noti ayuda" (click)="marcarLeida(1)">
-      <div class="noti-header">
-        <div class="noti-info">
-          <div class="noti-titulo">
-            <span class="badge ayuda-badge">Ayuda</span>
-            <span class="tiempo">Hace 15 min</span>
-          </div>
-          <div class="usuario">Pedro Martínez</div>
-        </div>
-      </div>
-      <div class="noti-contenido">
-        <div class="descripcion">Necesito ayuda para encontrar mis medicamentos.</div>
-      </div>
-    </div>
-
-    <!-- Ayer -->
-    <div class="fecha-separador">Ayer</div>
-
-    <div class="noti ayuda" (click)="marcarLeida(3)">
-      <div class="noti-header">
-        <div class="noti-info">
-          <div class="noti-titulo">
-            <span class="badge ayuda-badge">Ayuda</span>
-            <span class="tiempo">Ayer 18:30</span>
-          </div>
-          <div class="usuario">Ana López</div>
-        </div>
-      </div>
-      <div class="noti-contenido">
-        <div class="descripcion">¿Podrías ayudarme a recordar dónde dejé las llaves?</div>
-      </div>
-    </div>
-
-    <div class="noti emergencia" (click)="marcarLeida(4)">
-      <div class="noti-header">
-        <div class="noti-info">
-          <div class="noti-titulo">
-            <span class="badge emergencia-badge">Emergencia</span>
-            <span class="tiempo">Ayer 14:20</span>
-          </div>
-          <div class="usuario">Carlos Ruiz</div>
-        </div>
-      </div>
-      <div class="noti-contenido">
-        <div class="descripcion">Dolor en el pecho, llamen a emergencias.</div>
-      </div>
-    </div>
+    </ng-container>
 
     <!-- Estado vacío -->
-    @if (notificacionesFiltradas.length === 0) {
-    <div class="estado-vacio">
+    <div *ngIf="notificacionesFiltradas.length === 0" class="estado-vacio">
       <ion-icon name="notifications-off-outline"></ion-icon>
       <p>No hay notificaciones</p>
       <span>Cuando recibas notificaciones aparecerán aquí</span>
     </div>
-    }
-
   </div>
 
 </ion-content>
