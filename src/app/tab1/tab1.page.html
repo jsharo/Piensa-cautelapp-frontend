@@ -1,48 +1,5 @@
-<!-- HEADER SUPERIOR -->
-<ion-menu side="start" menuId="tab1-menu" contentId="tab1-content">
-  <ion-content>
-    <div class="menu-profile-header">
-      <div class="user-avatar">
-        <ion-icon name="person-circle"></ion-icon>
-      </div>
-      <div class="user-info" *ngIf="user">
-        <div class="user-name">{{ user.nombre }}</div>
-        <div class="user-email">{{ user.email }}</div>
-      </div>
-    </div>
-
-    <ion-list lines="none" class="menu-list">
-      <ion-menu-toggle auto-hide="true">
-        <ion-item button (click)="openEditModal()">
-          <ion-icon name="create-outline" slot="start"></ion-icon>
-          <ion-label>Editar Perfil</ion-label>
-        </ion-item>
-      </ion-menu-toggle>
-
-      <ion-menu-toggle auto-hide="true">
-        <ion-item button>
-          <ion-icon name="location-outline" slot="start"></ion-icon>
-          <ion-label>Mis Ubicaciones</ion-label>
-        </ion-item>
-      </ion-menu-toggle>
-
-      <div class="menu-divider"></div>
-
-      <ion-menu-toggle auto-hide="true">
-        <ion-item button class="logout-item" (click)="logout()">
-          <ion-icon name="log-out-outline" slot="start"></ion-icon>
-          <ion-label>Cerrar Sesión</ion-label>
-        </ion-item>
-      </ion-menu-toggle>
-    </ion-list>
-  </ion-content>
-</ion-menu>
-
 <div class="header">
   <div class="header-left">
-    <ion-buttons>
-      <ion-menu-button class="menu-toggle" menu="tab1-menu"></ion-menu-button>
-    </ion-buttons>
     <div class="titulo">Notificaciones</div>
   </div>
   <div class="header-right">
