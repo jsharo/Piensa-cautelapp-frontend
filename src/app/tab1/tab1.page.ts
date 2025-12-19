@@ -1,5 +1,5 @@
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { IonicModule, NavController, ToastController } from '@ionic/angular';
+import { IonicModule, ToastController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -79,7 +79,6 @@ export class Tab1Page implements OnInit {
   ];
 
   constructor(
-    private navCtrl: NavController,
     private router: Router,
     private auth: AuthService,
     private toast: ToastController
