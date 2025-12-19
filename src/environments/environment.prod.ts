@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://your-render-app-url.onrender.com/api' // Se configurará durante el despliegue
+  apiUrl: 'https://piensa-cautelapp-back.onrender.com/api'
 };
