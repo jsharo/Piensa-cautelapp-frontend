@@ -52,7 +52,7 @@ export class AuthService {
   private loadStoredUser(): void {
     const token = this.getToken();
     const userStr = localStorage.getItem('currentUser');
-
+    
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr);
@@ -108,17 +108,17 @@ export class AuthService {
   private handleAuthResponse(response: LoginResponse, remember: boolean): void {
     // Guardar token
     localStorage.setItem('access_token', response.access_token);
-
+    
     // Guardar usuario
     localStorage.setItem('currentUser', JSON.stringify(response.user));
-
+    
     // Guardar preferencia de recordar
     if (remember) {
       localStorage.setItem('rememberSession', 'true');
     } else {
       localStorage.removeItem('rememberSession');
     }
-
+    
     // Actualizar estado
     this.currentUserSubject.next(response.user);
   }
@@ -144,22 +144,6 @@ export class AuthService {
    */
   isAuthenticated(): boolean {
     return !!this.getToken();
-  }
-
-  /**
-   * Actualiza el usuario actual
-   */
-  updateUser(id: number, data: Partial<User>): Observable<User> {
-    return this.http.patch<User>(`${this.apiUrl}/user/${id}`, data).pipe(
-      tap(updatedUser => {
-        // Actualizar el estado local si es el mismo usuario
-        const current = this.getCurrentUser();
-        if (current && current.id_usuario === updatedUser.id_usuario) {
-          this.currentUserSubject.next(updatedUser);
-          localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-        }
-      })
-    );
   }
 
   /**
