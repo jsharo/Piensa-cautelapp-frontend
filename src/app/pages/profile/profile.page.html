@@ -6,9 +6,14 @@
         <div class="label">Nombre</div>
         <div class="value">{{ user.nombre }}</div>
       </div>
-      <div class="row">
+      <div class="row email-row">
         <div class="label">Correo</div>
-        <div class="value">{{ user.email }}</div>
+        <div class="value-with-action">
+          <div class="value">{{ user.email }}</div>
+          <button class="btn-edit" (click)="openEmailEdit()">
+            <ion-icon name="create-outline"></ion-icon>
+          </button>
+        </div>
       </div>
       <div class="row">
         <div class="label">Rol</div>
@@ -26,5 +31,53 @@
         <ion-spinner name="crescent"></ion-spinner>
       </div>
     </ng-template>
+  </div>
+
+  <!-- Modal para editar email -->
+  <div class="modal-overlay" *ngIf="isEditingEmail" (click)="closeEmailEdit()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Actualizar Correo Electrónico</h2>
+        <button class="btn-close" (click)="closeEmailEdit()">
+          <ion-icon name="close-circle"></ion-icon>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Correo actual</label>
+          <div class="current-email">{{ user?.email }}</div>
+        </div>
+
+        <div class="form-group">
+          <label for="newEmail">Nuevo correo electrónico</label>
+          <input 
+            type="email" 
+            id="newEmail"
+            [(ngModel)]="newEmail"
+            (input)="validateEmail()"
+            placeholder="ejemplo@correo.com"
+            class="input-field"
+            [class.error]="emailError"
+          />
+          <div class="error-message" *ngIf="emailError">
+            {{ emailError }}
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeEmailEdit()">
+          Cancelar
+        </button>
+        <button 
+          class="btn-primary" 
+          (click)="updateEmail()"
+          [disabled]="!newEmail || emailError || loading">
+          <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+          <span *ngIf="!loading">Actualizar</span>
+        </button>
+      </div>
+    </div>
   </div>
 </ion-content>

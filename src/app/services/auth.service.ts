@@ -8,6 +8,7 @@ export interface User {
   id_usuario: number;
   nombre: string;
   email: string;
+  email_recuperacion?: string;
   id_rol: number;
   rol?: {
     id_rol: number;
@@ -154,6 +155,14 @@ export class AuthService {
   }
 
   /**
+   * Actualiza el usuario actual en la sesión
+   */
+  setCurrentUser(user: User): void {
+    this.currentUserSubject.next(user);
+    localStorage.setItem('currentUser', JSON.stringify(user));
+  }
+
+  /**
    * Actualiza el perfil del usuario
    */
   updateProfile(id: number, data: { nombre?: string; imagen?: string }): Observable<User> {
@@ -162,6 +171,36 @@ export class AuthService {
         this.currentUserSubject.next(user);
         localStorage.setItem('currentUser', JSON.stringify(user));
       })
+    );
+  }
+
+  /**
+   * Solicita un código de reset de contraseña
+   */
+  requestPasswordReset(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.apiUrl}/auth/forgot-password`,
+      { email }
+    );
+  }
+
+  /**
+   * Verifica el código de reset
+   */
+  verifyResetCode(email: string, code: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.apiUrl}/auth/verify-reset-code`,
+      { email, code }
+    );
+  }
+
+  /**
+   * Actualiza la contraseña con el código de reset
+   */
+  resetPassword(email: string, code: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.apiUrl}/auth/reset-password`,
+      { email, code, newPassword }
     );
   }
 }

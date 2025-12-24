@@ -140,8 +140,8 @@ export class LoginPage implements OnInit {
   }
 
   forgotPassword() {
-    // Navegar o mostrar modal de recuperación
-    this.navCtrl.navigateForward('/recuperar');
+    // Navegar a la página de recuperación de contraseña
+    this.navCtrl.navigateForward('/forgot-password');
   }
 
   private async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {

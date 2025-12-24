@@ -1,7 +1,10 @@
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { IonContent, IonButton, NavController } from '@ionic/angular/standalone';
+import { IonContent, NavController, ToastController } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AuthService, User } from '../../services/auth.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 interface BluetoothDevice {
   id: string;
@@ -20,7 +23,7 @@ interface WiFiNetwork {
   selector: 'app-configuration',
   templateUrl: 'configuration.page.html',
   styleUrls: ['configuration.page.scss'],
-  imports: [IonContent, IonButton, CommonModule, FormsModule],
+  imports: [IonContent, CommonModule, FormsModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class ConfigurationPage implements OnInit {
@@ -38,13 +41,38 @@ export class ConfigurationPage implements OnInit {
   // Estados generales
   connectionStep: 'bluetooth' | 'wifi-list' | 'wifi-config' = 'bluetooth';
 
+  // Email de recuperación
+  user: User | null = null;
+  isEditingRecoveryEmail = false;
+  recoveryEmail = '';
+  recoveryEmailError = '';
+  loadingRecoveryEmail = false;
+  selectedTab: 'bluetooth' | 'recovery-email' = 'bluetooth';
+
   constructor(
-    private navController: NavController
+    private navController: NavController,
+    private authService: AuthService,
+    private http: HttpClient,
+    private toastCtrl: ToastController
   ) {}
 
   ngOnInit() {
     // Inicializar Bluetooth cuando carga la página
     this.initializeBluetooth();
+    // Cargar usuario actual
+    this.loadUser();
+  }
+
+  loadUser() {
+    this.user = this.authService.getCurrentUser();
+    this.authService.me().subscribe({
+      next: (u) => {
+        this.user = u;
+      },
+      error: () => {
+        console.error('Error cargando usuario');
+      }
+    });
   }
 
   // =====================
@@ -190,5 +218,105 @@ export class ConfigurationPage implements OnInit {
     if (rssi > -60) return '#ff9500';
     if (rssi > -70) return '#ff3b30';
     return '#808080';
+  }
+
+  // =====================
+  // EMAIL DE RECUPERACIÓN
+  // =====================
+
+  openRecoveryEmailEdit() {
+    this.recoveryEmail = this.user?.email_recuperacion || '';
+    this.recoveryEmailError = '';
+    this.isEditingRecoveryEmail = true;
+  }
+
+  closeRecoveryEmailEdit() {
+    this.isEditingRecoveryEmail = false;
+    this.recoveryEmail = '';
+    this.recoveryEmailError = '';
+  }
+
+  emailValid(value: string): boolean {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+    return re.test(value);
+  }
+
+  validateRecoveryEmail() {
+    if (!this.recoveryEmail) {
+      this.recoveryEmailError = '';
+      return true;
+    }
+    
+    if (!this.emailValid(this.recoveryEmail)) {
+      this.recoveryEmailError = 'Ingresa un correo electrónico válido';
+      return false;
+    }
+    
+    if (this.recoveryEmail === this.user?.email) {
+      this.recoveryEmailError = 'El email de recuperación no puede ser igual al email principal';
+      return false;
+    }
+    
+    this.recoveryEmailError = '';
+    return true;
+  }
+
+  async updateRecoveryEmail() {
+    if (!this.user) {
+      return;
+    }
+
+    if (this.recoveryEmail && !this.validateRecoveryEmail()) {
+      return;
+    }
+
+    this.loadingRecoveryEmail = true;
+
+    this.http
+      .patch(`${environment.apiUrl}/user/${this.user.id_usuario}`, {
+        email_recuperacion: this.recoveryEmail || null,
+      })
+      .subscribe({
+        next: async (updatedUser: any) => {
+          this.user = updatedUser;
+          this.authService.setCurrentUser(updatedUser);
+          
+          this.loadingRecoveryEmail = false;
+          this.closeRecoveryEmailEdit();
+          
+          const toast = await this.toastCtrl.create({
+            message: this.recoveryEmail 
+              ? 'Email de recuperación actualizado exitosamente'
+              : 'Email de recuperación eliminado exitosamente',
+            color: 'success',
+            duration: 3000,
+            position: 'top',
+          });
+          toast.present();
+        },
+        error: async (err) => {
+          this.loadingRecoveryEmail = false;
+          let errorMessage = 'No se pudo actualizar el email de recuperación';
+          
+          if (err.error?.message) {
+            errorMessage = err.error.message;
+          } else if (err.status === 409) {
+            errorMessage = 'Este correo ya está en uso';
+          }
+          
+          const toast = await this.toastCtrl.create({
+            message: errorMessage,
+            color: 'danger',
+            duration: 3000,
+            position: 'top',
+          });
+          toast.present();
+        },
+      });
+  }
+
+  async removeRecoveryEmail() {
+    this.recoveryEmail = '';
+    await this.updateRecoveryEmail();
   }
 }

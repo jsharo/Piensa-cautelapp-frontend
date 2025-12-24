@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonButton, IonIcon, IonInput, ModalController, IonHeader, IonToolbar, IonTitle } from '@ionic/angular/standalone';
+import { IonContent, IonButton, IonIcon, IonInput, ModalController } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { close, personCircle, mailOutline, camera } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
@@ -9,7 +9,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-profile-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonContent, IonButton, IonIcon, IonInput, IonHeader, IonToolbar, IonTitle],
+  imports: [CommonModule, FormsModule, IonContent, IonButton, IonIcon, IonInput],
   templateUrl: './profile-modal.component.html',
   styleUrls: ['./profile-modal.component.scss']
 })

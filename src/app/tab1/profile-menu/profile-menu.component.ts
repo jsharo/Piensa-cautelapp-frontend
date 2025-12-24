@@ -12,7 +12,7 @@ import { ProfileModalComponent } from '../profile-modal/profile-modal.component'
   templateUrl: './profile-menu.component.html',
   styleUrls: ['./profile-menu.component.scss'],
   standalone: true,
-  imports: [CommonModule, IonIcon, ProfileModalComponent]
+  imports: [CommonModule, IonIcon]
 })
 export class ProfileMenuComponent implements OnInit {
   @Input() userEmail: string = '';
