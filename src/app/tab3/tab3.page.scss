@@ -1,0 +1,152 @@
+ion-content {
+    --background: #f8f9fa;
+}
+
+.alarm-header {
+    padding: 20px 0;
+
+    h2 {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0;
+        color: #1a1a1a;
+    }
+}
+
+.alarm-item {
+    --background: #ffffff;
+    --border-radius: 16px;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+    ion-icon {
+        font-size: 24px;
+        margin-right: 16px;
+    }
+
+    h1 {
+        font-size: 32px;
+        font-weight: 600;
+        margin: 0;
+        color: #333;
+        transition: color 0.3s ease;
+    }
+
+    p {
+        font-size: 14px;
+        color: #666;
+        margin: 4px 0 0 0;
+    }
+
+    &.item-has-focus {
+        --background: #f0f0f0;
+    }
+}
+
+.disabled-text {
+    color: #999 !important;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60%;
+    color: #999;
+
+    ion-icon {
+        font-size: 80px;
+        margin-bottom: 16px;
+        opacity: 0.3;
+    }
+
+    p {
+        font-size: 18px;
+        font-weight: 500;
+    }
+}
+
+ion-fab-button {
+    --background: linear-gradient(135deg, #3880ff 0%, #3171e0 100%);
+    --box-shadow: 0 8px 16px rgba(56, 128, 255, 0.3);
+}
+
+.alarm-modal {
+    --height: 450px;
+    --border-radius: 24px;
+    --box-shadow: 0 28px 48px rgba(0, 0, 0, 0.4);
+
+    ion-toolbar {
+        --background: #ffffff;
+        --color: #333;
+        --border-width: 0;
+    }
+
+    .modal-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+    }
+
+    ion-datetime {
+        --background: transparent;
+        --border-radius: 12px;
+        margin-bottom: 10px;
+    }
+
+    .label-input {
+        width: 100%;
+        --background: #f4f5f8;
+        --border-radius: 12px;
+        --padding-start: 16px;
+        --border-color: transparent;
+
+        ion-label {
+            font-weight: 500;
+        }
+    }
+}
+
+// Custom styles for triggered alert
+:host ::ng-deep .premium-alert {
+    --background: #ffffff;
+    --border-radius: 20px;
+
+    .alert-header {
+        background: linear-gradient(135deg, #3880ff 0%, #3171e0 100%);
+        padding: 20px;
+        color: white;
+    }
+
+    .alert-title {
+        color: white;
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .alert-sub-title {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 16px;
+    }
+
+    .alert-message {
+        padding: 20px;
+        font-size: 18px;
+        color: #333;
+    }
+
+    .alert-button-group {
+        padding: 10px;
+    }
+
+    .alert-button {
+        color: #3880ff;
+        font-weight: 600;
+    }
+}
