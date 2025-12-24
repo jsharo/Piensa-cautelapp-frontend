@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { IonicModule, NavController, ToastController } from '@ionic/angular';
+import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { NavController, PopoverController } from '@ionic/angular';
+import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { ProfileMenuComponent } from './profile-menu/profile-menu.component';
 
 interface Notificacion {
   id: number;
@@ -24,20 +25,12 @@ type Filtro = 'todas' | 'emergencia' | 'ayuda';
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, RouterLink, FormsModule],
+  imports: [IonicModule, CommonModule],
 })
 export class Tab1Page implements OnInit {
   filtroActivo: Filtro = 'todas';
-  user: any = null;
-
-  // Propiedades para el Modal de Edición
-  isModalOpen = false;
-  saving = false;
-  editData = {
-    nombre: '',
-    email: ''
-  };
-
+  userProfileImage: string | null = null;
+  
   notificaciones: Notificacion[] = [
     {
       id: 1,
@@ -77,76 +70,18 @@ export class Tab1Page implements OnInit {
     }
   ];
 
-  constructor(
-    private navCtrl: NavController,
-    private router: Router,
-    private auth: AuthService,
-    private toast: ToastController
-  ) { }
+  constructor(private navCtrl: NavController, private router: Router, private auth: AuthService, private popoverController: PopoverController) {}
 
   ngOnInit() {
-    this.loadUser();
+    // Cargar imagen del perfil del usuario
+    this.loadUserProfileImage();
   }
 
-  loadUser() {
-    this.user = this.auth.getCurrentUser();
-    if (this.user) this.syncEditData();
-
-    this.auth.me().subscribe({
-      next: (u) => {
-        this.user = u;
-        this.syncEditData();
-      },
-      error: () => console.log('Error al cargar usuario en Tab1')
-    });
-  }
-
-  syncEditData() {
-    const currentUser = this.auth.getCurrentUser();
-    if (currentUser) {
-      this.user = currentUser;
-      this.editData.nombre = currentUser.nombre || '';
-      this.editData.email = currentUser.email || '';
+  loadUserProfileImage() {
+    const user = this.auth.getCurrentUser();
+    if (user && (user as any).imagen) {
+      this.userProfileImage = (user as any).imagen;
     }
-  }
-
-  openEditModal() {
-    this.syncEditData(); // Asegurar datos frescos
-    setTimeout(() => {
-      this.isModalOpen = true;
-    }, 50); // Pequeño delay para asegurar ciclo de detección de Angular
-  }
-
-  closeEditModal() {
-    this.isModalOpen = false;
-  }
-
-  async saveProfile() {
-    if (!this.user) return;
-
-    this.saving = true;
-    this.auth.updateUser(this.user.id_usuario, this.editData).subscribe({
-      next: (updated) => {
-        this.user = updated;
-        this.saving = false;
-        this.isModalOpen = false;
-        this.showToast('Perfil actualizado correctamente', 'success');
-      },
-      error: () => {
-        this.saving = false;
-        this.showToast('Error al actualizar el perfil', 'danger');
-      }
-    });
-  }
-
-  async showToast(message: string, color: string) {
-    const t = await this.toast.create({
-      message,
-      color,
-      duration: 2500,
-      position: 'top',
-    });
-    t.present();
   }
 
   get notificacionesFiltradas(): Notificacion[] {
@@ -166,14 +101,42 @@ export class Tab1Page implements OnInit {
   }
 
   marcarLeida(index: number) {
-    if (index < 0 || index >= this.notificaciones.length) {
+    if (index < 0 || index >= this.notificacionesFiltradas.length) {
       return;
     }
-    this.notificaciones[index].leida = true;
+    const notiId = this.notificacionesFiltradas[index].id;
+    const notiIndex = this.notificaciones.findIndex(n => n.id === notiId);
+    if (notiIndex !== -1) {
+      this.notificaciones[notiIndex].leida = true;
+    }
   }
 
   marcarTodasLeidas() {
     this.notificaciones.forEach(n => n.leida = true);
+  }
+
+  async openProfileMenu(event: any) {
+    // Recargar imagen por si cambió en el modal
+    this.loadUserProfileImage();
+    
+    const currentUser = this.auth.getCurrentUser();
+    
+    const popover = await this.popoverController.create({
+      component: ProfileMenuComponent,
+      event: event,
+      componentProps: {
+        userEmail: currentUser?.email || 'usuario@example.com',
+        userName: currentUser?.nombre || 'Usuario'
+      },
+      translucent: true,
+      cssClass: 'profile-popover'
+    });
+
+    return await popover.present();
+  }
+
+  goToProfile() {
+    this.router.navigate(['/profile']);
   }
 
   async logout() {

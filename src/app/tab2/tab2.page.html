@@ -1,17 +1,62 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Tab 2
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
+<!-- HEADER SUPERIOR -->
+<div class="header">
+  <div class="header-left">
+    <div class="titulo">Dispositivos</div>
+  </div>
+  <div class="header-right">
+    <button class="profile-btn" (click)="openProfileMenu($event)">
+      <img *ngIf="userProfileImage" [src]="userProfileImage" alt="Perfil" class="profile-img">
+      <ion-icon *ngIf="!userProfileImage" name="person-circle" class="profile-icon"></ion-icon>
+    </button>
+  </div>
+</div>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" class="dispositivos-content">
+  <!-- SECCIÓN DE DISPOSITIVOS -->
+  <div class="dispositivos-container">
+    <!-- Encabezado mejorado -->
+    <div class="section-header">
+      <div class="section-title-group">
+        <h2 class="section-title">Adultos Mayores</h2>
+        <p class="section-subtitle">{{ adultosMonitoreados.length }} monitoreado(s)</p>
+      </div>
+      <button class="btn-add-device" (click)="openAddDevice()"><ion-icon name="add-circle"></ion-icon>Agregar</button>
+    </div>
 
-  <app-explore-container name="Tab 2 page"></app-explore-container>
+    <!-- Lista de dispositivos -->
+    <div class="dispositivos-list">
+      <ng-container *ngIf="adultosMonitoreados.length > 0">
+        <div *ngFor="let adulto of adultosMonitoreados" class="device-card">
+          <div class="device-header">
+            <div class="device-info">
+              <h3 class="device-name">{{ adulto.nombre }}</h3>
+              <p class="device-age">{{ adulto.edad }} años</p>
+              <p class="device-status" [ngClass]="{'status-online': adulto.conectado, 'status-offline': !adulto.conectado}">
+                {{ adulto.conectado ? 'En línea' : 'Desconectado' }}
+              </p>
+            </div>
+            <div class="device-battery" [ngClass]="'battery-' + getBatteryClass(adulto.dispositivo.bateria)">
+              <ion-icon name="battery-half"></ion-icon>
+              <span>{{ adulto.dispositivo.bateria }}%</span>
+            </div>
+          </div>
+
+          <div class="device-actions">
+            <button class="btn-action btn-view" (click)="viewDevice(adulto)"><ion-icon name="eye"></ion-icon>Ver Detalles</button>
+            <button class="btn-action btn-remove" (click)="removeDevice(adulto)"><ion-icon name="trash"></ion-icon>Dejar de Monitorear</button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Estado vacío -->
+      <ng-container *ngIf="adultosMonitoreados.length === 0">
+        <div class="empty-state">
+          <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+          <h3>Sin adultos monitoreados</h3>
+          <p>Vincula un nuevo perfil de adulto mayor para comenzar</p>
+          <button class="btn-primary" (click)="openAddDevice()">Agregar Primer Adulto</button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
 </ion-content>

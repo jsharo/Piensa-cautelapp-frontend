@@ -1,0 +1,190 @@
+<!-- HEADER SUPERIOR -->
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn" (click)="goBack()">
+      <ion-icon name="chevron-back"></ion-icon>
+    </button>
+    <div class="titulo">Configuración</div>
+  </div>
+  <div class="header-right"></div>
+</div>
+
+<ion-content [fullscreen]="true" class="config-content">
+  <div class="config-container">
+    <!-- PASO 1: BLUETOOTH -->
+    <div *ngIf="connectionStep === 'bluetooth'" class="step-section">
+      <div class="section-header">
+        <h2 class="section-title">Conectar Dispositivo</h2>
+        <p class="section-subtitle">Escanea y selecciona tu dispositivo ESP32</p>
+      </div>
+
+      <!-- Dispositivo conectado actual -->
+      <div *ngIf="connectedDevice" class="connected-device-card">
+        <div class="device-status-header">
+          <div class="status-badge">
+            <ion-icon name="bluetooth"></ion-icon>
+            <span>Conectado</span>
+          </div>
+          <button class="btn-disconnect" (click)="disconnectDevice()">
+            <ion-icon name="close-circle"></ion-icon>
+            Desconectar
+          </button>
+        </div>
+        <div class="device-info">
+          <h3>{{ connectedDevice.name }}</h3>
+          <p>ID: {{ connectedDevice.id }}</p>
+        </div>
+        <button class="btn-next" (click)="connectionStep = 'wifi-list'">
+          <span>Continuar a WiFi</span>
+          <ion-icon name="arrow-forward"></ion-icon>
+        </button>
+      </div>
+
+      <!-- Escaneo de dispositivos -->
+      <div *ngIf="!connectedDevice" class="scan-section">
+        <div class="scan-buttons">
+          <button 
+            *ngIf="!isScanning" 
+            class="btn-primary" 
+            (click)="startScan()">
+            <ion-icon name="bluetooth"></ion-icon>
+            Buscar Dispositivos
+          </button>
+          <button 
+            *ngIf="isScanning" 
+            class="btn-primary loading" 
+            disabled>
+            <ion-icon name="sync"></ion-icon>
+            Escaneando...
+          </button>
+        </div>
+
+        <!-- Lista de dispositivos encontrados -->
+        <div *ngIf="bluetoothDevices.length > 0" class="devices-list">
+          <h3 class="list-title">Dispositivos Disponibles</h3>
+          <div 
+            *ngFor="let device of bluetoothDevices" 
+            class="device-item"
+            (click)="connectDevice(device)">
+            <div class="device-icon">
+              <ion-icon name="bluetooth"></ion-icon>
+            </div>
+            <div class="device-content">
+              <h4 class="device-name">{{ device.name }}</h4>
+              <p class="device-signal">
+                <ion-icon name="wifi"></ion-icon>
+                {{ getRSSIIndicator(device.rssi || -70) }} ({{ device.rssi }} dBm)
+              </p>
+            </div>
+            <ion-icon name="chevron-forward" class="chevron"></ion-icon>
+          </div>
+        </div>
+
+        <!-- Sin dispositivos encontrados -->
+        <div *ngIf="!isScanning && bluetoothDevices.length === 0 && bluetoothDevices.length !== undefined" class="empty-state">
+          <ion-icon name="bluetooth" class="empty-icon"></ion-icon>
+          <h3>Sin dispositivos encontrados</h3>
+          <p>Asegúrate de que tu ESP32 está encendido y con Bluetooth activo</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASO 2: LISTA DE REDES WiFi -->
+    <div *ngIf="connectionStep === 'wifi-list' && connectedDevice" class="step-section">
+      <div class="section-header">
+        <h2 class="section-title">Seleccionar Red WiFi</h2>
+        <p class="section-subtitle">Elige la red a la que se conectará el dispositivo</p>
+      </div>
+
+      <!-- Dispositivo conectado en header -->
+      <div class="mini-device-card">
+        <ion-icon name="bluetooth"></ion-icon>
+        <span>{{ connectedDevice.name }}</span>
+      </div>
+
+      <!-- Lista de redes WiFi -->
+      <div *ngIf="wifiNetworks.length > 0" class="networks-list">
+        <div 
+          *ngFor="let network of wifiNetworks" 
+          class="network-item"
+          [class.selected]="selectedWiFi?.ssid === network.ssid"
+          (click)="selectWiFi(network)">
+          <div class="network-icon">
+            <ion-icon name="wifi"></ion-icon>
+          </div>
+          <div class="network-content">
+            <h4 class="network-name">{{ network.ssid }}</h4>
+            <div class="network-meta">
+              <span class="signal-badge" [style.backgroundColor]="getRSSIColor(network.rssi)">
+                {{ getRSSIIndicator(network.rssi) }}
+              </span>
+              <span class="security-badge">{{ network.security }}</span>
+            </div>
+          </div>
+          <ion-icon 
+            *ngIf="selectedWiFi?.ssid === network.ssid" 
+            name="checkmark-circle" 
+            class="selected-icon"></ion-icon>
+          <ion-icon 
+            *ngIf="selectedWiFi?.ssid !== network.ssid" 
+            name="chevron-forward" 
+            class="chevron"></ion-icon>
+        </div>
+      </div>
+
+      <!-- Sin redes encontradas -->
+      <div *ngIf="wifiNetworks.length === 0" class="empty-state">
+        <ion-icon name="wifi-outline" class="empty-icon"></ion-icon>
+        <h3>Cargando redes disponibles...</h3>
+        <p>Espera a que el dispositivo detecte las redes WiFi cercanas</p>
+      </div>
+    </div>
+
+    <!-- PASO 3: INGRESAR CONTRASEÑA WiFi -->
+    <div *ngIf="connectionStep === 'wifi-config' && connectedDevice && selectedWiFi" class="step-section">
+      <div class="section-header">
+        <h2 class="section-title">Credenciales WiFi</h2>
+        <p class="section-subtitle">Ingresa la contraseña para {{ selectedWiFi.ssid }}</p>
+      </div>
+
+      <!-- Dispositivo y red en header -->
+      <div class="config-summary">
+        <div class="summary-item">
+          <span class="label">Dispositivo</span>
+          <span class="value">{{ connectedDevice.name }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Red WiFi</span>
+          <span class="value">{{ selectedWiFi.ssid }}</span>
+        </div>
+      </div>
+
+      <!-- Campo de contraseña -->
+      <div class="password-section">
+        <label class="input-label">Contraseña</label>
+        <input 
+          type="password" 
+          class="password-input"
+          placeholder="Ingresa la contraseña de la red"
+          [(ngModel)]="wifiPassword">
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="config-actions">
+        <button 
+          class="btn-secondary" 
+          (click)="backToWiFiList()">
+          <ion-icon name="chevron-back"></ion-icon>
+          Volver
+        </button>
+        <button 
+          class="btn-primary" 
+          [disabled]="!wifiPassword || isConnectingWiFi"
+          (click)="sendWiFiCredentials()">
+          <ion-icon [name]="isConnectingWiFi ? 'sync' : 'wifi'"></ion-icon>
+          {{ isConnectingWiFi ? 'Conectando...' : 'Conectar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</ion-content>

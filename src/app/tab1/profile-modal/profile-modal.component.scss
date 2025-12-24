@@ -1,0 +1,252 @@
+::ng-deep .profile-modal {
+  --width: 90%;
+  --height: 90%;
+  --max-width: 500px;
+  --border-radius: 16px;
+  --box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+  .modal-wrapper {
+    overflow: visible;
+  }
+}
+
+.profile-modal-content {
+  --background: #f7fafc;
+  --padding: 0;
+  --overflow: visible;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 16px;
+  background: #002333;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .close-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    ion-icon {
+      font-size: 24px;
+      color: white;
+    }
+  }
+}
+
+.profile-avatar {
+  text-align: center;
+  padding: 30px 0 20px;
+  display: flex;
+  justify-content: center;
+
+  .avatar-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .avatar-img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #159A9C;
+    }
+
+    .avatar-icon {
+      font-size: 80px;
+      color: #159A9C;
+    }
+
+    .camera-btn {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #159A9C;
+      color: white;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(21, 154, 156, 0.3);
+
+      ion-icon {
+        font-size: 18px;
+      }
+
+      &:hover {
+        background: #0D7278;
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(21, 154, 156, 0.4);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+  }
+}
+
+.profile-section {
+  padding: 0 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-field {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+
+  .field-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    .field-icon {
+      font-size: 18px;
+      color: #159A9C;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+  }
+
+  .field-value {
+    font-size: 16px;
+    color: #1a202c;
+    font-weight: 500;
+    word-break: break-word;
+  }
+
+  .field-note {
+    font-size: 11px;
+    color: #a0aec0;
+    margin: 4px 0 0 0;
+    font-style: italic;
+  }
+
+  .edit-input {
+    --padding-start: 12px;
+    --padding-end: 12px;
+    --padding-top: 10px;
+    --padding-bottom: 10px;
+    border: 2px solid #159A9C;
+    border-radius: 8px;
+    margin-top: 8px;
+  }
+}
+
+.action-buttons {
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  ion-button {
+    --border-radius: 12px;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    font-weight: 600;
+    font-size: 15px;
+    text-transform: none;
+  }
+
+  .btn-edit {
+    --background: #159A9C;
+    --color: white;
+
+    &:hover {
+      --background: #0D7278;
+    }
+  }
+
+  .btn-save {
+    --background: #159A9C;
+    --color: white;
+
+    &:hover {
+      --background: #0D7278;
+    }
+  }
+
+  .btn-cancel {
+    --background: transparent;
+    --border: 2px solid #159A9C;
+    --color: #159A9C;
+
+    &:hover {
+      --background: rgba(21, 154, 156, 0.1);
+    }
+  }
+
+  .edit-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-header {
+    padding: 16px 12px;
+
+    h2 {
+      font-size: 18px;
+    }
+  }
+
+  .profile-avatar {
+    padding: 20px 0 16px;
+
+    ion-icon {
+      font-size: 60px;
+    }
+  }
+
+  .profile-section {
+    padding: 0 12px 16px;
+    gap: 16px;
+  }
+
+  .action-buttons {
+    padding: 16px 12px;
+  }
+}

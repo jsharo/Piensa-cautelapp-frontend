@@ -1,10 +1,17 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>Alarmas</ion-title>
-  </ion-toolbar>
-</ion-header>
+<!-- HEADER SUPERIOR -->
+<div class="header">
+  <div class="header-left">
+    <div class="titulo">Alarmas</div>
+  </div>
+  <div class="header-right">
+    <button class="profile-btn" (click)="openProfileMenu($event)">
+      <img *ngIf="userProfileImage" [src]="userProfileImage" alt="Perfil" class="profile-img">
+      <ion-icon *ngIf="!userProfileImage" name="person-circle" class="profile-icon"></ion-icon>
+    </button>
+  </div>
+</div>
 
-<ion-content [fullscreen]="true" class="ion-padding">
+<ion-content [fullscreen]="true" class="ion-padding fondotab3">
   <div class="alarm-header">
     <h2>Mis Alarmas</h2>
   </div>

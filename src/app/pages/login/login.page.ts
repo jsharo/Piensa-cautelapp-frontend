@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { IonicModule, NavController, ToastController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -8,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
   selector: 'app-login',
   standalone: true,
   imports: [IonicModule, FormsModule, CommonModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss']
 })
@@ -28,13 +29,7 @@ export class LoginPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Auto-focus en el campo de email después de que la vista se cargue
-    setTimeout(() => {
-      const emailInput = document.querySelector('ion-input[name="email"]');
-      if (emailInput) {
-        (emailInput as any).setFocus();
-      }
-    }, 300);
+    // Componente inicializado
   }
 
   get canSubmit(): boolean {

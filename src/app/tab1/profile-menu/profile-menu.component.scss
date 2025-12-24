@@ -1,0 +1,128 @@
+$dark-blue: #002333;
+$teal: #159A9C;
+$light-gray: #B4BEC9;
+$white: #FFFFFF;
+$text: #1A202C;
+$text-light: #4A5568;
+$border: #E2E8F0;
+$error: #DC2626;
+
+.profile-menu {
+  width: 280px;
+  background: $white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+
+  .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: $dark-blue;
+    color: $white;
+
+    .profile-avatar-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      .profile-avatar-img {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid $white;
+      }
+
+      .profile-header-icon {
+        font-size: 48px;
+      }
+    }
+
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+
+      .profile-name {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .profile-email {
+        margin: 4px 0 0 0;
+        font-size: 12px;
+        opacity: 0.9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+
+  .menu-divider {
+    height: 1px;
+    background: $border;
+    margin: 0;
+  }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: $text;
+    transition: all 0.2s ease;
+
+    .menu-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    span {
+      flex: 1;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    &:hover {
+      background: #F7F8FA;
+    }
+
+    &:active {
+      background: #EEF2F5;
+    }
+
+    &.profile-item {
+      color: $teal;
+
+      .menu-icon {
+        color: $teal;
+      }
+    }
+
+    &.logout-item {
+      color: $error;
+      border-top: 1px solid $border;
+
+      .menu-icon {
+        color: $error;
+      }
+
+      &:hover {
+        background: rgba(220, 38, 38, 0.05);
+      }
+    }
+  }
+}

@@ -10,7 +10,7 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    loadComponent: () => import('./pages/login/login.page').then(m => m.LoginPage),
+    loadComponent: () => import('./pages/login/login.page').then( m => m.LoginPage),
     canActivate: [noAuthGuard]
   },
   {
@@ -19,8 +19,18 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'profile',
+    loadComponent: () => import('./pages/profile/profile.page').then(m => m.ProfilePage),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'configuration',
+    loadComponent: () => import('./pages/configuration/configuration.page').then(m => m.ConfigurationPage),
+    canActivate: [authGuard]
+  },
+  {
     path: 'create-acount',
-    loadComponent: () => import('./pages/create-acount/create-acount.page').then(m => m.CreateAcountPage),
+    loadComponent: () => import('./pages/create-acount/create-acount.page').then( m => m.CreateAcountPage),
     canActivate: [noAuthGuard]
   },
 ];

@@ -1,16 +1,19 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
   IonList, IonItem, IonLabel, IonToggle,
   IonButton, IonIcon, IonModal, IonDatetime,
-  IonFab, IonFabButton, IonButtons, IonNote,
+  IonFab, IonFabButton, IonButtons,
   IonItemSliding, IonItemOptions, IonItemOption,
-  AlertController, ToastController
+  AlertController, ToastController, PopoverController,
+  IonInput
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { addOutline, trashOutline, alarmOutline, timeOutline, closeOutline, checkmarkOutline } from 'ionicons/icons';
+import { addOutline, trashOutline, alarmOutline, timeOutline, closeOutline, checkmarkOutline, personCircle } from 'ionicons/icons';
+import { AuthService } from '../services/auth.service';
+import { ProfileMenuComponent } from '../tab1/profile-menu/profile-menu.component';
 
 interface Alarm {
   id: string;
@@ -29,9 +32,11 @@ interface Alarm {
     IonHeader, IonToolbar, IonTitle, IonContent,
     IonList, IonItem, IonLabel, IonToggle,
     IonButton, IonIcon, IonModal, IonDatetime,
-    IonFab, IonFabButton, IonButtons, IonNote,
-    IonItemSliding, IonItemOptions, IonItemOption
+    IonFab, IonFabButton, IonButtons,
+    IonItemSliding, IonItemOptions, IonItemOption,
+    IonInput
   ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class Tab3Page implements OnInit, OnDestroy {
   alarms: Alarm[] = [];
@@ -39,23 +44,52 @@ export class Tab3Page implements OnInit, OnDestroy {
   newAlarmTime: string = new Date().toISOString();
   newAlarmLabel: string = '';
   private intervalId: any;
+  userProfileImage: string | null = null;
 
   constructor(
     private alertController: AlertController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private auth: AuthService,
+    private popoverController: PopoverController
   ) {
-    addIcons({ addOutline, trashOutline, alarmOutline, timeOutline, closeOutline, checkmarkOutline });
+    addIcons({ addOutline, trashOutline, alarmOutline, timeOutline, closeOutline, checkmarkOutline, personCircle });
   }
 
   ngOnInit() {
     this.loadAlarms();
     this.startAlarmCheck();
+    this.loadUserProfileImage();
   }
 
   ngOnDestroy() {
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
+  }
+
+  loadUserProfileImage() {
+    const user = this.auth.getCurrentUser();
+    if (user && (user as any).imagen) {
+      this.userProfileImage = (user as any).imagen;
+    }
+  }
+
+  async openProfileMenu(event: any) {
+    this.loadUserProfileImage();
+    const currentUser = this.auth.getCurrentUser();
+
+    const popover = await this.popoverController.create({
+      component: ProfileMenuComponent,
+      event: event,
+      componentProps: {
+        userEmail: currentUser?.email || 'usuario@example.com',
+        userName: currentUser?.nombre || 'Usuario'
+      },
+      translucent: true,
+      cssClass: 'profile-popover'
+    });
+
+    return await popover.present();
   }
 
   loadAlarms() {

@@ -38,7 +38,7 @@ export interface LoginData {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = environment.apiUrl || 'http://localhost:3000';
+  private apiUrl = environment.apiUrl || 'http://localhost:3000/api';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -52,7 +52,7 @@ export class AuthService {
   private loadStoredUser(): void {
     const token = this.getToken();
     const userStr = localStorage.getItem('currentUser');
-
+    
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr);
@@ -108,17 +108,17 @@ export class AuthService {
   private handleAuthResponse(response: LoginResponse, remember: boolean): void {
     // Guardar token
     localStorage.setItem('access_token', response.access_token);
-
+    
     // Guardar usuario
     localStorage.setItem('currentUser', JSON.stringify(response.user));
-
+    
     // Guardar preferencia de recordar
     if (remember) {
       localStorage.setItem('rememberSession', 'true');
     } else {
       localStorage.removeItem('rememberSession');
     }
-
+    
     // Actualizar estado
     this.currentUserSubject.next(response.user);
   }
@@ -147,25 +147,21 @@ export class AuthService {
   }
 
   /**
-   * Actualiza el usuario actual
-   */
-  updateUser(id: number, data: Partial<User>): Observable<User> {
-    return this.http.patch<User>(`${this.apiUrl}/user/${id}`, data).pipe(
-      tap(updatedUser => {
-        // Actualizar el estado local si es el mismo usuario
-        const current = this.getCurrentUser();
-        if (current && current.id_usuario === updatedUser.id_usuario) {
-          this.currentUserSubject.next(updatedUser);
-          localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-        }
-      })
-    );
-  }
-
-  /**
    * Obtiene el usuario actual
    */
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
+  }
+
+  /**
+   * Actualiza el perfil del usuario
+   */
+  updateProfile(id: number, data: { nombre?: string; imagen?: string }): Observable<User> {
+    return this.http.patch<User>(`${this.apiUrl}/user/${id}`, data).pipe(
+      tap(user => {
+        this.currentUserSubject.next(user);
+        localStorage.setItem('currentUser', JSON.stringify(user));
+      })
+    );
   }
 }

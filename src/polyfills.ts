@@ -53,3 +53,9 @@ import 'zone.js';  // Included with Angular CLI.
 /***************************************************************************************************
  * APPLICATION IMPORTS
  */
+
+/**
+ * Load Ionic custom elements
+ */
+import { defineCustomElements } from '@ionic/core/loader';
+defineCustomElements(window);

@@ -1,0 +1,78 @@
+<ion-content class="profile-modal-content">
+  <!-- Header -->
+  <div class="modal-header">
+    <h2>Mi Perfil</h2>
+    <button class="close-btn" (click)="dismiss()">
+      <ion-icon name="close"></ion-icon>
+    </button>
+  </div>
+
+  <!-- Perfil Avatar -->
+  <div class="profile-avatar">
+    <div class="avatar-container">
+      <img *ngIf="profileImage" [src]="profileImage" alt="Foto de perfil" class="avatar-img">
+      <ion-icon *ngIf="!profileImage" name="person-circle" class="avatar-icon"></ion-icon>
+      <button *ngIf="isEditing" class="camera-btn" (click)="fileInput.click()">
+        <ion-icon name="camera"></ion-icon>
+      </button>
+    </div>
+    <input #fileInput type="file" accept="image/*" (change)="onImageSelected($event)" style="display: none;">
+  </div>
+
+  <!-- Información del Perfil -->
+  <div class="profile-section">
+    <!-- Nombre -->
+    <div class="profile-field">
+      <div class="field-header">
+        <ion-icon name="person-circle" class="field-icon"></ion-icon>
+        <label>Nombre</label>
+      </div>
+      <div *ngIf="!isEditing" class="field-value">
+        {{ userName }}
+      </div>
+      <ion-input 
+        *ngIf="isEditing"
+        [(ngModel)]="userName"
+        placeholder="Tu nombre"
+        class="edit-input">
+      </ion-input>
+    </div>
+
+    <!-- Email -->
+    <div class="profile-field">
+      <div class="field-header">
+        <ion-icon name="mail-outline" class="field-icon"></ion-icon>
+        <label>Email</label>
+      </div>
+      <div class="field-value">
+        {{ userEmail }}
+      </div>
+      <p class="field-note">No se puede cambiar</p>
+    </div>
+  </div>
+
+  <!-- Botones de Acción -->
+  <div class="action-buttons">
+    <ion-button 
+      *ngIf="!isEditing"
+      expand="block" 
+      class="btn-edit"
+      (click)="toggleEditing()">
+      Editar perfil
+    </ion-button>
+    <div *ngIf="isEditing" class="edit-actions">
+      <ion-button 
+        expand="block" 
+        class="btn-save"
+        (click)="saveProfile()">
+        Guardar cambios
+      </ion-button>
+      <ion-button 
+        expand="block" 
+        class="btn-cancel"
+        (click)="toggleEditing()">
+        Cancelar
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

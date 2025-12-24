@@ -1,0 +1,29 @@
+<div class="profile-menu">
+  <div class="profile-header">
+    <div class="profile-avatar-container">
+      <img *ngIf="profileImage" [src]="profileImage" alt="Foto de perfil" class="profile-avatar-img">
+      <ion-icon *ngIf="!profileImage" name="person-circle" class="profile-header-icon"></ion-icon>
+    </div>
+    <div class="profile-info">
+      <h3 class="profile-name">{{ userName || 'Usuario' }}</h3>
+      <p class="profile-email">{{ userEmail }}</p>
+    </div>
+  </div>
+
+  <div class="menu-divider"></div>
+
+  <button class="menu-item profile-item" (click)="goToProfile()">
+    <ion-icon name="person-outline" class="menu-icon"></ion-icon>
+    <span>Ver Perfil</span>
+  </button>
+
+  <button class="menu-item config-item" (click)="goToConfiguration()">
+    <ion-icon name="settings-outline" class="menu-icon"></ion-icon>
+    <span>Configuración</span>
+  </button>
+
+  <button class="menu-item logout-item" (click)="logout()">
+    <ion-icon name="log-out-outline" class="menu-icon"></ion-icon>
+    <span>Cerrar Sesión</span>
+  </button>
+</div>
