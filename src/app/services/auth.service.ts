@@ -38,7 +38,7 @@ export interface LoginData {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = environment.apiUrl || 'http://localhost:3000';
+  private apiUrl = environment.apiUrl || 'http://localhost:3000/api';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -151,5 +151,17 @@ export class AuthService {
    */
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
+  }
+
+  /**
+   * Actualiza el perfil del usuario
+   */
+  updateProfile(id: number, data: { nombre?: string; imagen?: string }): Observable<User> {
+    return this.http.patch<User>(`${this.apiUrl}/user/${id}`, data).pipe(
+      tap(user => {
+        this.currentUserSubject.next(user);
+        localStorage.setItem('currentUser', JSON.stringify(user));
+      })
+    );
   }
 }

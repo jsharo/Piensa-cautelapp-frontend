@@ -1,4 +1,4 @@
 export const environment = {
-  production: true,
-  apiUrl: 'https://piensa-cautelapp-back.onrender.com/api'
+  production: false,
+  apiUrl: 'http://localhost:3000/api'
 };

@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
-import { NavController } from '@ionic/angular';
+import { NavController, PopoverController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { ProfileMenuComponent } from './profile-menu/profile-menu.component';
 
 interface Notificacion {
   id: number;
@@ -28,6 +29,7 @@ type Filtro = 'todas' | 'emergencia' | 'ayuda';
 })
 export class Tab1Page implements OnInit {
   filtroActivo: Filtro = 'todas';
+  userProfileImage: string | null = null;
   
   notificaciones: Notificacion[] = [
     {
@@ -68,10 +70,18 @@ export class Tab1Page implements OnInit {
     }
   ];
 
-  constructor(private navCtrl: NavController, private router: Router, private auth: AuthService) {}
+  constructor(private navCtrl: NavController, private router: Router, private auth: AuthService, private popoverController: PopoverController) {}
 
   ngOnInit() {
-    // Inicialización si es necesaria
+    // Cargar imagen del perfil del usuario
+    this.loadUserProfileImage();
+  }
+
+  loadUserProfileImage() {
+    const user = this.auth.getCurrentUser();
+    if (user && (user as any).imagen) {
+      this.userProfileImage = (user as any).imagen;
+    }
   }
 
   get notificacionesFiltradas(): Notificacion[] {
@@ -103,6 +113,26 @@ export class Tab1Page implements OnInit {
 
   marcarTodasLeidas() {
     this.notificaciones.forEach(n => n.leida = true);
+  }
+
+  async openProfileMenu(event: any) {
+    // Recargar imagen por si cambió en el modal
+    this.loadUserProfileImage();
+    
+    const currentUser = this.auth.getCurrentUser();
+    
+    const popover = await this.popoverController.create({
+      component: ProfileMenuComponent,
+      event: event,
+      componentProps: {
+        userEmail: currentUser?.email || 'usuario@example.com',
+        userName: currentUser?.nombre || 'Usuario'
+      },
+      translucent: true,
+      cssClass: 'profile-popover'
+    });
+
+    return await popover.present();
   }
 
   goToProfile() {

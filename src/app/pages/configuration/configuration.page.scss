@@ -1,0 +1,629 @@
+// Paleta Cautelapp
+$dark-blue: #002333;
+$teal: #159A9C;
+$light-gray: #B4BEC9;
+$light-mint: #DEEFE7;
+$white: #FFFFFF;
+$text: #1A202C;
+$text-light: #4A5568;
+$border: #E2E8F0;
+$success: #34c759;
+$warning: #ff9500;
+$error: #DC2626;
+
+/* Header superior */
+.header {
+  height: 50px;
+  width: 100%;
+  background: $dark-blue;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  box-shadow: 0 2px 8px rgba(0, 35, 51, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .back-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $white;
+    font-size: 24px;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    &:active {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  .titulo {
+    font-size: 20px;
+    font-weight: 600;
+    color: $white;
+  }
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+ion-content {
+  --padding-bottom: 60px;
+}
+
+.config-content {
+  --background: $light-mint;
+  --padding-bottom: 60px;
+}
+
+.config-container {
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid $light-gray;
+
+  .section-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: $dark-blue;
+    letter-spacing: -0.5px;
+  }
+
+  .section-subtitle {
+    margin: 0;
+    font-size: 13px;
+    color: $text-light;
+    font-weight: 500;
+  }
+}
+
+.step-section {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== */
+/* BLUETOOTH SECTION */
+/* ==================== */
+
+.connected-device-card {
+  background: $white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 2px solid $teal;
+
+  .device-status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(52, 199, 89, 0.1);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: $success;
+
+      ion-icon {
+        font-size: 16px;
+      }
+    }
+
+    .btn-disconnect {
+      background: rgba(220, 38, 38, 0.1);
+      color: $error;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(220, 38, 38, 0.2);
+      }
+
+      ion-icon {
+        font-size: 16px;
+      }
+    }
+  }
+
+  .device-info {
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0 0 4px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: $text;
+    }
+
+    p {
+      margin: 0;
+      font-size: 12px;
+      color: $text-light;
+    }
+  }
+
+  .btn-next {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    background: $teal;
+    color: $white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: #0D7278;
+      transform: translateY(-2px);
+    }
+
+    ion-icon {
+      font-size: 18px;
+    }
+  }
+}
+
+.scan-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .scan-buttons {
+    display: flex;
+    gap: 12px;
+  }
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  background: $teal;
+  color: $white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  flex: 1;
+  box-shadow: 0 2px 8px rgba(21, 154, 156, 0.2);
+
+  ion-icon {
+    font-size: 24px;
+  }
+
+  &:hover {
+    background: #0D7278;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(21, 154, 156, 0.35);
+  }
+
+  &:active {
+    transform: translateY(-1px);
+  }
+
+  &.loading {
+    background: #0D7278;
+    opacity: 0.7;
+
+    ion-icon {
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.devices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .list-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: $text;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .device-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: $white;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid $border;
+
+    &:hover {
+      background: #f9fafb;
+      border-color: $teal;
+      transform: translateX(4px);
+    }
+
+    .device-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, $dark-blue 0%, $teal 100%);
+      border-radius: 10px;
+      color: $white;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .device-content {
+      flex: 1;
+      min-width: 0;
+
+      .device-name {
+        margin: 0 0 4px 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: $text;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .device-signal {
+        margin: 0;
+        font-size: 12px;
+        color: $text-light;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        ion-icon {
+          font-size: 14px;
+        }
+      }
+    }
+
+    .chevron {
+      font-size: 20px;
+      color: $text-light;
+      flex-shrink: 0;
+    }
+  }
+}
+
+/* ==================== */
+/* WiFi SECTION */
+/* ==================== */
+
+.mini-device-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(21, 154, 156, 0.1);
+  border: 1px solid $teal;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: $teal;
+
+  ion-icon {
+    font-size: 18px;
+  }
+}
+
+.networks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .network-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: $white;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid $border;
+
+    &.selected {
+      border-color: $teal;
+      background: rgba(21, 154, 156, 0.05);
+    }
+
+    &:hover {
+      border-color: $teal;
+      transform: translateX(4px);
+    }
+
+    .network-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, $dark-blue 0%, $teal 100%);
+      border-radius: 10px;
+      color: $white;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .network-content {
+      flex: 1;
+      min-width: 0;
+
+      .network-name {
+        margin: 0 0 6px 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: $text;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .network-meta {
+        display: flex;
+        gap: 8px;
+
+        .signal-badge {
+          padding: 2px 8px;
+          border-radius: 4px;
+          font-size: 11px;
+          font-weight: 600;
+          color: $white;
+        }
+
+        .security-badge {
+          padding: 2px 8px;
+          background: rgba(0, 0, 0, 0.05);
+          border-radius: 4px;
+          font-size: 11px;
+          font-weight: 600;
+          color: $text-light;
+        }
+      }
+    }
+
+    .selected-icon {
+      font-size: 24px;
+      color: $success;
+      flex-shrink: 0;
+    }
+
+    .chevron {
+      font-size: 20px;
+      color: $text-light;
+      flex-shrink: 0;
+    }
+  }
+}
+
+/* ==================== */
+/* PASSWORD SECTION */
+/* ==================== */
+
+.config-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(21, 154, 156, 0.05);
+  border-radius: 10px;
+  margin-bottom: 24px;
+
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .label {
+      font-size: 12px;
+      font-weight: 600;
+      color: $text-light;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .value {
+      font-size: 13px;
+      font-weight: 600;
+      color: $text;
+    }
+  }
+}
+
+.password-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+
+  .input-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: $text;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .password-input {
+    padding: 12px 14px;
+    border: 2px solid $border;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.3s ease;
+
+    &:focus {
+      outline: none;
+      border-color: $teal;
+      box-shadow: 0 0 0 3px rgba(21, 154, 156, 0.1);
+    }
+
+    &::placeholder {
+      color: $text-light;
+    }
+  }
+}
+
+.config-actions {
+  display: flex;
+  gap: 12px;
+
+  .btn-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 18px;
+    background: $white;
+    color: $teal;
+    border: 2px solid $teal;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(21, 154, 156, 0.05);
+    }
+
+    ion-icon {
+      font-size: 18px;
+    }
+  }
+}
+
+/* ==================== */
+/* EMPTY STATE */
+/* ==================== */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 80px;
+    color: $light-gray;
+    margin-bottom: 20px;
+    opacity: 0.5;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: $text;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    color: $text-light;
+  }
+}
+
+/* ==================== */
+/* RESPONSIVE */
+/* ==================== */
+
+@media (max-width: 480px) {
+  .btn-primary {
+    padding: 12px 16px;
+    font-size: 13px;
+
+    ion-icon {
+      font-size: 20px;
+    }
+  }
+
+  .section-header .section-title {
+    font-size: 24px;
+  }
+}

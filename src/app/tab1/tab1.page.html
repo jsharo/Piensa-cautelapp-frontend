@@ -1,28 +1,14 @@
 <!-- HEADER SUPERIOR -->
-<ion-menu side="start" menuId="tab1-menu" contentId="tab1-content">
-  <ion-content>
-    <ion-list>
-      <ion-menu-toggle auto-hide="true">
-        <ion-item button detail="false" (click)="goToProfile()">
-          <ion-icon name="person-circle" slot="start"></ion-icon>
-          <ion-label>Perfil</ion-label>
-        </ion-item>
-      </ion-menu-toggle>
-      <ion-menu-toggle auto-hide="true">
-        <ion-item button detail="false" (click)="logout()">
-          <ion-icon name="log-out" slot="start"></ion-icon>
-          <ion-label>Cerrar sesión</ion-label>
-        </ion-item>
-      </ion-menu-toggle>
-    </ion-list>
-  </ion-content>
-</ion-menu>
-
 <div class="header">
   <div class="header-left">
     <div class="titulo">Notificaciones</div>
   </div>
-  <div class="header-right"></div>
+  <div class="header-right">
+    <button class="profile-btn" (click)="openProfileMenu($event)">
+      <img *ngIf="userProfileImage" [src]="userProfileImage" alt="Perfil" class="profile-img">
+      <ion-icon *ngIf="!userProfileImage" name="person-circle" class="profile-icon"></ion-icon>
+    </button>
+  </div>
 </div>
 
 <div id="tab1-content">

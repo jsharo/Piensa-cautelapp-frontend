@@ -21,14 +21,29 @@ import {
   personCircle,
   createOutline,
   locationOutline,
-  notificationsOffOutline
+  notificationsOffOutline,
+  addCircle,
+  batteryHalf,
+  time,
+  eye,
+  trash,
+  peopleOutline,
+  chevronBack,
+  bluetooth,
+  wifiOutline,
+  wifi,
+  checkmarkCircle,
+  sync,
+  arrowForward,
+  closeCircle,
+  radioOutline
 } from 'ionicons/icons';
 
 import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
 import { AuthInterceptor } from './app/interceptors/auth.interceptor';
 
-// Registrar todos los iconos que usa la aplicación
+// Registrar los iconos que utiliza la aplicación
 addIcons({
   'person-outline': personOutline,
   'mail-outline': mailOutline,
@@ -44,7 +59,22 @@ addIcons({
   'help-circle-outline': helpCircleOutline,
   'create-outline': createOutline,
   'location-outline': locationOutline,
-  'notifications-off-outline': notificationsOffOutline
+  'notifications-off-outline': notificationsOffOutline,
+  'add-circle': addCircle,
+  'battery-half': batteryHalf,
+  'time': time,
+  'eye': eye,
+  'trash': trash,
+  'people-outline': peopleOutline,
+  'chevron-back': chevronBack,
+  'bluetooth': bluetooth,
+  'wifi-outline': wifiOutline,
+  'wifi': wifi,
+  'checkmark-circle': checkmarkCircle,
+  'sync': sync,
+  'arrow-forward': arrowForward,
+  'close-circle': closeCircle,
+  'radio-outline': radioOutline
 });
 
 bootstrapApplication(AppComponent, {
