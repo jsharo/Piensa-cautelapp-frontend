@@ -20,32 +20,44 @@
 
     <div class="form-fields">
       <ion-item lines="none">
-        <lucide-angular slot="start" [img]="UserIcon" [size]="20" [strokeWidth]="2" class="field-icon"></lucide-angular>
-        <ion-label position="floating">Nombre completo *</ion-label>
-        <ion-input
-          [(ngModel)]="nombre"
-          placeholder="Ej: María García López"
-          type="text"
-        ></ion-input>
+        <div class="input-wrapper">
+          <div class="label-with-icon">
+            <lucide-angular [img]="UserIcon" [size]="18" [strokeWidth]="2" class="field-icon"></lucide-angular>
+            <ion-label>Nombre completo *</ion-label>
+          </div>
+          <ion-input
+            [(ngModel)]="nombre"
+            placeholder="Ej: María García López"
+            type="text"
+          ></ion-input>
+        </div>
       </ion-item>
 
       <ion-item lines="none">
-        <lucide-angular slot="start" [img]="CalendarIcon" [size]="20" [strokeWidth]="2" class="field-icon"></lucide-angular>
-        <ion-label position="floating">Fecha de nacimiento</ion-label>
-        <ion-input
-          [(ngModel)]="fecha_nacimiento"
-          type="date"
-        ></ion-input>
+        <div class="input-wrapper">
+          <div class="label-with-icon">
+            <lucide-angular [img]="CalendarIcon" [size]="18" [strokeWidth]="2" class="field-icon"></lucide-angular>
+            <ion-label>Fecha de nacimiento</ion-label>
+          </div>
+          <ion-input
+            [(ngModel)]="fecha_nacimiento"
+            type="date"
+          ></ion-input>
+        </div>
       </ion-item>
 
       <ion-item lines="none">
-        <lucide-angular slot="start" [img]="MapPinIcon" [size]="20" [strokeWidth]="2" class="field-icon"></lucide-angular>
-        <ion-label position="floating">Dirección o ubicación</ion-label>
-        <ion-input
-          [(ngModel)]="direccion"
-          placeholder="Ej: Casa principal - Habitación 1"
-          type="text"
-        ></ion-input>
+        <div class="input-wrapper">
+          <div class="label-with-icon">
+            <lucide-angular [img]="MapPinIcon" [size]="18" [strokeWidth]="2" class="field-icon"></lucide-angular>
+            <ion-label>Dirección o ubicación</ion-label>
+          </div>
+          <ion-input
+            [(ngModel)]="direccion"
+            placeholder="Ej: Casa principal - Habitación 1"
+            type="text"
+          ></ion-input>
+        </div>
       </ion-item>
     </div>
 
