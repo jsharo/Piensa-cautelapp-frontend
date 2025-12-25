@@ -1,46 +1,61 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>{{ title }}</ion-title>
+    <ion-button slot="end" fill="clear" (click)="dismiss()">
+      <lucide-angular [img]="XIcon" [size]="24" [strokeWidth]="2" class="close-icon"></lucide-angular>
+    </ion-button>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
   <div class="modal-content">
-    <p class="modal-description">
-      {{ isEditMode ? 'Actualiza los datos de la persona' : 'Ingresa los datos de la persona que usará este dispositivo' }}
-    </p>
+    <div class="modal-header-info">
+      <div class="icon-circle">
+        <lucide-angular [img]="UserIcon" [size]="32" [strokeWidth]="2"></lucide-angular>
+      </div>
+      <p class="modal-description">
+        {{ isEditMode ? 'Actualiza los datos de la persona' : 'Ingresa los datos de la persona que usará este dispositivo' }}
+      </p>
+    </div>
 
-    <ion-item>
-      <ion-label position="stacked">Nombre completo *</ion-label>
-      <ion-input
-        [(ngModel)]="nombre"
-        placeholder="Ej: María García López"
-        type="text"
-      ></ion-input>
-    </ion-item>
+    <div class="form-fields">
+      <ion-item lines="none">
+        <lucide-angular slot="start" [img]="UserIcon" [size]="20" [strokeWidth]="2" class="field-icon"></lucide-angular>
+        <ion-label position="floating">Nombre completo *</ion-label>
+        <ion-input
+          [(ngModel)]="nombre"
+          placeholder="Ej: María García López"
+          type="text"
+        ></ion-input>
+      </ion-item>
 
-    <ion-item>
-      <ion-label position="stacked">Fecha de nacimiento</ion-label>
-      <ion-input
-        [(ngModel)]="fecha_nacimiento"
-        type="date"
-      ></ion-input>
-    </ion-item>
+      <ion-item lines="none">
+        <lucide-angular slot="start" [img]="CalendarIcon" [size]="20" [strokeWidth]="2" class="field-icon"></lucide-angular>
+        <ion-label position="floating">Fecha de nacimiento</ion-label>
+        <ion-input
+          [(ngModel)]="fecha_nacimiento"
+          type="date"
+        ></ion-input>
+      </ion-item>
 
-    <ion-item>
-      <ion-label position="stacked">Dirección o ubicación</ion-label>
-      <ion-input
-        [(ngModel)]="direccion"
-        placeholder="Ej: Casa principal - Habitación 1"
-        type="text"
-      ></ion-input>
-    </ion-item>
+      <ion-item lines="none">
+        <lucide-angular slot="start" [img]="MapPinIcon" [size]="20" [strokeWidth]="2" class="field-icon"></lucide-angular>
+        <ion-label position="floating">Dirección o ubicación</ion-label>
+        <ion-input
+          [(ngModel)]="direccion"
+          placeholder="Ej: Casa principal - Habitación 1"
+          type="text"
+        ></ion-input>
+      </ion-item>
+    </div>
 
     <div class="button-group">
-      <ion-button expand="block" (click)="dismiss()" fill="outline">
+      <ion-button expand="block" (click)="dismiss()" fill="outline" class="cancel-btn">
+        <lucide-angular slot="start" [img]="XIcon" [size]="20" [strokeWidth]="2"></lucide-angular>
         Cancelar
       </ion-button>
-      <ion-button expand="block" (click)="save()" [disabled]="!nombre.trim()">
+      <ion-button expand="block" (click)="save()" [disabled]="!nombre.trim()" class="save-btn">
+        <lucide-angular slot="start" [img]="CheckIcon" [size]="20" [strokeWidth]="2"></lucide-angular>
         Guardar
       </ion-button>
     </div>

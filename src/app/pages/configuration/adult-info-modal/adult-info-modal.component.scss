@@ -16,6 +16,14 @@ ion-header {
       font-weight: 600;
       font-size: 18px;
     }
+
+    ion-button {
+      --color: #{$white};
+
+      .close-icon {
+        color: $white;
+      }
+    }
   }
 }
 
@@ -28,34 +36,84 @@ ion-content {
   flex-direction: column;
   gap: 1.5rem;
   padding: 1rem 0;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.modal-header-info {
+  text-align: center;
+  margin-bottom: 1rem;
+
+  .icon-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $teal 0%, #0D7278 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    box-shadow: 0 4px 12px rgba(21, 154, 156, 0.3);
+
+    lucide-angular {
+      color: $white;
+    }
+  }
 }
 
 .modal-description {
   color: $text-light;
-  margin-bottom: 0.5rem;
   font-size: 0.95rem;
-  line-height: 1.5;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0 1rem;
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 ion-item {
   --background: #{$white};
-  --border-radius: 12px;
+  --border-radius: 16px;
   --padding-start: 16px;
   --padding-end: 16px;
-  margin-bottom: 1rem;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --inner-padding-end: 0;
+  --min-height: 60px;
+  margin-bottom: 0;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+
+  &:hover, &:focus-within {
+    box-shadow: 0 4px 12px rgba(21, 154, 156, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .field-icon {
+    color: $teal;
+    margin-right: 12px;
+  }
 
   ion-label {
     font-weight: 600;
-    color: $dark-blue;
-    margin-bottom: 8px;
+    color: $teal;
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+
+    &[position="floating"] {
+      transform: translateY(0);
+      font-size: 0.85rem;
+    }
   }
 
   ion-input {
     --color: #{$text};
     --placeholder-color: #{$light-gray};
     font-size: 15px;
+    margin-top: 4px;
   }
 }
 
@@ -67,32 +125,56 @@ ion-item {
 
   ion-button {
     flex: 1;
-    --border-radius: 12px;
-    height: 48px;
+    --border-radius: 16px;
+    height: 52px;
     font-weight: 600;
     text-transform: none;
     font-size: 15px;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
 
-    &[fill="outline"] {
+    lucide-angular {
+      margin-right: 8px;
+    }
+
+    &.cancel-btn {
       --border-color: #{$light-gray};
+      --border-width: 2px;
       --color: #{$text};
 
       &:hover {
         --background: rgba(0, 0, 0, 0.05);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      lucide-angular {
+        color: $text-light;
       }
     }
 
-    &:not([fill="outline"]) {
-      --background: #{$teal};
+    &.save-btn {
+      --background: linear-gradient(135deg, #{$teal} 0%, #0D7278 100%);
       --color: #{$white};
+      box-shadow: 0 4px 12px rgba(21, 154, 156, 0.3);
 
       &:hover {
-        --background: #0D7278;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(21, 154, 156, 0.4);
       }
 
       &[disabled] {
         --background: #{$light-gray};
         opacity: 0.6;
+        box-shadow: none;
+        
+        &:hover {
+          transform: none;
+        }
+      }
+
+      lucide-angular {
+        color: $white;
       }
     }
   }

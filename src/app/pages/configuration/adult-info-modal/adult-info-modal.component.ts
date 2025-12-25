@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonItem, IonLabel, IonInput, ModalController } from '@ionic/angular/standalone';
+import { LucideAngularModule, User, Calendar, MapPin, X, Check } from 'lucide-angular';
 
 export interface AdultInfo {
   nombre: string;
@@ -24,7 +25,8 @@ export interface AdultInfo {
     IonButton,
     IonItem,
     IonLabel,
-    IonInput
+    IonInput,
+    LucideAngularModule
   ]
 })
 export class AdultInfoModalComponent {
@@ -33,6 +35,13 @@ export class AdultInfoModalComponent {
   @Input() direccion: string = '';
   @Input() isEditMode: boolean = false;
   @Input() title: string = 'Información del Adulto Mayor';
+
+  // Iconos de Lucide
+  readonly UserIcon = User;
+  readonly CalendarIcon = Calendar;
+  readonly MapPinIcon = MapPin;
+  readonly XIcon = X;
+  readonly CheckIcon = Check;
 
   constructor(private modalController: ModalController) {}
 
