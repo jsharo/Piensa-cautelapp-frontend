@@ -190,7 +190,7 @@ export class Tab2Page implements OnInit {
     // Configurar datos mediante el componente antes de presentar
     modal.componentProps = {
       nombre: adulto.nombre,
-      fechaNacimiento: adulto.fecha_nacimiento ? new Date(adulto.fecha_nacimiento).toISOString().split('T')[0] : '',
+      fecha_nacimiento: adulto.fecha_nacimiento ? new Date(adulto.fecha_nacimiento).toISOString().split('T')[0] : '',
       direccion: adulto.direccion,
       isEditMode: true,
       title: 'Editar Adulto Mayor'

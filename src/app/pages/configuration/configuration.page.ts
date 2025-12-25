@@ -223,13 +223,13 @@ export class ConfigurationPage implements OnInit {
         adulto: adultInfo ? {
           id_adulto: 0,
           nombre: adultInfo.nombre,
-          fecha_nacimiento: adultInfo.fechaNacimiento || '1950-01-01',
+          fecha_nacimiento: adultInfo.fecha_nacimiento || '1950-01-01',
           direccion: adultInfo.direccion || 'No especificada'
         } : undefined
       };
       
       console.log('📱 Dispositivo a agregar:', JSON.stringify(deviceToAdd, null, 2));
-      console.log('📅 Fecha de nacimiento:', adultInfo?.fechaNacimiento);
+      console.log('📅 Fecha de nacimiento:', adultInfo?.fecha_nacimiento);
       
       this.bleService.addConnectedDevice(deviceToAdd);
       
@@ -497,7 +497,7 @@ export class ConfigurationPage implements OnInit {
     await this.updateRecoveryEmail();
   }
 
-  async openAdultInfoModal(): Promise<{ nombre: string; fechaNacimiento?: string; direccion?: string } | null> {
+  async openAdultInfoModal(): Promise<{ nombre: string; fecha_nacimiento?: string; direccion?: string } | null> {
     const modal = await this.modalController.create({
       component: AdultInfoModalComponent,
       cssClass: 'adult-info-modal'

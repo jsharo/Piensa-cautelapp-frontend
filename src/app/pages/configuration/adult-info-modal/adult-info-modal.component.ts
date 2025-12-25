@@ -29,7 +29,7 @@ export interface AdultInfo {
 })
 export class AdultInfoModalComponent {
   @Input() nombre: string = '';
-  @Input() fechaNacimiento: string = '';
+  @Input() fecha_nacimiento: string = '';
   @Input() direccion: string = '';
   @Input() isEditMode: boolean = false;
   @Input() title: string = 'Información del Adulto Mayor';
@@ -47,7 +47,7 @@ export class AdultInfoModalComponent {
 
     const dataToReturn = {
       nombre: this.nombre,
-      fechaNacimiento: this.fechaNacimiento || undefined,
+      fecha_nacimiento: this.fecha_nacimiento || undefined,
       direccion: this.direccion || undefined
     };
     
