@@ -181,53 +181,22 @@ export class Tab2Page implements OnInit {
     alert(infoTexto);
   }
 
-  async editDevice(adulto: AdultoMayor) {
+  async editAdult(adulto: AdultoMayor) {
     const modal = await this.modalController.create({
       component: AdultInfoModalComponent,
       cssClass: 'adult-info-modal'
     });
 
-    // Configurar datos en el modal
-    await modal.present();
-    const { role, data } = await modal.onWillDismiss();
-
-    if (data && role !== 'backdrop') {
-      // Llamar al componente para configurar los datos
-      const component = await modal.getTop();
-      if (component) {
-        const instance = (component as any).instance as AdultInfoModalComponent;
-        instance.setData({
-          nombre: adulto.nombre,
-          fecha_nacimiento: adulto.fecha_nacimiento,
-          direccion: adulto.direccion
-        });
-      }
-    }
-  }
-
-  async editAdult(adulto: AdultoMayor) {
-    const modal = await this.modalController.create({
-      component: AdultInfoModalComponent,
-      cssClass: 'adult-info-modal',
-      componentProps: {
-        isEditMode: true,
-        title: 'Editar Adulto Mayor'
-      }
-    });
+    // Configurar datos mediante el componente antes de presentar
+    modal.componentProps = {
+      nombre: adulto.nombre,
+      fechaNacimiento: adulto.fecha_nacimiento ? new Date(adulto.fecha_nacimiento).toISOString().split('T')[0] : '',
+      direccion: adulto.direccion,
+      isEditMode: true,
+      title: 'Editar Adulto Mayor'
+    };
 
     await modal.present();
-    
-    // Configurar datos después de presentar
-    const component = await modal.getTop();
-    if (component) {
-      const instance = (component as any).instance as AdultInfoModalComponent;
-      instance.setData({
-        nombre: adulto.nombre,
-        fecha_nacimiento: adulto.fecha_nacimiento,
-        direccion: adulto.direccion
-      });
-    }
-
     const { data } = await modal.onWillDismiss();
 
     if (data) {

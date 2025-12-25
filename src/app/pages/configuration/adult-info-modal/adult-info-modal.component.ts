@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonItem, IonLabel, IonInput, ModalController } from '@ionic/angular/standalone';
@@ -28,25 +28,13 @@ export interface AdultInfo {
   ]
 })
 export class AdultInfoModalComponent {
-  nombre: string = '';
-  fechaNacimiento: string = '';
-  direccion: string = '';
-  isEditMode: boolean = false;
-  title: string = 'Información del Adulto Mayor';
+  @Input() nombre: string = '';
+  @Input() fechaNacimiento: string = '';
+  @Input() direccion: string = '';
+  @Input() isEditMode: boolean = false;
+  @Input() title: string = 'Información del Adulto Mayor';
 
   constructor(private modalController: ModalController) {}
-
-  // Método para configurar datos iniciales en modo edición
-  setData(data: { nombre: string; fecha_nacimiento: string; direccion: string }) {
-    this.nombre = data.nombre;
-    // Convertir DateTime a formato date input (YYYY-MM-DD)
-    if (data.fecha_nacimiento) {
-      this.fechaNacimiento = new Date(data.fecha_nacimiento).toISOString().split('T')[0];
-    }
-    this.direccion = data.direccion;
-    this.isEditMode = true;
-    this.title = 'Editar Adulto Mayor';
-  }
 
   dismiss() {
     this.modalController.dismiss();
