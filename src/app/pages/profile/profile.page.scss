@@ -12,7 +12,11 @@ $light-bg: #DEEFE7;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 20px 16px;
+  padding-top: max(24px, calc(env(safe-area-inset-top) + 16px));
+  padding-bottom: max(20px, calc(env(safe-area-inset-bottom) + 16px));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
 }
 
 .card {
@@ -21,13 +25,13 @@ $light-bg: #DEEFE7;
   background: $white;
   border: 1px solid $border;
   border-radius: 16px;
-  padding: 24px;
+  padding: 20px;
   box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
 }
 
 .title {
   margin: 0 0 16px;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: $dark-blue;
 }

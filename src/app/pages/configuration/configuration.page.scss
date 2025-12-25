@@ -18,8 +18,13 @@ $error: #DC2626;
   background: $dark-blue;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   padding: 0 20px;
+  padding-top: calc(env(safe-area-inset-top) + 0px);
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+  padding-bottom: 8px;
+  min-height: calc(50px + env(safe-area-inset-top));
   box-shadow: 0 2px 8px rgba(0, 35, 51, 0.15);
   position: sticky;
   top: 0;
@@ -54,9 +59,10 @@ $error: #DC2626;
   }
 
   .titulo {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 600;
     color: $white;
+    margin-bottom: 12px;
   }
 }
 
@@ -76,7 +82,7 @@ ion-content {
 }
 
 .config-container {
-  padding: 20px;
+  padding: 16px;
   max-width: 600px;
   margin: 0 auto;
 }
@@ -85,13 +91,13 @@ ion-content {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
   border-bottom: 2px solid $light-gray;
 
   .section-title {
     margin: 0;
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
     color: $dark-blue;
     letter-spacing: -0.5px;
@@ -99,7 +105,7 @@ ion-content {
 
   .section-subtitle {
     margin: 0;
-    font-size: 13px;
+    font-size: 12px;
     color: $text-light;
     font-weight: 500;
   }
@@ -127,8 +133,8 @@ ion-content {
 .connected-device-card {
   background: $white;
   border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 24px;
+  padding: 14px;
+  margin-bottom: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border: 2px solid $teal;
 
@@ -285,6 +291,12 @@ ion-content {
   to {
     transform: rotate(360deg);
   }
+}
+
+// Clase para hacer girar iconos de Lucide
+lucide-angular.spin {
+  animation: spin 1s linear infinite;
+  display: inline-block;
 }
 
 .devices-list {
@@ -543,6 +555,60 @@ ion-content {
 
     &::placeholder {
       color: $text-light;
+    }
+  }
+}
+
+// Formulario manual de WiFi
+.wifi-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 24px;
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .input-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: $text;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .wifi-input {
+      padding: 12px 14px;
+      border: 2px solid $border;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+      background: $white;
+
+      &:focus {
+        outline: none;
+        border-color: $teal;
+        box-shadow: 0 0 0 3px rgba(21, 154, 156, 0.1);
+      }
+
+      &::placeholder {
+        color: $text-light;
+      }
+    }
+
+    .help-text {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: $text-light;
+      
+      lucide-angular {
+        flex-shrink: 0;
+      }
     }
   }
 }

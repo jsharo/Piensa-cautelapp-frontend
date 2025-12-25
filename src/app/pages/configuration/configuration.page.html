@@ -2,7 +2,7 @@
 <div class="header">
   <div class="header-left">
     <button class="back-btn" (click)="goBack()">
-      <ion-icon name="chevron-back"></ion-icon>
+      <lucide-angular [img]="ChevronLeft" [size]="24"></lucide-angular>
     </button>
     <div class="titulo">Configuración</div>
   </div>
@@ -16,14 +16,14 @@
       class="tab-btn" 
       [class.active]="selectedTab === 'bluetooth'"
       (click)="selectedTab = 'bluetooth'">
-      <ion-icon name="bluetooth"></ion-icon>
+      <lucide-angular [img]="Bluetooth" [size]="20"></lucide-angular>
       <span>Dispositivo</span>
     </button>
     <button 
       class="tab-btn" 
       [class.active]="selectedTab === 'recovery-email'"
       (click)="selectedTab = 'recovery-email'">
-      <ion-icon name="mail-outline"></ion-icon>
+      <lucide-angular [img]="Mail" [size]="20"></lucide-angular>
       <span>Email de Recuperación</span>
     </button>
   </div>
@@ -38,7 +38,7 @@
 
       <div class="info-card">
         <div class="info-icon">
-          <ion-icon name="information-circle"></ion-icon>
+          <lucide-angular [img]="Info" [size]="24"></lucide-angular>
         </div>
         <div class="info-text">
           <p><strong>¿Para qué sirve?</strong></p>
@@ -50,7 +50,8 @@
         <div class="status-header">
           <h3>Estado Actual</h3>
           <div class="status-badge" [class.configured]="user?.email_recuperacion">
-            <ion-icon [name]="user?.email_recuperacion ? 'checkmark-circle' : 'alert-circle'"></ion-icon>
+            <lucide-angular *ngIf="user?.email_recuperacion" [img]="CheckCircle2" [size]="20"></lucide-angular>
+            <lucide-angular *ngIf="!user?.email_recuperacion" [img]="AlertCircle" [size]="20"></lucide-angular>
             <span>{{ user?.email_recuperacion ? 'Configurado' : 'No Configurado' }}</span>
           </div>
         </div>
@@ -69,14 +70,15 @@
 
         <div class="action-buttons">
           <button class="btn-primary" (click)="openRecoveryEmailEdit()">
-            <ion-icon [name]="user?.email_recuperacion ? 'create-outline' : 'add-circle'"></ion-icon>
+            <lucide-angular *ngIf="user?.email_recuperacion" [img]="Edit" [size]="18"></lucide-angular>
+            <lucide-angular *ngIf="!user?.email_recuperacion" [img]="PlusCircle" [size]="18"></lucide-angular>
             <span>{{ user?.email_recuperacion ? 'Cambiar' : 'Añadir' }} Email</span>
           </button>
           <button 
             *ngIf="user?.email_recuperacion" 
             class="btn-danger" 
             (click)="removeRecoveryEmail()">
-            <ion-icon name="trash"></ion-icon>
+            <lucide-angular [img]="Trash2" [size]="18"></lucide-angular>
             <span>Eliminar</span>
           </button>
         </div>
@@ -94,11 +96,11 @@
       <div *ngIf="connectedDevice" class="connected-device-card">
         <div class="device-status-header">
           <div class="status-badge">
-            <ion-icon name="bluetooth"></ion-icon>
+            <lucide-angular [img]="Bluetooth" [size]="20"></lucide-angular>
             <span>Conectado</span>
           </div>
           <button class="btn-disconnect" (click)="disconnectDevice()">
-            <ion-icon name="close-circle"></ion-icon>
+            <lucide-angular [img]="XCircle" [size]="18"></lucide-angular>
             Desconectar
           </button>
         </div>
@@ -106,9 +108,9 @@
           <h3>{{ connectedDevice.name }}</h3>
           <p>ID: {{ connectedDevice.id }}</p>
         </div>
-        <button class="btn-next" (click)="connectionStep = 'wifi-list'">
+        <button class="btn-next" (click)="connectionStep = 'wifi-manual'">
           <span>Continuar a WiFi</span>
-          <ion-icon name="arrow-forward"></ion-icon>
+          <lucide-angular [img]="ArrowRight" [size]="18"></lucide-angular>
         </button>
       </div>
 
@@ -119,14 +121,14 @@
             *ngIf="!isScanning" 
             class="btn-primary" 
             (click)="startScan()">
-            <ion-icon name="bluetooth"></ion-icon>
+            <lucide-angular [img]="Bluetooth" [size]="20"></lucide-angular>
             Buscar Dispositivos
           </button>
           <button 
             *ngIf="isScanning" 
             class="btn-primary loading" 
             disabled>
-            <ion-icon name="sync"></ion-icon>
+            <lucide-angular [img]="RefreshCw" [size]="20" class="spin"></lucide-angular>
             Escaneando...
           </button>
         </div>
@@ -139,121 +141,86 @@
             class="device-item"
             (click)="connectDevice(device)">
             <div class="device-icon">
-              <ion-icon name="bluetooth"></ion-icon>
+              <lucide-angular [img]="Bluetooth" [size]="24"></lucide-angular>
             </div>
             <div class="device-content">
               <h4 class="device-name">{{ device.name }}</h4>
               <p class="device-signal">
-                <ion-icon name="wifi"></ion-icon>
+                <lucide-angular [img]="Wifi" [size]="16"></lucide-angular>
                 {{ getRSSIIndicator(device.rssi || -70) }} ({{ device.rssi }} dBm)
               </p>
             </div>
-            <ion-icon name="chevron-forward" class="chevron"></ion-icon>
+            <lucide-angular [img]="ChevronRight" [size]="20" class="chevron"></lucide-angular>
           </div>
         </div>
 
         <!-- Sin dispositivos encontrados -->
         <div *ngIf="!isScanning && bluetoothDevices.length === 0 && bluetoothDevices.length !== undefined" class="empty-state">
-          <ion-icon name="bluetooth" class="empty-icon"></ion-icon>
+          <lucide-angular [img]="Bluetooth" [size]="48" class="empty-icon"></lucide-angular>
           <h3>Sin dispositivos encontrados</h3>
           <p>Asegúrate de que tu ESP32 está encendido y con Bluetooth activo</p>
         </div>
       </div>
     </div>
 
-    <!-- PASO 2: LISTA DE REDES WiFi -->
-    <div *ngIf="connectionStep === 'wifi-list' && connectedDevice" class="step-section">
+    <!-- PASO 2: ENTRADA MANUAL DE CREDENCIALES WiFi -->
+    <div *ngIf="connectionStep === 'wifi-manual' && connectedDevice" class="step-section">
       <div class="section-header">
-        <h2 class="section-title">Seleccionar Red WiFi</h2>
-        <p class="section-subtitle">Elige la red a la que se conectará el dispositivo</p>
+        <h2 class="section-title">Configurar WiFi</h2>
+        <p class="section-subtitle">Ingresa las credenciales de tu red WiFi</p>
       </div>
 
       <!-- Dispositivo conectado en header -->
       <div class="mini-device-card">
-        <ion-icon name="bluetooth"></ion-icon>
+        <lucide-angular [img]="Bluetooth" [size]="20"></lucide-angular>
         <span>{{ connectedDevice.name }}</span>
       </div>
 
-      <!-- Lista de redes WiFi -->
-      <div *ngIf="wifiNetworks.length > 0" class="networks-list">
-        <div 
-          *ngFor="let network of wifiNetworks" 
-          class="network-item"
-          [class.selected]="selectedWiFi?.ssid === network.ssid"
-          (click)="selectWiFi(network)">
-          <div class="network-icon">
-            <ion-icon name="wifi"></ion-icon>
+      <!-- Formulario de credenciales WiFi -->
+      <div class="wifi-form">
+        <div class="form-group">
+          <label class="input-label">Nombre de la red (SSID)</label>
+          <input 
+            type="text" 
+            class="wifi-input"
+            placeholder="Mi-Red-WiFi"
+            [(ngModel)]="manualSSID"
+            autocomplete="off">
+          <div class="help-text">
+            <lucide-angular [img]="Info" [size]="14"></lucide-angular>
+            <span>Escribe el nombre exacto de tu red WiFi</span>
           </div>
-          <div class="network-content">
-            <h4 class="network-name">{{ network.ssid }}</h4>
-            <div class="network-meta">
-              <span class="signal-badge" [style.backgroundColor]="getRSSIColor(network.rssi)">
-                {{ getRSSIIndicator(network.rssi) }}
-              </span>
-              <span class="security-badge">{{ network.security }}</span>
-            </div>
+        </div>
+
+        <div class="form-group">
+          <label class="input-label">Contraseña</label>
+          <input 
+            type="password" 
+            class="wifi-input"
+            placeholder="Contraseña de la red"
+            [(ngModel)]="wifiPassword"
+            autocomplete="off">
+          <div class="help-text">
+            <lucide-angular [img]="Info" [size]="14"></lucide-angular>
+            <span>La contraseña de tu red WiFi</span>
           </div>
-          <ion-icon 
-            *ngIf="selectedWiFi?.ssid === network.ssid" 
-            name="checkmark-circle" 
-            class="selected-icon"></ion-icon>
-          <ion-icon 
-            *ngIf="selectedWiFi?.ssid !== network.ssid" 
-            name="chevron-forward" 
-            class="chevron"></ion-icon>
         </div>
-      </div>
-
-      <!-- Sin redes encontradas -->
-      <div *ngIf="wifiNetworks.length === 0" class="empty-state">
-        <ion-icon name="wifi-outline" class="empty-icon"></ion-icon>
-        <h3>Cargando redes disponibles...</h3>
-        <p>Espera a que el dispositivo detecte las redes WiFi cercanas</p>
-      </div>
-    </div>
-
-    <!-- PASO 3: INGRESAR CONTRASEÑA WiFi -->
-    <div *ngIf="connectionStep === 'wifi-config' && connectedDevice && selectedWiFi" class="step-section">
-      <div class="section-header">
-        <h2 class="section-title">Credenciales WiFi</h2>
-        <p class="section-subtitle">Ingresa la contraseña para {{ selectedWiFi.ssid }}</p>
-      </div>
-
-      <!-- Dispositivo y red en header -->
-      <div class="config-summary">
-        <div class="summary-item">
-          <span class="label">Dispositivo</span>
-          <span class="value">{{ connectedDevice.name }}</span>
-        </div>
-        <div class="summary-item">
-          <span class="label">Red WiFi</span>
-          <span class="value">{{ selectedWiFi.ssid }}</span>
-        </div>
-      </div>
-
-      <!-- Campo de contraseña -->
-      <div class="password-section">
-        <label class="input-label">Contraseña</label>
-        <input 
-          type="password" 
-          class="password-input"
-          placeholder="Ingresa la contraseña de la red"
-          [(ngModel)]="wifiPassword">
       </div>
 
       <!-- Botones de acción -->
       <div class="config-actions">
         <button 
           class="btn-secondary" 
-          (click)="backToWiFiList()">
-          <ion-icon name="chevron-back"></ion-icon>
+          (click)="connectionStep = 'bluetooth'">
+          <lucide-angular [img]="ChevronLeft" [size]="18"></lucide-angular>
           Volver
         </button>
         <button 
           class="btn-primary" 
-          [disabled]="!wifiPassword || isConnectingWiFi"
+          [disabled]="!manualSSID || !wifiPassword || isConnectingWiFi"
           (click)="sendWiFiCredentials()">
-          <ion-icon [name]="isConnectingWiFi ? 'sync' : 'wifi'"></ion-icon>
+          <lucide-angular *ngIf="isConnectingWiFi" [img]="RefreshCw" [size]="18" class="spin"></lucide-angular>
+          <lucide-angular *ngIf="!isConnectingWiFi" [img]="Wifi" [size]="18"></lucide-angular>
           {{ isConnectingWiFi ? 'Conectando...' : 'Conectar' }}
         </button>
       </div>
@@ -266,7 +233,7 @@
       <div class="modal-header">
         <h2>{{ user?.email_recuperacion ? 'Cambiar' : 'Añadir' }} Email de Recuperación</h2>
         <button class="btn-close" (click)="closeRecoveryEmailEdit()">
-          <ion-icon name="close-circle"></ion-icon>
+          <lucide-angular [img]="XCircle" [size]="24"></lucide-angular>
         </button>
       </div>
       

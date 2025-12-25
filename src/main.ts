@@ -37,7 +37,10 @@ import {
   sync,
   arrowForward,
   closeCircle,
-  radioOutline
+  radioOutline,
+  informationCircle,
+  alertCircle,
+  chevronForward
 } from 'ionicons/icons';
 
 import { routes } from './app/app.routes';
@@ -75,7 +78,10 @@ addIcons({
   'sync': sync,
   'arrow-forward': arrowForward,
   'close-circle': closeCircle,
-  'radio-outline': radioOutline
+  'radio-outline': radioOutline,
+  'information-circle': informationCircle,
+  'alert-circle': alertCircle,
+  'chevron-forward': chevronForward
 });
 
 bootstrapApplication(AppComponent, {

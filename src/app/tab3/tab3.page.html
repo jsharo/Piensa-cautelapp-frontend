@@ -1,16 +1,18 @@
-<ion-content [fullscreen]="true" class="fondotab3">
-  <!-- HEADER SUPERIOR -->
-  <div class="header">
-    <div class="header-left">
-      <div class="titulo">Alarmas</div>
-    </div>
-    <div class="header-right">
-      <button class="profile-btn" (click)="openProfileMenu($event)">
-        <img *ngIf="userProfileImage" [src]="userProfileImage" alt="Perfil" class="profile-img">
-        <ion-icon *ngIf="!userProfileImage" name="person-circle" class="profile-icon"></ion-icon>
-      </button>
-    </div>
+<!-- HEADER SUPERIOR -->
+<div class="header">
+  <div class="header-left">
+    <div class="titulo">Alarmas</div>
   </div>
+  <div class="header-right">
+    <button class="profile-btn" (click)="openProfileMenu($event)">
+      <img *ngIf="userProfileImage" [src]="userProfileImage" alt="Perfil" class="profile-img">
+      <ion-icon *ngIf="!userProfileImage" name="person-circle" class="profile-icon"></ion-icon>
+    </button>
+  </div>
+</div>
+
+<div id="tab3-content">
+  <ion-content [fullscreen]="true" class="fondotab3">
 
   <div class="content-wrapper">
     <!-- Stats Cards -->
@@ -204,4 +206,6 @@
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>
+
 </ion-content>
+</div> <!-- #tab3-content -->
