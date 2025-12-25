@@ -76,9 +76,9 @@ export class BleService {
     this.deviceApiService.vincularDispositivo({
       mac_address: device.mac_address,
       bateria: device.bateria || 100,
-      nombre_adulto: device.adulto?.nombre,
-      fecha_nacimiento: device.adulto?.fecha_nacimiento,
-      direccion: device.adulto?.direccion,
+      nombre_adulto: device.adulto?.nombre || undefined,
+      fecha_nacimiento: device.adulto?.fecha_nacimiento || undefined,
+      direccion: device.adulto?.direccion || undefined,
       ble_device_id: device.id
     }).subscribe({
       next: (response) => {
@@ -86,6 +86,7 @@ export class BleService {
       },
       error: (error) => {
         console.error('❌ Error vinculando dispositivo en el backend:', error);
+        console.error('Detalles del error:', error.error);
       }
     });
   }

@@ -7,7 +7,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { BleClient, ScanResult } from '@capacitor-community/bluetooth-le';
 import { LucideAngularModule, ChevronLeft, Bluetooth, Mail, Info, CheckCircle2, AlertCircle, Edit, PlusCircle, Trash2, XCircle, ArrowRight, RefreshCw, Wifi, ChevronRight, WifiOff } from 'lucide-angular';
-import { BleService } from '../../services/ble.service';
+import { BleService, ConnectedDevice } from '../../services/ble.service';
 import { AdultInfoModalComponent } from './adult-info-modal/adult-info-modal.component';
 
 // UUIDs del ESP32 - DEBEN COINCIDIR EXACTAMENTE con el código del ESP32
@@ -212,7 +212,7 @@ export class ConfigurationPage implements OnInit {
       const adultInfo = await this.openAdultInfoModal();
       
       // Agregar dispositivo al servicio BLE con información del adulto mayor
-      this.bleService.addConnectedDevice({
+      const deviceToAdd: ConnectedDevice = {
         id: device.id,
         name: device.name,
         rssi: device.rssi,
@@ -226,7 +226,12 @@ export class ConfigurationPage implements OnInit {
           fecha_nacimiento: adultInfo.fechaNacimiento || '1950-01-01',
           direccion: adultInfo.direccion || 'No especificada'
         } : undefined
-      });
+      };
+      
+      console.log('📱 Dispositivo a agregar:', JSON.stringify(deviceToAdd, null, 2));
+      console.log('📅 Fecha de nacimiento:', adultInfo?.fechaNacimiento);
+      
+      this.bleService.addConnectedDevice(deviceToAdd);
       
       // Suscribirse a notificaciones de estado WiFi
       await this.subscribeToWiFiStatus();

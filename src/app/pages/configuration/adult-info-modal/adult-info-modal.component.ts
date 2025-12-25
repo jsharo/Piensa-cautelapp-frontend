@@ -45,10 +45,14 @@ export class AdultInfoModalComponent {
       return;
     }
 
-    this.modalController.dismiss({
+    const dataToReturn = {
       nombre: this.nombre,
-      fecha_nacimiento: this.fechaNacimiento || undefined,
+      fechaNacimiento: this.fechaNacimiento || undefined,
       direccion: this.direccion || undefined
-    });
+    };
+    
+    console.log('📝 Datos del modal:', JSON.stringify(dataToReturn, null, 2));
+
+    this.modalController.dismiss(dataToReturn);
   }
 }
