@@ -1,0 +1,99 @@
+// Paleta Cautelapp
+$dark-blue: #002333;
+$teal: #159A9C;
+$light-gray: #B4BEC9;
+$light-mint: #DEEFE7;
+$white: #FFFFFF;
+$text: #1A202C;
+$text-light: #4A5568;
+
+ion-header {
+  ion-toolbar {
+    --background: #{$dark-blue};
+    --color: #{$white};
+    
+    ion-title {
+      font-weight: 600;
+      font-size: 18px;
+    }
+  }
+}
+
+ion-content {
+  --background: #{$light-mint};
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+.modal-description {
+  color: $text-light;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+ion-item {
+  --background: #{$white};
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  ion-label {
+    font-weight: 600;
+    color: $dark-blue;
+    margin-bottom: 8px;
+  }
+
+  ion-input {
+    --color: #{$text};
+    --placeholder-color: #{$light-gray};
+    font-size: 15px;
+  }
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 0 0.5rem;
+
+  ion-button {
+    flex: 1;
+    --border-radius: 12px;
+    height: 48px;
+    font-weight: 600;
+    text-transform: none;
+    font-size: 15px;
+
+    &[fill="outline"] {
+      --border-color: #{$light-gray};
+      --color: #{$text};
+
+      &:hover {
+        --background: rgba(0, 0, 0, 0.05);
+      }
+    }
+
+    &:not([fill="outline"]) {
+      --background: #{$teal};
+      --color: #{$white};
+
+      &:hover {
+        --background: #0D7278;
+      }
+
+      &[disabled] {
+        --background: #{$light-gray};
+        opacity: 0.6;
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ title }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="modal-content">
+    <p class="modal-description">
+      {{ isEditMode ? 'Actualiza los datos de la persona' : 'Ingresa los datos de la persona que usará este dispositivo' }}
+    </p>
+
+    <ion-item>
+      <ion-label position="stacked">Nombre completo *</ion-label>
+      <ion-input
+        [(ngModel)]="nombre"
+        placeholder="Ej: María García López"
+        type="text"
+      ></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Fecha de nacimiento</ion-label>
+      <ion-input
+        [(ngModel)]="fechaNacimiento"
+        type="date"
+      ></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Dirección o ubicación</ion-label>
+      <ion-input
+        [(ngModel)]="direccion"
+        placeholder="Ej: Casa principal - Habitación 1"
+        type="text"
+      ></ion-input>
+    </ion-item>
+
+    <div class="button-group">
+      <ion-button expand="block" (click)="dismiss()" fill="outline">
+        Cancelar
+      </ion-button>
+      <ion-button expand="block" (click)="save()" [disabled]="!nombre.trim()">
+        Guardar
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

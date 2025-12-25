@@ -43,6 +43,7 @@
 
           <div class="device-actions">
             <button class="btn-action btn-view" (click)="viewDevice(adulto)"><ion-icon name="eye"></ion-icon>Ver Detalles</button>
+            <button class="btn-action btn-edit" (click)="editAdult(adulto)"><ion-icon name="create-outline"></ion-icon>Editar</button>
             <button class="btn-action btn-remove" (click)="removeDevice(adulto)"><ion-icon name="trash"></ion-icon>Dejar de Monitorear</button>
           </div>
         </div>
@@ -54,7 +55,6 @@
           <ion-icon name="people-outline" class="empty-icon"></ion-icon>
           <h3>Sin adultos monitoreados</h3>
           <p>Vincula un nuevo perfil de adulto mayor para comenzar</p>
-          <button class="btn-primary" (click)="openAddDevice()">Agregar Primer Adulto</button>
         </div>
       </ng-container>
     </div>

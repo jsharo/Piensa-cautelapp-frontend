@@ -1,5 +1,5 @@
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { IonContent, IonSpinner, NavController, ToastController } from '@ionic/angular/standalone';
+import { IonContent, IonSpinner, NavController, ToastController, ModalController } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../services/auth.service';
@@ -7,6 +7,8 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { BleClient, ScanResult } from '@capacitor-community/bluetooth-le';
 import { LucideAngularModule, ChevronLeft, Bluetooth, Mail, Info, CheckCircle2, AlertCircle, Edit, PlusCircle, Trash2, XCircle, ArrowRight, RefreshCw, Wifi, ChevronRight, WifiOff } from 'lucide-angular';
+import { BleService } from '../../services/ble.service';
+import { AdultInfoModalComponent } from './adult-info-modal/adult-info-modal.component';
 
 // UUIDs del ESP32 - DEBEN COINCIDIR EXACTAMENTE con el código del ESP32
 const BLE_SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
@@ -86,7 +88,9 @@ export class ConfigurationPage implements OnInit {
     private navController: NavController,
     private authService: AuthService,
     private http: HttpClient,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private bleService: BleService,
+    private modalController: ModalController
   ) {}
 
   async ngOnInit() {
@@ -204,6 +208,26 @@ export class ConfigurationPage implements OnInit {
       device.connected = true;
       this.connectedDevice = device;
       
+      // Abrir modal para capturar datos del adulto mayor
+      const adultInfo = await this.openAdultInfoModal();
+      
+      // Agregar dispositivo al servicio BLE con información del adulto mayor
+      this.bleService.addConnectedDevice({
+        id: device.id,
+        name: device.name,
+        rssi: device.rssi,
+        mac_address: device.id, // En Android puede ser la MAC, en iOS un UUID
+        bateria: 100, // Valor inicial, se actualizará después
+        connected: true,
+        ultimaActividad: 'Ahora',
+        adulto: adultInfo ? {
+          id_adulto: 0,
+          nombre: adultInfo.nombre,
+          fecha_nacimiento: adultInfo.fechaNacimiento || '1950-01-01',
+          direccion: adultInfo.direccion || 'No especificada'
+        } : undefined
+      });
+      
       // Suscribirse a notificaciones de estado WiFi
       await this.subscribeToWiFiStatus();
       
@@ -222,6 +246,10 @@ export class ConfigurationPage implements OnInit {
     try {
       console.log('🔌 Desconectando de:', this.connectedDevice.name);
       await BleClient.disconnect(this.connectedDevice.id);
+      
+      // Remover del servicio BLE
+      this.bleService.removeConnectedDevice(this.connectedDevice.id);
+      
       this.handleDisconnection();
       this.showToast('Dispositivo desconectado', 'medium');
     } catch (error) {
@@ -462,5 +490,17 @@ export class ConfigurationPage implements OnInit {
   async removeRecoveryEmail() {
     this.recoveryEmail = '';
     await this.updateRecoveryEmail();
+  }
+
+  async openAdultInfoModal(): Promise<{ nombre: string; fechaNacimiento?: string; direccion?: string } | null> {
+    const modal = await this.modalController.create({
+      component: AdultInfoModalComponent,
+      cssClass: 'adult-info-modal'
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    return data || null;
   }
 }
