@@ -63,7 +63,7 @@ $light-bg: #DEEFE7;
   }
 
   &:hover {
-    color: darken($teal, 10%);
+    color: #117B7D;
     transform: scale(1.1);
   }
 }
@@ -230,7 +230,7 @@ $light-bg: #DEEFE7;
     }
 
     &.btn-primary {
-      background: linear-gradient(135deg, $teal 0%, darken($teal, 8%) 100%);
+      background: linear-gradient(135deg, $teal 0%, #128486 100%);
       color: $white;
       box-shadow: 0 4px 6px -1px rgba(21, 154, 156, 0.3);
 

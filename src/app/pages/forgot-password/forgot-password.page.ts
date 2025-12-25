@@ -92,10 +92,10 @@ export class ForgotPasswordPage implements OnInit {
       },
       error: async (error) => {
         this.loading = false;
-        let message = 'Error al enviar el código. Intenta de nuevo.';
+        let message = 'Error al enviar el código, intenta de nuevo';
         
         if (error.status === 404) {
-          message = 'No encontramos una cuenta con ese correo.';
+          message = 'No encontramos una cuenta con ese correo';
         } else if (error.error?.message) {
           message = error.error.message;
         }
@@ -118,12 +118,12 @@ export class ForgotPasswordPage implements OnInit {
     this.authService.verifyResetCode(this.email, this.resetCode).subscribe({
       next: async (response) => {
         this.loading = false;
-        await this.showToast('Código verificado. Ahora ingresa tu nueva contraseña.', 'success');
+        await this.showToast('Código verificado, ahora ingresa tu nueva contraseña', 'success');
         this.step = 'reset';
       },
       error: async (error) => {
         this.loading = false;
-        let message = 'Código inválido. Intenta de nuevo.';
+        let message = 'Código inválido, intenta de nuevo';
         
         if (error.error?.message) {
           message = error.error.message;
@@ -165,7 +165,7 @@ export class ForgotPasswordPage implements OnInit {
       },
       error: async (error) => {
         this.loading = false;
-        let message = 'Error al actualizar la contraseña. Intenta de nuevo.';
+        let message = 'Error al actualizar la contraseña, intenta de nuevo';
         
         if (error.error?.message) {
           message = error.error.message;
