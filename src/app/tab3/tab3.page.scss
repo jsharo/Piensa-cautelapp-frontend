@@ -35,19 +35,8 @@ ion-content {
   min-height: calc(60px + env(safe-area-inset-top));
   box-shadow: 0 2px 8px rgba(0, 35, 51, 0.15);
   position: sticky;
-
-  .menu-toggle {
-    color: $white;
-  }
-
   top: 0;
   z-index: 100;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 
   .titulo {
     font-size: 22px;
@@ -57,11 +46,24 @@ ion-content {
   }
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .header-right {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  
+  gap: 8px;
+
+  .test-sound-btn {
+    --padding-start: 8px;
+    --padding-end: 8px;
+    margin-bottom: 6px;
+  }
+
   .profile-btn {
     background: none;
     border: none;
@@ -75,18 +77,18 @@ ion-content {
     transition: all 0.3s ease;
     min-width: 56px;
     min-height: 56px;
-    
+
     &:hover,
     &:focus {
-      background: rgba(0, 0, 0, 0.05);
+      background: rgba(255, 255, 255, 0.1);
       outline: none;
     }
-    
+
     &:active {
-      background: rgba(0, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.2);
       transform: scale(0.95);
     }
-    
+
     .profile-icon {
       font-size: 38px;
       color: $white;
@@ -136,7 +138,7 @@ ion-content {
   .stat-icon {
     font-size: 32px;
     color: $teal;
-    
+
     &.active {
       color: #10B981;
     }
@@ -167,7 +169,7 @@ ion-content {
   margin-bottom: 20px;
   overflow-x: auto;
   padding-bottom: 4px;
-  
+
   &::-webkit-scrollbar {
     height: 0;
   }
@@ -213,8 +215,8 @@ ion-content {
 
 .alarm-card {
   --background: #{$white};
-  --padding-start: 0;
-  --padding-end: 0;
+  --padding-start: 16px;
+  --padding-end: 16px;
   --inner-padding-start: 0;
   --inner-padding-end: 0;
   background: $white;
@@ -234,7 +236,7 @@ ion-content {
 
   &.disabled {
     opacity: 0.6;
-    
+
     .alarm-time {
       text-decoration: line-through;
     }
@@ -312,7 +314,7 @@ ion-content {
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  
+
   ion-icon {
     font-size: 80px;
     color: $light-gray;
@@ -512,17 +514,17 @@ ion-fab-button {
 ::ng-deep {
   .profile-popover {
     --background: transparent !important;
-    
+
     ion-popover-core {
       --background: transparent;
     }
-    
+
     .popover-content {
       background: transparent;
       box-shadow: none;
     }
   }
-  
+
   .profile-modal {
     --width: 100%;
     --max-width: 100%;

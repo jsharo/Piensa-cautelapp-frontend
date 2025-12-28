@@ -11,12 +11,14 @@ import {
   IonInput
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { 
-  add, addOutline, trashOutline, alarmOutline, timeOutline, closeOutline, 
-  checkmarkOutline, personCircle, medicalOutline, calendarOutline, 
-  notificationsOutline, checkmarkCircleOutline, filterOutline 
+import {
+  add, addOutline, trashOutline, alarmOutline, timeOutline, closeOutline,
+  checkmarkOutline, personCircle, medicalOutline, calendarOutline,
+  notificationsOutline, checkmarkCircleOutline, filterOutline,
+  volumeHighOutline, playOutline
 } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
+import { AlarmService } from '../services/alarm.service';
 import { ProfileMenuComponent } from '../tab1/profile-menu/profile-menu.component';
 
 interface Alarm {
@@ -57,6 +59,7 @@ export class Tab3Page implements OnInit, OnDestroy {
   userProfileImage: string | null = null;
   selectedCategory: 'all' | 'medicamento' | 'cita' | 'otro' = 'all';
   editingAlarm: Alarm | null = null;
+  private audio: HTMLAudioElement;
 
   daysOfWeek = [
     { label: 'D', value: 0 },
@@ -72,23 +75,28 @@ export class Tab3Page implements OnInit, OnDestroy {
     private alertController: AlertController,
     private toastController: ToastController,
     private auth: AuthService,
+    private alarmService: AlarmService,
     private popoverController: PopoverController
   ) {
-    addIcons({ 
+    addIcons({
       'add': add,
-      'add-outline': addOutline, 
-      'trash-outline': trashOutline, 
-      'alarm-outline': alarmOutline, 
-      'time-outline': timeOutline, 
-      'close-outline': closeOutline, 
-      'checkmark-outline': checkmarkOutline, 
-      'person-circle': personCircle, 
-      'medical-outline': medicalOutline, 
+      'add-outline': addOutline,
+      'trash-outline': trashOutline,
+      'alarm-outline': alarmOutline,
+      'time-outline': timeOutline,
+      'close-outline': closeOutline,
+      'checkmark-outline': checkmarkOutline,
+      'person-circle': personCircle,
+      'medical-outline': medicalOutline,
       'calendar-outline': calendarOutline,
-      'notifications-outline': notificationsOutline, 
-      'checkmark-circle-outline': checkmarkCircleOutline, 
-      'filter-outline': filterOutline
+      'notifications-outline': notificationsOutline,
+      'checkmark-circle-outline': checkmarkCircleOutline,
+      'filter-outline': filterOutline,
+      'volume-high-outline': volumeHighOutline,
+      'play-outline': playOutline
     });
+    this.audio = new Audio('assets/sounds/alarm.mp3');
+    this.audio.loop = true;
   }
 
   ngOnInit() {
@@ -101,6 +109,7 @@ export class Tab3Page implements OnInit, OnDestroy {
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
+    this.stopAlarmSound();
   }
 
   loadUserProfileImage() {
@@ -306,10 +315,10 @@ export class Tab3Page implements OnInit, OnDestroy {
 
       const triggeredAlarms = this.alarms.filter(a => {
         if (!a.enabled || a.time !== currentTime) return false;
-        
+
         // Si no tiene días de repetición, se dispara siempre
         if (!a.repeatDays || a.repeatDays.length === 0) return true;
-        
+
         // Si tiene días de repetición, verificar si hoy está incluido
         return a.repeatDays.includes(currentDay);
       });
@@ -320,7 +329,37 @@ export class Tab3Page implements OnInit, OnDestroy {
     }, 30000); // Check every 30 seconds
   }
 
+  async testAlarm() {
+    this.playAlarmSound();
+    const alert = await this.alertController.create({
+      header: 'Prueba de Alarma',
+      message: 'Esta es una prueba del sistema de sonido.',
+      buttons: [{
+        text: 'Detener',
+        handler: () => {
+          this.stopAlarmSound();
+        }
+      }],
+      cssClass: 'premium-alert'
+    });
+    await alert.present();
+
+    // Notify backend anyway to test connectivity
+    this.alarmService.triggerAlarm({ id: 'test', label: 'Prueba de Sistema', time: 'AHORA' }).subscribe();
+  }
+
   async triggerAlarm(alarm: Alarm) {
+    alarm.enabled = false;
+    this.saveAlarms();
+
+    this.playAlarmSound();
+
+    // Call backend service
+    this.alarmService.triggerAlarm(alarm).subscribe({
+      next: () => console.log('Backend notified of alarm'),
+      error: (err) => console.error('Error notifying backend', err)
+    });
+
     const alert = await this.alertController.create({
       header: '¡Alarma!',
       subHeader: alarm.label,
@@ -330,12 +369,16 @@ export class Tab3Page implements OnInit, OnDestroy {
           text: 'Posponer 10 min',
           role: 'cancel',
           handler: () => {
+            this.stopAlarmSound();
             this.snoozeAlarm(alarm);
           }
         },
         {
           text: 'OK',
-          role: 'confirm'
+          role: 'confirm',
+          handler: () => {
+            this.stopAlarmSound();
+          }
         }
       ],
       cssClass: 'alarm-alert'
@@ -349,7 +392,7 @@ export class Tab3Page implements OnInit, OnDestroy {
     const now = new Date();
     now.setMinutes(now.getMinutes() + 10);
     const snoozeTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    
+
     const snoozeAlarm: Alarm = {
       id: Date.now().toString(),
       time: snoozeTime,
@@ -364,6 +407,15 @@ export class Tab3Page implements OnInit, OnDestroy {
     this.alarms.sort((a, b) => a.time.localeCompare(b.time));
     this.saveAlarms();
     this.showToast('Alarma pospuesta 10 minutos');
+  }
+
+  playAlarmSound() {
+    this.audio.play().catch(err => console.error('Error playing sound:', err));
+  }
+
+  stopAlarmSound() {
+    this.audio.pause();
+    this.audio.currentTime = 0;
   }
 
   async showToast(message: string) {
