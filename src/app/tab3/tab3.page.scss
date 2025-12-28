@@ -531,3 +531,50 @@ ion-fab-button {
     --height: auto;
   }
 }
+
+// Botón agregar alarma debajo de tabs
+.add-alarm-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 12px 0 8px 0;
+}
+
+.btn-add-alarm {
+  background: none;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  min-width: 44px;
+  min-height: 44px;
+  color: $teal;
+
+  ion-icon {
+    font-size: 32px;
+    color: $teal;
+  }
+
+  &:hover,
+  &:focus {
+    background: rgba(21, 154, 156, 0.08);
+    outline: none;
+  }
+
+  &:active {
+    background: rgba(21, 154, 156, 0.15);
+    transform: scale(0.95);
+  }
+}
+
+// Tamaño grande para el botón de agregar alarma debajo de los filtros
+.btn-add-alarm-large {
+  min-width: 64px;
+  min-height: 64px;
+  ion-icon {
+    font-size: 44px;
+  }
+}

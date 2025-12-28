@@ -17,6 +17,7 @@
 <div id="tab3-content">
   <ion-content [fullscreen]="true" class="fondotab3">
 
+
     <div class="content-wrapper">
       <!-- Stats Cards -->
       <div class="stats-container">
@@ -37,6 +38,7 @@
       </div>
 
       <!-- Filter Tabs -->
+
       <div class="filter-tabs">
         <button class="filter-tab" [class.active]="selectedCategory === 'all'" (click)="filterByCategory('all')">
           Todas
@@ -53,6 +55,12 @@
         <button class="filter-tab" [class.active]="selectedCategory === 'otro'" (click)="filterByCategory('otro')">
           <ion-icon name="notifications-outline"></ion-icon>
           Otros
+        </button>
+      </div>
+
+      <div class="add-alarm-row">
+        <button class="btn-add-alarm btn-add-alarm-large" (click)="openAddModal()">
+          <ion-icon name="add-circle"></ion-icon>
         </button>
       </div>
 
@@ -87,6 +95,13 @@
         <p>{{ selectedCategory === 'all' ? 'No tienes alarmas configuradas' : 'No hay alarmas en esta categoría' }}</p>
       </div>
     </div>
+
+    <!-- FAB Button -->
+    <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+      <ion-fab-button (click)="openAddModal()">
+        <ion-icon name="add"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
 
     <!-- Modal para Crear/Editar Alarma -->
     <ion-modal [isOpen]="isModalOpen" (didDismiss)="closeModal()" class="alarm-modal">
@@ -166,13 +181,6 @@
         </ion-content>
       </ng-template>
     </ion-modal>
-
-    <!-- FAB Button -->
-    <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-      <ion-fab-button (click)="openAddModal()">
-        <ion-icon name="add"></ion-icon>
-      </ion-fab-button>
-    </ion-fab>
 
   </ion-content>
 </div>

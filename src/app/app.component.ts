@@ -1,7 +1,8 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Platform } from '@ionic/angular/standalone';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
@@ -27,3 +28,12 @@ export class AppComponent {
     });
   }
 }
+
+@NgModule({
+  imports: [
+    // ...otros módulos...
+    FormsModule
+  ],
+  // ...código existente...
+})
+export class Tab2PageModule {}

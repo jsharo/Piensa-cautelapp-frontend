@@ -1,7 +1,8 @@
 <!-- HEADER SUPERIOR -->
-<div class="header">
+
+<header class="header">
   <div class="header-left">
-    <div class="titulo">Dispositivos</div>
+    <h1 class="titulo">Dispositivos</h1>
   </div>
   <div class="header-right">
     <button class="profile-btn" (click)="openProfileMenu($event)">
@@ -9,7 +10,31 @@
       <ion-icon *ngIf="!userProfileImage" name="person-circle" class="profile-icon"></ion-icon>
     </button>
   </div>
-</div>
+</header>
+
+<!-- INVITACIÓN POR CÓDIGO/ENLACE -->
+
+<section class="shared-group-invite">
+  <button (click)="createOrGetGroup()" [disabled]="isLoadingGroup">
+    {{ inviteCode ? 'Ver código de invitación' : 'Crear grupo para compartir' }}
+  </button>
+  <div *ngIf="isLoadingGroup" class="loading">Cargando...</div>
+  <div *ngIf="inviteCode && sharedGroup">
+    <p><strong>Código de invitación:</strong> <span class="invite-code">{{ inviteCode }}</span></p>
+    <p>Comparte este código para que otros se unan a tu grupo y reciban notificaciones.</p>
+    <div>
+      <strong>Miembros:</strong>
+      <ul>
+        <li *ngFor="let m of sharedGroup.members">{{ m.user?.nombre || 'Usuario ' + m.user_id }}</li>
+      </ul>
+    </div>
+  </div>
+  <div class="join-group-section">
+    <input type="text" [(ngModel)]="joinCode" maxlength="16" placeholder="Código de invitación">
+    <button (click)="joinGroupByCode()" [disabled]="isLoadingGroup || !joinCode.trim()">Unirse a grupo</button>
+    <div *ngIf="joinError" class="error">{{ joinError }}</div>
+  </div>
+</section>
 
 <ion-content [fullscreen]="true" class="dispositivos-content">
   <!-- SECCIÓN DE DISPOSITIVOS -->

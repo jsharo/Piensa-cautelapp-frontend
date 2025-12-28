@@ -1,4 +1,4 @@
-import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { IonContent, PopoverController, ModalController, ToastController } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
@@ -6,7 +6,9 @@ import { ProfileMenuComponent } from '../tab1/profile-menu/profile-menu.componen
 import { BleService, ConnectedDevice } from '../services/ble.service';
 import { Router } from '@angular/router';
 import { DeviceApiService } from '../services/device-api.service';
+import { SharedGroupService, SharedGroup } from '../services/shared-group.service';
 import { AdultInfoModalComponent } from '../pages/configuration/adult-info-modal/adult-info-modal.component';
+import { FormsModule } from '@angular/forms';
 
 interface Dispositivo {
   id_dispositivo: number;
@@ -39,6 +41,14 @@ export class Tab2Page implements OnInit {
   dispositivosReales: ConnectedDevice[] = [];
   dispositivosBackend: AdultoMayor[] = [];
 
+
+  // --- INVITACIÓN POR CÓDIGO ---
+  sharedGroup: SharedGroup | null = null;
+  inviteCode: string | null = null;
+  joinCode: string = '';
+  joinError: string = '';
+  isLoadingGroup = false;
+
   constructor(
     private auth: AuthService,
     private popoverController: PopoverController,
@@ -46,8 +56,59 @@ export class Tab2Page implements OnInit {
     private router: Router,
     private deviceApiService: DeviceApiService,
     private modalController: ModalController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private sharedGroupService: SharedGroupService
   ) {}
+  // --- LÓGICA DE INVITACIÓN ---
+  async createOrGetGroup() {
+    this.isLoadingGroup = true;
+    this.inviteCode = null;
+    this.sharedGroup = null;
+    this.joinError = '';
+    const user = this.auth.getCurrentUser();
+    if (!user) {
+      this.isLoadingGroup = false;
+      return;
+    }
+    this.sharedGroupService.getMyGroups(user.id_usuario).subscribe({
+      next: (groups) => {
+        if (groups.length > 0) {
+          this.sharedGroup = groups[0];
+          this.inviteCode = groups[0].code;
+          this.isLoadingGroup = false;
+        } else {
+          this.sharedGroupService.createGroup(user.id_usuario).subscribe({
+            next: (group) => {
+              this.sharedGroup = group;
+              this.inviteCode = group.code;
+              this.isLoadingGroup = false;
+            },
+            error: () => { this.isLoadingGroup = false; }
+          });
+        }
+      },
+      error: () => { this.isLoadingGroup = false; }
+    });
+  }
+
+  joinGroupByCode() {
+    this.joinError = '';
+    const user = this.auth.getCurrentUser();
+    if (!user || !this.joinCode.trim()) return;
+    this.isLoadingGroup = true;
+    this.sharedGroupService.joinGroup(user.id_usuario, this.joinCode.trim()).subscribe({
+      next: (group) => {
+        this.sharedGroup = group;
+        this.inviteCode = group.code;
+        this.isLoadingGroup = false;
+        this.joinCode = '';
+      },
+      error: (err) => {
+        this.joinError = 'Código inválido o ya eres miembro.';
+        this.isLoadingGroup = false;
+      }
+    });
+  }
 
   ngOnInit() {
     // Cargar imagen del perfil del usuario
@@ -256,3 +317,12 @@ export class Tab2Page implements OnInit {
     return await popover.present();
   }
 }
+
+@NgModule({
+  imports: [
+    // ...otros módulos...
+    FormsModule
+  ],
+  // ...código existente...
+})
+export class Tab2PageModule {}
