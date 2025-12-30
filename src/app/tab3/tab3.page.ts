@@ -542,7 +542,12 @@ export class Tab3Page implements OnInit, OnDestroy {
   }
 
   playAlarmSound() {
-    this.audio.play().catch(err => console.error('Error playing sound:', err));
+    this.audio.play().then(() => {
+      console.log('Reproduciendo sonido de alarma');
+    }).catch(err => {
+      console.error('Error al reproducir el sonido:', err);
+      // Reintentar si es necesario o mostrar mensaje
+    });
   }
 
   stopAlarmSound() {

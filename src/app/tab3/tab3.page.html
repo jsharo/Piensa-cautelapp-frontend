@@ -14,173 +14,173 @@
   </div>
 </div>
 
-<div id="tab3-content">
-  <ion-content [fullscreen]="true" class="fondotab3">
+<ion-content [fullscreen]="true" class="fondotab3">
 
-
-    <div class="content-wrapper">
-      <!-- Stats Cards -->
-      <div class="stats-container">
-        <div class="stat-card">
-          <ion-icon name="alarm-outline" class="stat-icon"></ion-icon>
-          <div class="stat-info">
-            <div class="stat-value">{{ alarms.length }}</div>
-            <div class="stat-label">Total</div>
-          </div>
-        </div>
-        <div class="stat-card">
-          <ion-icon name="checkmark-circle-outline" class="stat-icon active"></ion-icon>
-          <div class="stat-info">
-            <div class="stat-value">{{ getActiveAlarmsCount() }}</div>
-            <div class="stat-label">Activas</div>
-          </div>
+  <div class="content-wrapper">
+    <!-- Stats Cards -->
+    <div class="stats-container">
+      <div class="stat-card">
+        <ion-icon name="alarm-outline" class="stat-icon"></ion-icon>
+        <div class="stat-info">
+          <div class="stat-value">{{ alarms.length }}</div>
+          <div class="stat-label">Total</div>
         </div>
       </div>
-
-      <!-- Filter Tabs -->
-
-      <div class="filter-tabs">
-        <button class="filter-tab" [class.active]="selectedCategory === 'all'" (click)="filterByCategory('all')">
-          Todas
-        </button>
-        <button class="filter-tab" [class.active]="selectedCategory === 'medicamento'"
-          (click)="filterByCategory('medicamento')">
-          <ion-icon name="medical-outline"></ion-icon>
-          Medicamentos
-        </button>
-        <button class="filter-tab" [class.active]="selectedCategory === 'cita'" (click)="filterByCategory('cita')">
-          <ion-icon name="calendar-outline"></ion-icon>
-          Citas
-        </button>
-        <button class="filter-tab" [class.active]="selectedCategory === 'otro'" (click)="filterByCategory('otro')">
-          <ion-icon name="notifications-outline"></ion-icon>
-          Otros
-        </button>
-      </div>
-
-      <div class="add-alarm-row">
-        <button class="btn-add-alarm btn-add-alarm-large" (click)="openAddModal()">
-          <ion-icon name="add-circle"></ion-icon>
-        </button>
-      </div>
-
-      <!-- Alarms List -->
-      <div class="alarms-list" *ngIf="getFilteredAlarms().length > 0">
-        <ion-item-sliding *ngFor="let alarm of getFilteredAlarms()">
-          <ion-item class="alarm-card" [class.disabled]="!alarm.enabled" (click)="editAlarm(alarm)">
-            <div class="alarm-icon" [attr.data-category]="alarm.category">
-              <ion-icon [name]="getCategoryIcon(alarm.category)"></ion-icon>
-            </div>
-            <div class="alarm-content">
-              <div class="alarm-time">{{ formatTime(alarm.time) }}</div>
-              <div class="alarm-label">{{ alarm.label || 'Sin título' }}</div>
-              <div class="alarm-days" *ngIf="alarm.repeatDays && alarm.repeatDays.length > 0">
-                <span class="day-badge" *ngFor="let day of alarm.repeatDays">{{ getDayAbbr(day) }}</span>
-              </div>
-            </div>
-            <ion-toggle slot="end" [checked]="alarm.enabled" (ionChange)="toggleAlarm(alarm, $event)"
-              (click)="$event.stopPropagation()"></ion-toggle>
-          </ion-item>
-
-          <ion-item-options side="end">
-            <ion-item-option color="danger" (click)="deleteAlarm(alarm)">
-              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-            </ion-item-option>
-          </ion-item-options>
-        </ion-item-sliding>
-      </div>
-
-      <div *ngIf="getFilteredAlarms().length === 0" class="empty-state">
-        <ion-icon [name]="selectedCategory === 'all' ? 'alarm-outline' : 'filter-outline'"></ion-icon>
-        <p>{{ selectedCategory === 'all' ? 'No tienes alarmas configuradas' : 'No hay alarmas en esta categoría' }}</p>
+      <div class="stat-card">
+        <ion-icon name="checkmark-circle-outline" class="stat-icon active"></ion-icon>
+        <div class="stat-info">
+          <div class="stat-value">{{ getActiveAlarmsCount() }}</div>
+          <div class="stat-label">Activas</div>
+        </div>
       </div>
     </div>
 
-    <!-- FAB Button -->
-    <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-      <ion-fab-button (click)="openAddModal()">
-        <ion-icon name="add"></ion-icon>
-      </ion-fab-button>
-    </ion-fab>
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+      <button class="filter-tab" [class.active]="selectedCategory === 'all'" (click)="filterByCategory('all')">
+        Todas
+      </button>
+      <button class="filter-tab" [class.active]="selectedCategory === 'medicamento'"
+        (click)="filterByCategory('medicamento')">
+        <ion-icon name="medical-outline"></ion-icon>
+        Medicamentos
+      </button>
+      <button class="filter-tab" [class.active]="selectedCategory === 'cita'" (click)="filterByCategory('cita')">
+        <ion-icon name="calendar-outline"></ion-icon>
+        Citas
+      </button>
+      <button class="filter-tab" [class.active]="selectedCategory === 'otro'" (click)="filterByCategory('otro')">
+        <ion-icon name="notifications-outline"></ion-icon>
+        Otros
+      </button>
+    </div>
 
-    <!-- Modal para Crear/Editar Alarma -->
-    <ion-modal [isOpen]="isModalOpen" (didDismiss)="closeModal()" class="alarm-modal">
-      <ng-template>
-        <ion-header>
-          <ion-toolbar>
-            <ion-buttons slot="start">
-              <ion-button (click)="closeModal()">
-                <ion-icon name="close-outline"></ion-icon>
-              </ion-button>
-            </ion-buttons>
-            <ion-title>{{ editingAlarm ? 'Editar alarma' : 'Nueva alarma' }}</ion-title>
-            <ion-buttons slot="end">
-              <ion-button (click)="saveAlarm()" [strong]="true">
-                Guardar
-              </ion-button>
-            </ion-buttons>
-          </ion-toolbar>
-        </ion-header>
-        <ion-content class="modal-content-wrapper">
-          <div class="form-section">
-            <!-- Selector de Hora -->
-            <div class="time-picker-section">
-              <ion-datetime presentation="time" [(ngModel)]="newAlarmTime" [preferWheel]="true"
-                class="custom-datetime"></ion-datetime>
-            </div>
-
-            <!-- Título -->
-            <div class="input-section">
-              <ion-item class="custom-input" lines="none">
-                <ion-label position="stacked">Título</ion-label>
-                <ion-input type="text" [(ngModel)]="newAlarmLabel" placeholder="Ej. Tomar aspirina"></ion-input>
-              </ion-item>
-            </div>
-
-            <!-- Categoría -->
-            <div class="input-section">
-              <label class="section-label">Categoría</label>
-              <div class="category-selector">
-                <button class="category-btn" [class.selected]="newAlarmCategory === 'medicamento'"
-                  (click)="newAlarmCategory = 'medicamento'">
-                  <ion-icon name="medical-outline"></ion-icon>
-                  <span>Medicamento</span>
-                </button>
-                <button class="category-btn" [class.selected]="newAlarmCategory === 'cita'"
-                  (click)="newAlarmCategory = 'cita'">
-                  <ion-icon name="calendar-outline"></ion-icon>
-                  <span>Cita médica</span>
-                </button>
-                <button class="category-btn" [class.selected]="newAlarmCategory === 'otro'"
-                  (click)="newAlarmCategory = 'otro'">
-                  <ion-icon name="notifications-outline"></ion-icon>
-                  <span>Otro</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Días de repetición -->
-            <div class="input-section">
-              <label class="section-label">Repetir</label>
-              <div class="days-selector">
-                <button *ngFor="let day of daysOfWeek" class="day-btn" [class.selected]="isDaySelected(day.value)"
-                  (click)="toggleDay(day.value)">
-                  {{ day.label }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Notas adicionales -->
-            <div class="input-section">
-              <ion-item class="custom-input" lines="none">
-                <ion-label position="stacked">Notas (opcional)</ion-label>
-                <ion-input type="text" [(ngModel)]="newAlarmNotes" placeholder="Después de comer"></ion-input>
-              </ion-item>
+    <!-- Alarms List -->
+    <div class="alarms-list" *ngIf="getFilteredAlarms().length > 0">
+      <ion-item-sliding *ngFor="let alarm of getFilteredAlarms()">
+        <ion-item class="alarm-card" [class.disabled]="!alarm.enabled" (click)="editAlarm(alarm)">
+          <div class="alarm-icon" [attr.data-category]="alarm.category">
+            <ion-icon [name]="getCategoryIcon(alarm.category)"></ion-icon>
+          </div>
+          <div class="alarm-content">
+            <div class="alarm-time">{{ formatTime(alarm.time) }}</div>
+            <div class="alarm-label">{{ alarm.label || 'Sin título' }}</div>
+            <div class="alarm-days" *ngIf="alarm.repeatDays && alarm.repeatDays.length > 0">
+              <span class="day-badge" *ngFor="let day of alarm.repeatDays">{{ getDayAbbr(day) }}</span>
             </div>
           </div>
-        </ion-content>
-      </ng-template>
-    </ion-modal>
+          <ion-toggle slot="end" [checked]="alarm.enabled" (ionChange)="toggleAlarm(alarm, $event)"
+            (click)="$event.stopPropagation()"></ion-toggle>
+        </ion-item>
 
-  </ion-content>
-</div>
+        <ion-item-options side="end">
+          <ion-item-option color="danger" (click)="deleteAlarm(alarm)">
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
+    </div>
+
+    <div *ngIf="getFilteredAlarms().length === 0" class="empty-state">
+      <ion-icon [name]="selectedCategory === 'all' ? 'alarm-outline' : 'filter-outline'"></ion-icon>
+      <p>{{ selectedCategory === 'all' ? 'No tienes alarmas configuradas' : 'No hay alarmas en esta categoría' }}</p>
+      <ion-button *ngIf="selectedCategory === 'all'" (click)="openAddModal()" class="premium-add-btn" mode="ios">
+        Configurar Alarma
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- Modal para Crear/Editar Alarma -->
+  <ion-modal [isOpen]="isModalOpen" (didDismiss)="closeModal()" class="alarm-modal">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="closeModal()">
+              <ion-icon name="close-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+          <ion-title>{{ editingAlarm ? 'Editar alarma' : 'Nueva alarma' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="saveAlarm()" [strong]="true">
+              Guardar
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="modal-content-wrapper">
+        <div class="form-section">
+          <!-- Selector de Hora -->
+          <div class="time-picker-section">
+            <ion-datetime presentation="time" [(ngModel)]="newAlarmTime" [preferWheel]="true"
+              class="custom-datetime"></ion-datetime>
+          </div>
+
+          <!-- Título -->
+          <div class="input-section">
+            <ion-item class="custom-input" lines="none">
+              <ion-label position="stacked">Título</ion-label>
+              <ion-input type="text" [(ngModel)]="newAlarmLabel" placeholder="Ej. Tomar aspirina"></ion-input>
+            </ion-item>
+          </div>
+
+          <!-- Categoría -->
+          <div class="input-section">
+            <label class="section-label">Categoría</label>
+            <div class="category-selector">
+              <button class="category-btn" [class.selected]="newAlarmCategory === 'medicamento'"
+                (click)="newAlarmCategory = 'medicamento'">
+                <ion-icon name="medical-outline"></ion-icon>
+                <span>Medicamento</span>
+              </button>
+              <button class="category-btn" [class.selected]="newAlarmCategory === 'cita'"
+                (click)="newAlarmCategory = 'cita'">
+                <ion-icon name="calendar-outline"></ion-icon>
+                <span>Cita médica</span>
+              </button>
+              <button class="category-btn" [class.selected]="newAlarmCategory === 'otro'"
+                (click)="newAlarmCategory = 'otro'">
+                <ion-icon name="notifications-outline"></ion-icon>
+                <span>Otro</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Días de repetición -->
+          <div class="input-section">
+            <label class="section-label">Repetir</label>
+            <div class="days-selector">
+              <button *ngFor="let day of daysOfWeek" class="day-btn" [class.selected]="isDaySelected(day.value)"
+                (click)="toggleDay(day.value)">
+                {{ day.label }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Notas adicionales -->
+          <div class="input-section">
+            <ion-item class="custom-input" lines="none">
+              <ion-label position="stacked">Notas (opcional)</ion-label>
+              <ion-input type="text" [(ngModel)]="newAlarmNotes" placeholder="Después de comer"></ion-input>
+            </ion-item>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>
+
+
+<ion-fab vertical="bottom" horizontal="end" slot="fixed" class="premium-fab">
+  <ion-fab-button (click)="openAddModal()" mode="ios">
+    <div class="fab-icon-container">
+      <svg viewBox="0 0 36 36" class="fab-svg">
+        <path fill="#159A9C" d="M16 16v14h4V16z"></path>
+        <path fill="#002333" d="M20 16h10v4H20z"></path>
+        <path fill="#B4BEC9" d="M6 16h10v4H6z"></path>
+        <path fill="#117B7D" d="M16 6h4v10h-4z"></path>
+      </svg>
+    </div>
+  </ion-fab-button>
+</ion-fab>
