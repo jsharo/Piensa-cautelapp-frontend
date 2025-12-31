@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { BleClient, ScanResult } from '@capacitor-community/bluetooth-le';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { DeviceApiService } from './device-api.service';
+import { Platform } from '@ionic/angular';
+import { Capacitor } from '@capacitor/core';
 
 // UUIDs del ESP32 - DEBEN COINCIDIR con el código del ESP32
 const BLE_SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
@@ -34,8 +36,62 @@ export class BleService {
 
   private initialized = false;
 
-  constructor(private deviceApiService: DeviceApiService) {
-    this.initializeBluetooth();
+  constructor(private deviceApiService: DeviceApiService, private platform: Platform) {
+    this.platform.ready().then(() => {
+      this.requestBlePermissions().then(() => {
+        this.initializeBluetooth();
+      });
+    });
+  }
+
+  async requestBlePermissions() {
+    if (Capacitor.getPlatform() !== 'android') return;
+    // Android 12+ BLE permissions
+    const permissions = [
+      'android.permission.BLUETOOTH_SCAN',
+      'android.permission.BLUETOOTH_CONNECT',
+      'android.permission.ACCESS_FINE_LOCATION'
+    ];
+    // Android 6+ location permission
+    try {
+      // @ts-ignore
+      const { PermissionsAndroid } = window;
+      if (PermissionsAndroid && PermissionsAndroid.request) {
+        for (const perm of permissions) {
+          const result = await PermissionsAndroid.request(perm);
+          if (result !== 'granted') {
+            console.warn('Permiso no concedido:', perm);
+          }
+        }
+      } else if ((window as any).cordova && (window as any).cordova.plugins && (window as any).cordova.plugins.permissions) {
+        // Cordova permissions plugin fallback
+        const permissionsPlugin = (window as any).cordova.plugins.permissions;
+        permissions.forEach((perm: string) => {
+          permissionsPlugin.requestPermission(perm, (status: any) => {
+            if (!status.hasPermission) {
+              console.warn('Permiso no concedido:', perm);
+            }
+          }, (err: any) => {
+            console.error('Error solicitando permiso', perm, err);
+          });
+        });
+      } else {
+        // Capacitor 5+ Permissions API (if available)
+        // @ts-ignore
+        if (navigator && navigator.permissions) {
+          for (const perm of permissions) {
+            try {
+              // @ts-ignore
+              await navigator.permissions.query({ name: perm });
+            } catch (e) {
+              // ignore
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error solicitando permisos BLE/ubicación:', err);
+    }
   }
 
   async initializeBluetooth() {

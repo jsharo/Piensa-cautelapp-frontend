@@ -32,13 +32,12 @@ interface AdultoMayor {
   selector: 'app-tab2',
   templateUrl: 'tab2.page.html',
   styleUrls: ['tab2.page.scss'],
-  imports: [IonContent, CommonModule],
+  imports: [IonContent, CommonModule, FormsModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class Tab2Page implements OnInit {
   userProfileImage: string | null = null;
   adultosMonitoreados: AdultoMayor[] = [];
-  dispositivosReales: ConnectedDevice[] = [];
   dispositivosBackend: AdultoMayor[] = [];
 
 
@@ -113,21 +112,14 @@ export class Tab2Page implements OnInit {
   ngOnInit() {
     // Cargar imagen del perfil del usuario
     this.loadUserProfileImage();
-    
-    // Cargar dispositivos guardados del backend
+    // Cargar dispositivos guardados del backend (WiFi)
     this.cargarDispositivosGuardados();
-    
-    // Suscribirse a los dispositivos conectados en tiempo real (BLE)
-    this.bleService.connectedDevices$.subscribe(devices => {
-      this.dispositivosReales = devices;
-      this.combinarDispositivos();
-    });
   }
 
   cargarDispositivosGuardados() {
     this.deviceApiService.obtenerMisDispositivos().subscribe({
       next: (dispositivos) => {
-        console.log('Dispositivos guardados cargados:', dispositivos);
+        console.log('RESPUESTA BACKEND obtenerMisDispositivos:', dispositivos);
         // Convertir dispositivos guardados a formato AdultoMayor
         this.dispositivosBackend = dispositivos.map((disp) => ({
           id_adulto: disp.id_adulto,
@@ -139,9 +131,8 @@ export class Tab2Page implements OnInit {
           conectado: false,
           ultimaActividad: 'Sin conexión reciente'
         }));
-        
-        // Combinar con dispositivos BLE conectados
-        this.combinarDispositivos();
+        // Mostrar solo los adultos que tienen dispositivo válido (no null)
+        this.adultosMonitoreados = this.dispositivosBackend.filter(d => d.dispositivo);
       },
       error: (error) => {
         console.error('Error cargando dispositivos guardados:', error);
@@ -149,58 +140,7 @@ export class Tab2Page implements OnInit {
     });
   }
 
-  combinarDispositivos() {
-    // Primero, mapear dispositivos BLE conectados
-    const dispositivosBLE = this.dispositivosReales.map((device, index) => ({
-      id_adulto: 0, // Temporal, se actualizará si existe en backend
-      nombre: device.adulto?.nombre || device.name || 'Dispositivo sin nombre',
-      fecha_nacimiento: device.adulto?.fecha_nacimiento || '1950-01-01',
-      direccion: device.adulto?.direccion || 'Ubicación desconocida',
-      dispositivo: {
-        id_dispositivo: 0,
-        bateria: device.bateria || 100,
-        mac_address: device.mac_address
-      },
-      edad: device.adulto?.edad || this.calcularEdad(device.adulto?.fecha_nacimiento || '1950-01-01'),
-      conectado: true,
-      ultimaActividad: device.ultimaActividad || 'Ahora',
-      deviceId: device.id
-    }));
 
-    // Combinar: priorizar dispositivos BLE (conectados) y agregar los del backend no conectados
-    const dispositivosCombinados: AdultoMayor[] = [];
-    const macsConectadas = new Set(dispositivosBLE.map(d => d.dispositivo.mac_address));
-
-    // Agregar dispositivos BLE conectados
-    dispositivosBLE.forEach(dispBLE => {
-      // Buscar si existe en backend para obtener datos completos
-      const dispBackend = this.dispositivosBackend.find(
-        db => db.dispositivo.mac_address === dispBLE.dispositivo.mac_address
-      );
-      
-      if (dispBackend) {
-        // Usar datos del backend pero marcar como conectado
-        dispositivosCombinados.push({
-          ...dispBackend,
-          conectado: true,
-          ultimaActividad: 'Ahora',
-          deviceId: dispBLE.deviceId
-        });
-      } else {
-        // Usar datos del BLE
-        dispositivosCombinados.push(dispBLE);
-      }
-    });
-
-    // Agregar dispositivos del backend que NO están conectados
-    this.dispositivosBackend.forEach(dispBackend => {
-      if (!macsConectadas.has(dispBackend.dispositivo.mac_address)) {
-        dispositivosCombinados.push(dispBackend);
-      }
-    });
-
-    this.adultosMonitoreados = dispositivosCombinados;
-  }
 
   calcularEdad(fechaNacimiento: string): number {
     const hoy = new Date();
@@ -291,9 +231,35 @@ export class Tab2Page implements OnInit {
 
   async removeDevice(adulto: AdultoMayor) {
     const confirmed = confirm(`¿Dejar de monitorear a ${adulto.nombre}?`);
-    if (confirmed && adulto.deviceId) {
-      // Desconectar dispositivo BLE
+    if (!confirmed) return;
+
+    // Desconectar BLE si está conectado
+    if (adulto.deviceId) {
       await this.bleService.disconnectDevice(adulto.deviceId);
+    }
+
+    // Eliminar en backend si existe en base de datos
+    if (adulto.dispositivo?.id_dispositivo) {
+      this.deviceApiService.deleteDispositivo(adulto.dispositivo.id_dispositivo).subscribe({
+        next: async () => {
+          await this.showToast('Dispositivo eliminado correctamente', 'success');
+          this.cargarDispositivosGuardados(); // Recargar lista desde backend para asegurar sincronía
+        },
+        error: async (error) => {
+          let errorMsg = 'Error al eliminar el dispositivo';
+          if (error && error.error) {
+            if (typeof error.error === 'string') {
+              errorMsg += ': ' + error.error;
+            } else if (error.error.message) {
+              errorMsg += ': ' + error.error.message;
+            } else {
+              errorMsg += ': ' + JSON.stringify(error.error);
+            }
+          }
+          console.error('Error eliminando dispositivo:', error);
+          await this.showToast(errorMsg, 'danger');
+        }
+      });
     }
   }
 
