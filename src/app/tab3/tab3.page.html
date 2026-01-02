@@ -55,11 +55,19 @@
       </button>
     </div>
 
+    <!-- Botón visible para agregar alarma -->
+    <div class="add-alarm-row">
+      <button class="btn-add-alarm" (click)="openAddModal()">
+        <ion-icon name="add-circle-outline"></ion-icon>
+        <span style="margin-left: 8px; font-weight: 600;">Programar Alarma</span>
+      </button>
+    </div>
+
     <!-- Alarms List -->
     <div class="alarms-list" *ngIf="getFilteredAlarms().length > 0">
       <ion-item-sliding *ngFor="let alarm of getFilteredAlarms()">
-        <ion-item class="alarm-card" [class.disabled]="!alarm.enabled" (click)="editAlarm(alarm)">
-          <div class="alarm-icon" [attr.data-category]="alarm.category">
+        <ion-item class="alarm-card" [class.disabled]="!alarm.enabled" (click)="editAlarm(alarm)" lines="none">
+          <div class="alarm-icon" [attr.data-category]="alarm.category" slot="start">
             <ion-icon [name]="getCategoryIcon(alarm.category)"></ion-icon>
           </div>
           <div class="alarm-content">

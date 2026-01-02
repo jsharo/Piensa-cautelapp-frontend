@@ -1,4 +1,4 @@
-import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { IonContent, PopoverController, ModalController, ToastController } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
@@ -32,7 +32,8 @@ interface AdultoMayor {
   selector: 'app-tab2',
   templateUrl: 'tab2.page.html',
   styleUrls: ['tab2.page.scss'],
-  imports: [IonContent, CommonModule],
+  standalone: true,
+  imports: [IonContent, CommonModule, FormsModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class Tab2Page implements OnInit {
@@ -58,7 +59,7 @@ export class Tab2Page implements OnInit {
     private modalController: ModalController,
     private toastController: ToastController,
     private sharedGroupService: SharedGroupService
-  ) {}
+  ) { }
   // --- LÓGICA DE INVITACIÓN ---
   async createOrGetGroup() {
     this.isLoadingGroup = true;
@@ -113,10 +114,10 @@ export class Tab2Page implements OnInit {
   ngOnInit() {
     // Cargar imagen del perfil del usuario
     this.loadUserProfileImage();
-    
+
     // Cargar dispositivos guardados del backend
     this.cargarDispositivosGuardados();
-    
+
     // Suscribirse a los dispositivos conectados en tiempo real (BLE)
     this.bleService.connectedDevices$.subscribe(devices => {
       this.dispositivosReales = devices;
@@ -139,7 +140,7 @@ export class Tab2Page implements OnInit {
           conectado: false,
           ultimaActividad: 'Sin conexión reciente'
         }));
-        
+
         // Combinar con dispositivos BLE conectados
         this.combinarDispositivos();
       },
@@ -177,7 +178,7 @@ export class Tab2Page implements OnInit {
       const dispBackend = this.dispositivosBackend.find(
         db => db.dispositivo.mac_address === dispBLE.dispositivo.mac_address
       );
-      
+
       if (dispBackend) {
         // Usar datos del backend pero marcar como conectado
         dispositivosCombinados.push({
@@ -300,9 +301,9 @@ export class Tab2Page implements OnInit {
   async openProfileMenu(event: any) {
     // Recargar imagen por si cambió en el modal
     this.loadUserProfileImage();
-    
+
     const currentUser = this.auth.getCurrentUser();
-    
+
     const popover = await this.popoverController.create({
       component: ProfileMenuComponent,
       event: event,
@@ -317,12 +318,3 @@ export class Tab2Page implements OnInit {
     return await popover.present();
   }
 }
-
-@NgModule({
-  imports: [
-    // ...otros módulos...
-    FormsModule
-  ],
-  // ...código existente...
-})
-export class Tab2PageModule {}

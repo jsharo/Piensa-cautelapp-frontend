@@ -61,7 +61,7 @@ export class Tab3Page implements OnInit, OnDestroy {
   newAlarmCategory: 'medicamento' | 'cita' | 'otro' = 'medicamento';
   newAlarmRepeatDays: number[] = [];
   newAlarmNotes: string = '';
-  private intervalId: any;
+  private checkIntervalId: any;
   userProfileImage: string | null = null;
   selectedCategory: 'all' | 'medicamento' | 'cita' | 'otro' = 'all';
   editingAlarm: Alarm | null = null;
@@ -103,7 +103,9 @@ export class Tab3Page implements OnInit, OnDestroy {
       'volume-high-outline': volumeHighOutline,
       'play-outline': playOutline
     });
-    this.audio = new Audio('assets/sounds/alarm_sound.mp3');
+    this.audio = new Audio();
+    this.audio.src = 'assets/sounds/alarm_sound.mp3';
+    this.audio.load();
     this.audio.loop = true;
   }
 
@@ -111,10 +113,10 @@ export class Tab3Page implements OnInit, OnDestroy {
   async ngOnInit() {
     this.loadAlarms();
     this.loadUserProfileImage();
-    
+
     // Programar todas las alarmas cargadas
     await this.scheduleAllAlarms();
-    
+
     // Escuchar eventos de alarma desde notificaciones
     window.addEventListener('alarmTriggered', (event: any) => {
       const alarmId = event.detail.alarmId;
@@ -123,7 +125,7 @@ export class Tab3Page implements OnInit, OnDestroy {
         this.triggerAlarm(alarm);
       }
     });
-    
+
     // Escuchar cuando la app se vuelve activa
     App.addListener('appStateChange', async (state) => {
       if (state.isActive) {
@@ -131,11 +133,14 @@ export class Tab3Page implements OnInit, OnDestroy {
         await this.checkMissedAlarms();
       }
     });
+
+    // Iniciar monitoreo en primer plano (cada 10 segundos)
+    this.startForegroundCheck();
   }
 
   ngOnDestroy() {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
+    if (this.checkIntervalId) {
+      clearInterval(this.checkIntervalId);
     }
     this.stopAlarmSound();
   }
@@ -221,14 +226,14 @@ export class Tab3Page implements OnInit, OnDestroy {
       if (this.editingAlarm.notificationId) {
         await this.alarmBackground.cancelAlarm(this.editingAlarm.id);
       }
-      
+
       // Editar alarma existente
       this.editingAlarm.time = alarmTime;
       this.editingAlarm.label = this.newAlarmLabel;
       this.editingAlarm.category = this.newAlarmCategory;
       this.editingAlarm.repeatDays = [...this.newAlarmRepeatDays];
       this.editingAlarm.notes = this.newAlarmNotes;
-      
+
       // Reprogramar si está habilitada
       if (this.editingAlarm.enabled) {
         try {
@@ -238,7 +243,7 @@ export class Tab3Page implements OnInit, OnDestroy {
           console.error('Error reprogramando alarma:', error);
         }
       }
-      
+
       this.showToast('Alarma actualizada');
     } else {
       // Crear nueva alarma
@@ -251,7 +256,7 @@ export class Tab3Page implements OnInit, OnDestroy {
         repeatDays: [...this.newAlarmRepeatDays],
         notes: this.newAlarmNotes
       };
-      
+
       // Programar notificación
       try {
         const notificationId = await this.alarmBackground.scheduleAlarm(newAlarm);
@@ -259,7 +264,7 @@ export class Tab3Page implements OnInit, OnDestroy {
       } catch (error) {
         console.error('Error programando nueva alarma:', error);
       }
-      
+
       this.alarms.push(newAlarm);
       this.showToast('Alarma creada');
     }
@@ -304,7 +309,7 @@ export class Tab3Page implements OnInit, OnDestroy {
     if (alarm.notificationId) {
       await this.alarmBackground.cancelAlarm(alarm.id);
     }
-    
+
     this.alarms = this.alarms.filter(a => a.id !== alarm.id);
     this.saveAlarms();
     this.showToast('Alarma eliminada');
@@ -315,9 +320,9 @@ export class Tab3Page implements OnInit, OnDestroy {
     if (event) {
       event.stopPropagation();
     }
-    
+
     alarm.enabled = !alarm.enabled;
-    
+
     if (alarm.enabled) {
       // Programar notificación
       try {
@@ -333,7 +338,7 @@ export class Tab3Page implements OnInit, OnDestroy {
         alarm.notificationId = undefined;
       }
     }
-    
+
     this.saveAlarms();
     this.showToast(alarm.enabled ? 'Alarma activada' : 'Alarma desactivada');
   }
@@ -394,7 +399,7 @@ export class Tab3Page implements OnInit, OnDestroy {
     try {
       // Cancelar todas las alarmas existentes
       await this.alarmBackground.cancelAllAlarms();
-      
+
       // Programar solo las alarmas activas
       for (const alarm of this.alarms.filter(a => a.enabled)) {
         try {
@@ -404,7 +409,7 @@ export class Tab3Page implements OnInit, OnDestroy {
           console.error(`Error programando alarma ${alarm.label}:`, error);
         }
       }
-      
+
       this.saveAlarms();
     } catch (error) {
       console.error('Error programando alarmas:', error);
@@ -438,54 +443,58 @@ export class Tab3Page implements OnInit, OnDestroy {
 
   async triggerAlarm(alarm: Alarm) {
     // Desactivar alarma para que no se repita
+    // Desactivar alarma para que no se repita
     alarm.enabled = false;
-    
-    // Cancelar notificación
-    if (alarm.notificationId) {
-      await this.alarmBackground.cancelAlarm(alarm.id);
-      alarm.notificationId = undefined;
-    }
-    
-    this.saveAlarms();
 
-    // Reproducir sonido
-    this.playAlarmSound();
+    // Pequeño delay para asegurar que el evento se procese tras la notificación
+    setTimeout(async () => {
+      // Cancelar notificación
+      if (alarm.notificationId) {
+        await this.alarmBackground.cancelAlarm(alarm.id);
+        alarm.notificationId = undefined;
+      }
 
-    // Call backend service
-    this.alarmService.triggerAlarm({
-      ...alarm,
-      timestamp: new Date().toISOString()
-    }).subscribe({
-      next: () => console.log('Backend notified of alarm'),
-      error: (err) => console.error('Error notifying backend', err)
-    });
+      this.saveAlarms();
 
-    // Mostrar alerta en la app
-    const alert = await this.alertController.create({
-      header: '¡Alarma!',
-      subHeader: alarm.label,
-      message: alarm.notes ? `${this.formatTime(alarm.time)}\n${alarm.notes}` : `Son las ${this.formatTime(alarm.time)}`,
-      buttons: [
-        {
-          text: 'Posponer 10 min',
-          role: 'cancel',
-          handler: () => {
-            this.stopAlarmSound();
-            this.snoozeAlarm(alarm);
+      // Reproducir sonido
+      this.playAlarmSound();
+
+      // Call backend service
+      this.alarmService.triggerAlarm({
+        ...alarm,
+        timestamp: new Date().toISOString()
+      }).subscribe({
+        next: () => console.log('Backend notified of alarm'),
+        error: (err) => console.error('Error notifying backend', err)
+      });
+
+      // Mostrar alerta en la app
+      const alert = await this.alertController.create({
+        header: '¡Alarma!',
+        subHeader: alarm.label,
+        message: alarm.notes ? `${this.formatTime(alarm.time)}\n${alarm.notes}` : `Son las ${this.formatTime(alarm.time)}`,
+        buttons: [
+          {
+            text: 'Posponer 10 min',
+            role: 'cancel',
+            handler: () => {
+              this.stopAlarmSound();
+              this.snoozeAlarm(alarm);
+            }
+          },
+          {
+            text: 'OK',
+            role: 'confirm',
+            handler: () => {
+              this.stopAlarmSound();
+            }
           }
-        },
-        {
-          text: 'OK',
-          role: 'confirm',
-          handler: () => {
-            this.stopAlarmSound();
-          }
-        }
-      ],
-      cssClass: 'alarm-alert'
-    });
+        ],
+        cssClass: 'alarm-alert'
+      });
 
-    await alert.present();
+      await alert.present();
+    }, 500);
   }
 
   snoozeAlarm(alarm: Alarm) {
@@ -507,34 +516,63 @@ export class Tab3Page implements OnInit, OnDestroy {
     this.alarms.push(snoozeAlarm);
     this.alarms.sort((a, b) => a.time.localeCompare(b.time));
     this.saveAlarms();
-    
+
     // Programar la alarma pospuesta
     this.alarmBackground.scheduleAlarm(snoozeAlarm).then((notificationId: number) => {
       snoozeAlarm.notificationId = notificationId;
       this.saveAlarms();
     });
-    
+
     this.showToast('Alarma pospuesta 10 minutos');
+  }
+
+  // MÉTODO NUEVO: startForegroundCheck
+  private startForegroundCheck() {
+    if (this.checkIntervalId) {
+      clearInterval(this.checkIntervalId);
+    }
+
+    this.checkIntervalId = setInterval(() => {
+      const now = new Date();
+      const currentH = now.getHours().toString().padStart(2, '0');
+      const currentM = now.getMinutes().toString().padStart(2, '0');
+      const currentTime = `${currentH}:${currentM}`;
+      const currentDay = now.getDay();
+
+      this.alarms.forEach(alarm => {
+        if (alarm.enabled && alarm.time === currentTime) {
+          // Si tiene repetición, verificar el día
+          if (alarm.repeatDays && alarm.repeatDays.length > 0) {
+            if (alarm.repeatDays.includes(currentDay)) {
+              this.triggerAlarm(alarm);
+            }
+          } else {
+            // Si no tiene repetición, disparar directamente
+            this.triggerAlarm(alarm);
+          }
+        }
+      });
+    }, 10000); // Verificar cada 10 segundos
   }
 
   // MÉTODO NUEVO: checkMissedAlarms
   private async checkMissedAlarms(): Promise<void> {
     const now = new Date();
-    
+
     const missedAlarms = this.alarms.filter(alarm => {
       if (!alarm.enabled) return false;
-      
+
       // Verificar si la alarma debería haberse disparado en los últimos 5 minutos
       const [alarmHour, alarmMinute] = alarm.time.split(':').map(Number);
       const alarmDate = new Date();
       alarmDate.setHours(alarmHour, alarmMinute, 0, 0);
-      
+
       const diffMinutes = (now.getTime() - alarmDate.getTime()) / (1000 * 60);
-      
+
       // Si la alarma era para hace menos de 5 minutos y aún no se ha disparado
       return diffMinutes >= 0 && diffMinutes <= 5;
     });
-    
+
     if (missedAlarms.length > 0) {
       // Mostrar la primera alarma perdida
       this.triggerAlarm(missedAlarms[0]);
@@ -542,11 +580,14 @@ export class Tab3Page implements OnInit, OnDestroy {
   }
 
   playAlarmSound() {
+    this.audio.volume = 1.0;
     this.audio.play().then(() => {
       console.log('Reproduciendo sonido de alarma');
     }).catch(err => {
       console.error('Error al reproducir el sonido:', err);
-      // Reintentar si es necesario o mostrar mensaje
+      // Intento de recuperación: re-cargar y reproducir
+      this.audio.load();
+      this.audio.play().catch(e => console.error('Fallo final de audio:', e));
     });
   }
 

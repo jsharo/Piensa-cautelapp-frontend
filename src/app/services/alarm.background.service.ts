@@ -24,10 +24,10 @@ export class AlarmBackgroundService {
   private async initialize() {
     // Solicitar permisos
     await this.requestPermissions();
-    
+
     // Configurar listener para notificaciones
     await this.setupNotificationListeners();
-    
+
     // Registrar tarea en background
     await this.registerBackgroundTask();
   }
@@ -47,13 +47,13 @@ export class AlarmBackgroundService {
     try {
       // Calcular fecha/hora del próximo disparo
       const triggerDate = this.calculateNextTrigger(alarm);
-      
+
       // Generar ID único para la notificación
       const notificationId = this.generateNotificationId(alarm);
-      
+
       // Crear canal (Android)
       await this.createAlarmChannel();
-      
+
       // Programar la notificación
       await LocalNotifications.schedule({
         notifications: [{
@@ -61,7 +61,7 @@ export class AlarmBackgroundService {
           title: '⏰ ' + alarm.label,
           body: alarm.notes || `Hora de ${alarm.category}`,
           schedule: { at: new Date(triggerDate) },
-          sound: 'alarm_sound.mp3',
+          sound: 'alarm_sound', // Sin extensión para recursos nativos en Android
           extra: {
             alarmId: alarm.id,
             type: 'ALARM_TRIGGER',
@@ -69,9 +69,9 @@ export class AlarmBackgroundService {
             label: alarm.label
           },
           channelId: 'alarm_channel',
-          ongoing: true, // Hace que la notificación sea persistente
-          autoCancel: false, // No se cancela automáticamente
-          smallIcon: 'ic_stat_alarm', // Nombre del ícono en resources
+          ongoing: true,
+          autoCancel: false,
+          smallIcon: 'ic_stat_alarm',
           largeIcon: 'ic_launcher' // Ícono grande
         }]
       });
@@ -103,7 +103,7 @@ export class AlarmBackgroundService {
         await LocalNotifications.cancel({
           notifications: [{ id: scheduledAlarm.notificationId }]
         });
-        
+
         this.scheduledAlarms.splice(alarmIndex, 1);
         this.saveScheduledAlarms();
       }
@@ -128,7 +128,7 @@ export class AlarmBackgroundService {
 
   async rescheduleAllAlarms(alarms: any[]): Promise<void> {
     await this.cancelAllAlarms();
-    
+
     for (const alarm of alarms.filter(a => a.enabled)) {
       await this.scheduleAlarm(alarm);
     }
@@ -137,21 +137,21 @@ export class AlarmBackgroundService {
   private calculateNextTrigger(alarm: any): Date {
     const now = new Date();
     const [hours, minutes] = alarm.time.split(':').map(Number);
-    
+
     // Crear fecha para hoy con la hora de la alarma
     const triggerDate = new Date();
     triggerDate.setHours(hours, minutes, 0, 0);
-    
+
     // Si la hora ya pasó hoy, programar para mañana
     if (triggerDate <= now) {
       triggerDate.setDate(triggerDate.getDate() + 1);
     }
-    
+
     // Si tiene días de repetición, calcular el próximo día válido
     if (alarm.repeatDays && alarm.repeatDays.length > 0) {
       let daysToAdd = 0;
       const currentDay = now.getDay(); // 0=Dom, 6=Sab
-      
+
       // Buscar el próximo día válido
       for (let i = 1; i <= 7; i++) {
         const nextDay = (currentDay + i) % 7;
@@ -160,12 +160,12 @@ export class AlarmBackgroundService {
           break;
         }
       }
-      
+
       if (daysToAdd > 0) {
         triggerDate.setDate(triggerDate.getDate() + daysToAdd);
       }
     }
-    
+
     return triggerDate;
   }
 
@@ -183,7 +183,7 @@ export class AlarmBackgroundService {
           description: 'Canal para alarmas de medicamentos y citas',
           importance: 5,
           vibration: true,
-          sound: 'alarm_sound.mp3',
+          sound: 'alarm_sound', // Sin extensión para recursos nativos
           lights: true,
           lightColor: '#FF0000',
           visibility: 1 // Public
@@ -196,15 +196,25 @@ export class AlarmBackgroundService {
 
   private async setupNotificationListeners(): Promise<void> {
     // Cuando se hace clic en la notificación
-    LocalNotifications.addListener('localNotificationActionPerformed', async (action) => {
+    LocalNotifications.addListener('localNotificationActionPerformed', async (action: any) => {
       const alarmId = action.notification.extra?.alarmId;
       const type = action.notification.extra?.type;
-      
+
       if (type === 'ALARM_TRIGGER' && alarmId) {
-        // Aquí puedes abrir la app o mostrar alerta
         console.log('Alarma clickeada:', alarmId);
-        
-        // Emitir evento para que Tab3Page maneje el sonido
+        window.dispatchEvent(new CustomEvent('alarmTriggered', {
+          detail: { alarmId }
+        }));
+      }
+    });
+
+    // NUEVO: Escuchar notificaciones recibidas en primer plano
+    LocalNotifications.addListener('localNotificationReceived', (notification) => {
+      const alarmId = notification.extra?.alarmId;
+      const type = notification.extra?.type;
+
+      if (type === 'ALARM_TRIGGER' && alarmId) {
+        console.log('Alarma recibida en primer plano:', alarmId);
         window.dispatchEvent(new CustomEvent('alarmTriggered', {
           detail: { alarmId }
         }));
