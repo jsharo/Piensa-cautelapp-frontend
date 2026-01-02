@@ -61,7 +61,7 @@ export class AlarmBackgroundService {
           title: '⏰ ' + alarm.label,
           body: alarm.notes || `Hora de ${alarm.category}`,
           schedule: { at: new Date(triggerDate) },
-          sound: 'alarm_sound', // Sin extensión para recursos nativos en Android
+          sound: 'alarm_sound.mp3', // Nombre del archivo en res/raw
           extra: {
             alarmId: alarm.id,
             type: 'ALARM_TRIGGER',
@@ -72,7 +72,8 @@ export class AlarmBackgroundService {
           ongoing: true,
           autoCancel: false,
           smallIcon: 'ic_stat_alarm',
-          largeIcon: 'ic_launcher' // Ícono grande
+          largeIcon: 'ic_launcher', // Ícono grande
+          actionTypeId: 'ALARM_ACTION'
         }]
       });
 
@@ -181,9 +182,9 @@ export class AlarmBackgroundService {
           id: 'alarm_channel',
           name: 'Alarmas',
           description: 'Canal para alarmas de medicamentos y citas',
-          importance: 5,
+          importance: 5, // IMPORTANCE_HIGH para sonar incluso en no molestar
           vibration: true,
-          sound: 'alarm_sound', // Sin extensión para recursos nativos
+          sound: 'alarm_sound.mp3', // Nombre del archivo en res/raw
           lights: true,
           lightColor: '#FF0000',
           visibility: 1 // Public

@@ -1,3 +1,4 @@
+
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { IonContent, PopoverController, ModalController, ToastController } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
@@ -32,10 +33,7 @@ interface AdultoMayor {
   selector: 'app-tab2',
   templateUrl: 'tab2.page.html',
   styleUrls: ['tab2.page.scss'],
-<<<<<<< HEAD
   standalone: true,
-=======
->>>>>>> 69254cb57ccfdf3705e079b6813dceecd91ec5e1
   imports: [IonContent, CommonModule, FormsModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
@@ -43,9 +41,7 @@ export class Tab2Page implements OnInit {
   userProfileImage: string | null = null;
   adultosMonitoreados: AdultoMayor[] = [];
   dispositivosBackend: AdultoMayor[] = [];
-
-
-  // --- INVITACIÓN POR CÓDIGO ---
+  dispositivosReales: ConnectedDevice[] = [];
   sharedGroup: SharedGroup | null = null;
   inviteCode: string | null = null;
   joinCode: string = '';
@@ -62,8 +58,8 @@ export class Tab2Page implements OnInit {
     private toastController: ToastController,
     private sharedGroupService: SharedGroupService
   ) { }
-  // --- LÓGICA DE INVITACIÓN ---
-  async createOrGetGroup() {
+
+  async createOrGetGroup(): Promise<void> {
     this.isLoadingGroup = true;
     this.inviteCode = null;
     this.sharedGroup = null;
@@ -73,71 +69,51 @@ export class Tab2Page implements OnInit {
       this.isLoadingGroup = false;
       return;
     }
-    this.sharedGroupService.getMyGroups(user.id_usuario).subscribe({
-      next: (groups) => {
-        if (groups.length > 0) {
-          this.sharedGroup = groups[0];
-          this.inviteCode = groups[0].code;
+    this.sharedGroupService.getMyGroups(user.id_usuario).subscribe((groups: any[]) => {
+      if (groups.length > 0) {
+        this.sharedGroup = groups[0];
+        this.inviteCode = groups[0].code;
+        this.isLoadingGroup = false;
+      } else {
+        this.sharedGroupService.createGroup(user.id_usuario).subscribe((group: any) => {
+          this.sharedGroup = group;
+          this.inviteCode = group.code;
           this.isLoadingGroup = false;
-        } else {
-          this.sharedGroupService.createGroup(user.id_usuario).subscribe({
-            next: (group) => {
-              this.sharedGroup = group;
-              this.inviteCode = group.code;
-              this.isLoadingGroup = false;
-            },
-            error: () => { this.isLoadingGroup = false; }
-          });
-        }
-      },
-      error: () => { this.isLoadingGroup = false; }
-    });
+        }, () => { this.isLoadingGroup = false; });
+      }
+    }, () => { this.isLoadingGroup = false; });
   }
 
-  joinGroupByCode() {
+  joinGroupByCode(): void {
     this.joinError = '';
     const user = this.auth.getCurrentUser();
     if (!user || !this.joinCode.trim()) return;
     this.isLoadingGroup = true;
-    this.sharedGroupService.joinGroup(user.id_usuario, this.joinCode.trim()).subscribe({
-      next: (group) => {
-        this.sharedGroup = group;
-        this.inviteCode = group.code;
-        this.isLoadingGroup = false;
-        this.joinCode = '';
-      },
-      error: (err) => {
-        this.joinError = 'Código inválido o ya eres miembro.';
-        this.isLoadingGroup = false;
-      }
+    this.sharedGroupService.joinGroup(user.id_usuario, this.joinCode.trim()).subscribe((group: any) => {
+      this.sharedGroup = group;
+      this.inviteCode = group.code;
+      this.isLoadingGroup = false;
+      this.joinCode = '';
+    }, (_err: any) => {
+      this.joinError = 'Código inválido o ya eres miembro.';
+      this.isLoadingGroup = false;
     });
   }
 
-  ngOnInit() {
-    // Cargar imagen del perfil del usuario
+  ngOnInit(): void {
     this.loadUserProfileImage();
-<<<<<<< HEAD
-
-    // Cargar dispositivos guardados del backend
     this.cargarDispositivosGuardados();
-
-    // Suscribirse a los dispositivos conectados en tiempo real (BLE)
-    this.bleService.connectedDevices$.subscribe(devices => {
+    this.bleService.connectedDevices$.subscribe((devices: ConnectedDevice[]) => {
       this.dispositivosReales = devices;
       this.combinarDispositivos();
     });
-=======
-    // Cargar dispositivos guardados del backend (WiFi)
-    this.cargarDispositivosGuardados();
->>>>>>> 69254cb57ccfdf3705e079b6813dceecd91ec5e1
   }
 
   cargarDispositivosGuardados() {
     this.deviceApiService.obtenerMisDispositivos().subscribe({
-      next: (dispositivos) => {
+      next: (dispositivos: any[]) => {
         console.log('RESPUESTA BACKEND obtenerMisDispositivos:', dispositivos);
-        // Convertir dispositivos guardados a formato AdultoMayor
-        this.dispositivosBackend = dispositivos.map((disp) => ({
+        this.dispositivosBackend = dispositivos.map((disp: any) => ({
           id_adulto: disp.id_adulto,
           nombre: disp.nombre,
           fecha_nacimiento: disp.fecha_nacimiento,
@@ -147,36 +123,29 @@ export class Tab2Page implements OnInit {
           conectado: false,
           ultimaActividad: 'Sin conexión reciente'
         }));
-<<<<<<< HEAD
-
-        // Combinar con dispositivos BLE conectados
         this.combinarDispositivos();
-=======
-        // Mostrar solo los adultos que tienen dispositivo válido (no null)
-        this.adultosMonitoreados = this.dispositivosBackend.filter(d => d.dispositivo);
->>>>>>> 69254cb57ccfdf3705e079b6813dceecd91ec5e1
+        this.adultosMonitoreados = this.dispositivosBackend.filter((d: any) => d.dispositivo);
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error cargando dispositivos guardados:', error);
       }
     });
   }
 
-
-<<<<<<< HEAD
-    // Combinar: priorizar dispositivos BLE (conectados) y agregar los del backend no conectados
+  combinarDispositivos() {
+    if (!this.dispositivosBackend) return;
+    const dispositivosBLE = this.dispositivosReales || [];
     const dispositivosCombinados: AdultoMayor[] = [];
-    const macsConectadas = new Set(dispositivosBLE.map(d => d.dispositivo.mac_address));
-
-    // Agregar dispositivos BLE conectados
-    dispositivosBLE.forEach(dispBLE => {
-      // Buscar si existe en backend para obtener datos completos
+    
+    // Filtrar dispositivos BLE válidos
+    const bleValidos = dispositivosBLE.filter((d: any) => d && d.dispositivo && d.dispositivo.mac_address);
+    const macsConectadas = new Set(bleValidos.map((d: any) => d.dispositivo.mac_address));
+    
+    bleValidos.forEach((dispBLE: any) => {
       const dispBackend = this.dispositivosBackend.find(
-        db => db.dispositivo.mac_address === dispBLE.dispositivo.mac_address
+        (db: any) => db && db.dispositivo && db.dispositivo.mac_address === dispBLE.dispositivo.mac_address
       );
-
       if (dispBackend) {
-        // Usar datos del backend pero marcar como conectado
         dispositivosCombinados.push({
           ...dispBackend,
           conectado: true,
@@ -184,22 +153,19 @@ export class Tab2Page implements OnInit {
           deviceId: dispBLE.deviceId
         });
       } else {
-        // Usar datos del BLE
         dispositivosCombinados.push(dispBLE);
       }
     });
-
-    // Agregar dispositivos del backend que NO están conectados
-    this.dispositivosBackend.forEach(dispBackend => {
-      if (!macsConectadas.has(dispBackend.dispositivo.mac_address)) {
-        dispositivosCombinados.push(dispBackend);
+    
+    this.dispositivosBackend.forEach((dispBackend: any) => {
+      if (dispBackend && dispBackend.dispositivo && dispBackend.dispositivo.mac_address) {
+        if (!macsConectadas.has(dispBackend.dispositivo.mac_address)) {
+          dispositivosCombinados.push(dispBackend);
+        }
       }
     });
-
     this.adultosMonitoreados = dispositivosCombinados;
   }
-=======
->>>>>>> 69254cb57ccfdf3705e079b6813dceecd91ec5e1
 
   calcularEdad(fechaNacimiento: string): number {
     const hoy = new Date();
@@ -226,7 +192,6 @@ export class Tab2Page implements OnInit {
   }
 
   openAddDevice() {
-    // Navegar a la página de configuración para conectar un nuevo dispositivo
     this.router.navigate(['/configuration']);
   }
 
@@ -234,8 +199,8 @@ export class Tab2Page implements OnInit {
     const infoTexto = `Información de ${adulto.nombre}\n\n` +
       `Edad: ${adulto.edad} años\n` +
       `Dirección: ${adulto.direccion}\n` +
-      `Dispositivo: ${adulto.dispositivo.mac_address}\n` +
-      `Batería: ${adulto.dispositivo.bateria}%\n` +
+      `Dispositivo: ${adulto.dispositivo?.mac_address || 'No asignado'}\n` +
+      `Batería: ${adulto.dispositivo?.bateria || 0}%\n` +
       `Estado: ${adulto.conectado ? 'En línea' : 'Desconectado'}\n` +
       `Última actividad: ${adulto.ultimaActividad}`;
     alert(infoTexto);
@@ -246,8 +211,6 @@ export class Tab2Page implements OnInit {
       component: AdultInfoModalComponent,
       cssClass: 'adult-info-modal'
     });
-
-    // Configurar datos mediante el componente antes de presentar
     modal.componentProps = {
       nombre: adulto.nombre,
       fecha_nacimiento: adulto.fecha_nacimiento ? new Date(adulto.fecha_nacimiento).toISOString().split('T')[0] : '',
@@ -255,12 +218,9 @@ export class Tab2Page implements OnInit {
       isEditMode: true,
       title: 'Editar Adulto Mayor'
     };
-
     await modal.present();
     const { data } = await modal.onWillDismiss();
-
     if (data) {
-      // Actualizar en el backend
       this.deviceApiService.actualizarAdultoMayor(adulto.id_adulto, {
         nombre: data.nombre,
         fecha_nacimiento: data.fecha_nacimiento,
@@ -268,9 +228,9 @@ export class Tab2Page implements OnInit {
       }).subscribe({
         next: async () => {
           await this.showToast('Datos actualizados exitosamente', 'success');
-          this.cargarDispositivosGuardados(); // Recargar lista
+          this.cargarDispositivosGuardados();
         },
-        error: async (error) => {
+        error: async (error: any) => {
           console.error('Error actualizando adulto mayor:', error);
           await this.showToast('Error al actualizar los datos', 'danger');
         }
@@ -291,20 +251,16 @@ export class Tab2Page implements OnInit {
   async removeDevice(adulto: AdultoMayor) {
     const confirmed = confirm(`¿Dejar de monitorear a ${adulto.nombre}?`);
     if (!confirmed) return;
-
-    // Desconectar BLE si está conectado
     if (adulto.deviceId) {
       await this.bleService.disconnectDevice(adulto.deviceId);
     }
-
-    // Eliminar en backend si existe en base de datos
     if (adulto.dispositivo?.id_dispositivo) {
       this.deviceApiService.deleteDispositivo(adulto.dispositivo.id_dispositivo).subscribe({
         next: async () => {
           await this.showToast('Dispositivo eliminado correctamente', 'success');
-          this.cargarDispositivosGuardados(); // Recargar lista desde backend para asegurar sincronía
+          this.cargarDispositivosGuardados();
         },
-        error: async (error) => {
+        error: async (error: any) => {
           let errorMsg = 'Error al eliminar el dispositivo';
           if (error && error.error) {
             if (typeof error.error === 'string') {
@@ -323,11 +279,8 @@ export class Tab2Page implements OnInit {
   }
 
   async openProfileMenu(event: any) {
-    // Recargar imagen por si cambió en el modal
     this.loadUserProfileImage();
-
     const currentUser = this.auth.getCurrentUser();
-
     const popover = await this.popoverController.create({
       component: ProfileMenuComponent,
       event: event,
@@ -338,7 +291,6 @@ export class Tab2Page implements OnInit {
       translucent: true,
       cssClass: 'profile-popover'
     });
-
     return await popover.present();
   }
 }

@@ -24,6 +24,7 @@ import { ProfileMenuComponent } from '../tab1/profile-menu/profile-menu.componen
 import { AlarmBackgroundService } from '../services/alarm.background.service';
 import { Inject } from '@angular/core';
 import { App } from '@capacitor/app';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 // INTERFACE MODIFICADA:
 interface Alarm {
@@ -65,7 +66,9 @@ export class Tab3Page implements OnInit, OnDestroy {
   userProfileImage: string | null = null;
   selectedCategory: 'all' | 'medicamento' | 'cita' | 'otro' = 'all';
   editingAlarm: Alarm | null = null;
-  private audio: HTMLAudioElement;
+  private audio: HTMLAudioElement | null = null;
+  private audioContext: AudioContext | null = null;
+  private isPlayingSound = false;
 
   daysOfWeek = [
     { label: 'D', value: 0 },
@@ -103,10 +106,13 @@ export class Tab3Page implements OnInit, OnDestroy {
       'volume-high-outline': volumeHighOutline,
       'play-outline': playOutline
     });
-    this.audio = new Audio();
-    this.audio.src = 'assets/sounds/alarm_sound.mp3';
-    this.audio.load();
-    this.audio.loop = true;
+    // Inicializar audio solo si estamos en un navegador (no en Android nativo)
+    if (typeof Audio !== 'undefined') {
+      this.audio = new Audio();
+      this.audio.src = 'assets/sounds/alarm_sound.mp3';
+      this.audio.load();
+      this.audio.loop = true;
+    }
   }
 
   // ngOnInit MODIFICADO COMPLETAMENTE:
@@ -579,21 +585,57 @@ export class Tab3Page implements OnInit, OnDestroy {
     }
   }
 
-  playAlarmSound() {
-    this.audio.volume = 1.0;
-    this.audio.play().then(() => {
-      console.log('Reproduciendo sonido de alarma');
-    }).catch(err => {
-      console.error('Error al reproducir el sonido:', err);
-      // Intento de recuperación: re-cargar y reproducir
-      this.audio.load();
-      this.audio.play().catch(e => console.error('Fallo final de audio:', e));
-    });
+  async playAlarmSound() {
+    if (this.isPlayingSound) return;
+    this.isPlayingSound = true;
+
+    // Vibración fuerte para llamar la atención
+    try {
+      await Haptics.vibrate({ duration: 1000 });
+      // Repetir vibración cada 2 segundos
+      const vibrateInterval = setInterval(async () => {
+        if (this.isPlayingSound) {
+          await Haptics.vibrate({ duration: 500 });
+        } else {
+          clearInterval(vibrateInterval);
+        }
+      }, 2000);
+    } catch (e) {
+      console.log('Vibración no disponible');
+    }
+
+    // En Android nativo, el sonido lo maneja LocalNotifications
+    // Solo reproducir audio si estamos en navegador
+    if (this.audio) {
+      try {
+        // Crear AudioContext si no existe (necesario para algunos navegadores)
+        if (!this.audioContext) {
+          this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+        
+        // Reanudar el contexto de audio si está suspendido
+        if (this.audioContext.state === 'suspended') {
+          await this.audioContext.resume();
+        }
+
+        this.audio.volume = 1.0;
+        await this.audio.play();
+        console.log('Reproduciendo sonido de alarma');
+      } catch (err) {
+        console.error('Error playing sound:', err);
+      }
+    }
   }
 
   stopAlarmSound() {
-    this.audio.pause();
-    this.audio.currentTime = 0;
+    this.isPlayingSound = false;
+    
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.currentTime = 0;
+    }
+    
+    // Detener vibración (ya se detendrá automáticamente con isPlayingSound = false)
   }
 
   async showToast(message: string) {
