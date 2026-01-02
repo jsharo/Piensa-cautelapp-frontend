@@ -38,6 +38,10 @@ export class DeviceApiService {
 
   constructor(private http: HttpClient) {}
 
+  deleteDispositivo(id_dispositivo: number) {
+    return this.http.delete(`${this.apiUrl}/${id_dispositivo}`);
+  }
+
   vincularDispositivo(dto: VincularDispositivoDto): Observable<any> {
     return this.http.post(`${this.apiUrl}/vincular`, dto);
   }

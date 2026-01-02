@@ -6,7 +6,7 @@ android {
     defaultConfig {
         applicationId "io.ionic.starter"
         minSdkVersion 24
-        targetSdkVersion 36
+        targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
