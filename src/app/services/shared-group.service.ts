@@ -41,4 +41,8 @@ export class SharedGroupService {
   getGroupByCode(code: string): Observable<SharedGroup> {
     return this.http.get<SharedGroup>(`${this.apiUrl}/code/${code}`);
   }
+
+  leaveGroup(userId: number, groupId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/leave`, { userId, groupId });
+  }
 }

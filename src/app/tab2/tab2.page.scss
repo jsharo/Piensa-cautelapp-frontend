@@ -17,7 +17,7 @@ $error: #DC2626;
   background: $dark-blue;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   padding-top: calc(env(safe-area-inset-top) + 8px);
   padding-left: max(20px, env(safe-area-inset-left));
   padding-right: max(20px, env(safe-area-inset-right));
@@ -43,15 +43,39 @@ $error: #DC2626;
     font-size: 22px;
     font-weight: 600;
     color: $white;
-    margin-bottom: 12px;
+    margin: 0;
   }
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  
+  gap: 12px;
+
+  .share-btn {
+    background: transparent;
+    border: 2px solid $teal;
+    color: $teal;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    ion-icon {
+      font-size: 22px;
+    }
+
+    &:hover, &:active {
+      background: $teal;
+      color: $white;
+      transform: scale(1.05);
+    }
+  }
+
   .profile-btn {
     background: none;
     border: none;
@@ -424,3 +448,30 @@ ion-content {
     --box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   }
 }
+
+::ng-deep {
+  .profile-popover {
+    --width: auto;
+    --min-width: 280px;
+  }
+
+  .profile-modal {
+    --width: 90%;
+    --height: 90%;
+    --max-width: 500px;
+    --border-radius: 16px;
+    --box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+
+  .shared-group-modal {
+    --height: auto;
+    --max-height: 90vh;
+    --border-radius: 16px 16px 0 0;
+    --box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
+    
+    ion-backdrop {
+      opacity: 0.6;
+    }
+  }
+}
+

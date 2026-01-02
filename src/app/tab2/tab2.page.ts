@@ -1,4 +1,3 @@
-
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { IonContent, PopoverController, ModalController, ToastController } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
@@ -7,8 +6,8 @@ import { ProfileMenuComponent } from '../tab1/profile-menu/profile-menu.componen
 import { BleService, ConnectedDevice } from '../services/ble.service';
 import { Router } from '@angular/router';
 import { DeviceApiService } from '../services/device-api.service';
-import { SharedGroupService, SharedGroup } from '../services/shared-group.service';
 import { AdultInfoModalComponent } from '../pages/configuration/adult-info-modal/adult-info-modal.component';
+import { SharedGroupModalComponent } from './shared-group-modal/shared-group-modal.component';
 import { FormsModule } from '@angular/forms';
 
 interface Dispositivo {
@@ -42,11 +41,6 @@ export class Tab2Page implements OnInit {
   adultosMonitoreados: AdultoMayor[] = [];
   dispositivosBackend: AdultoMayor[] = [];
   dispositivosReales: ConnectedDevice[] = [];
-  sharedGroup: SharedGroup | null = null;
-  inviteCode: string | null = null;
-  joinCode: string = '';
-  joinError: string = '';
-  isLoadingGroup = false;
 
   constructor(
     private auth: AuthService,
@@ -55,49 +49,18 @@ export class Tab2Page implements OnInit {
     private router: Router,
     private deviceApiService: DeviceApiService,
     private modalController: ModalController,
-    private toastController: ToastController,
-    private sharedGroupService: SharedGroupService
+    private toastController: ToastController
   ) { }
 
-  async createOrGetGroup(): Promise<void> {
-    this.isLoadingGroup = true;
-    this.inviteCode = null;
-    this.sharedGroup = null;
-    this.joinError = '';
-    const user = this.auth.getCurrentUser();
-    if (!user) {
-      this.isLoadingGroup = false;
-      return;
-    }
-    this.sharedGroupService.getMyGroups(user.id_usuario).subscribe((groups: any[]) => {
-      if (groups.length > 0) {
-        this.sharedGroup = groups[0];
-        this.inviteCode = groups[0].code;
-        this.isLoadingGroup = false;
-      } else {
-        this.sharedGroupService.createGroup(user.id_usuario).subscribe((group: any) => {
-          this.sharedGroup = group;
-          this.inviteCode = group.code;
-          this.isLoadingGroup = false;
-        }, () => { this.isLoadingGroup = false; });
-      }
-    }, () => { this.isLoadingGroup = false; });
-  }
-
-  joinGroupByCode(): void {
-    this.joinError = '';
-    const user = this.auth.getCurrentUser();
-    if (!user || !this.joinCode.trim()) return;
-    this.isLoadingGroup = true;
-    this.sharedGroupService.joinGroup(user.id_usuario, this.joinCode.trim()).subscribe((group: any) => {
-      this.sharedGroup = group;
-      this.inviteCode = group.code;
-      this.isLoadingGroup = false;
-      this.joinCode = '';
-    }, (_err: any) => {
-      this.joinError = 'Código inválido o ya eres miembro.';
-      this.isLoadingGroup = false;
+  async openSharedGroupModal() {
+    const modal = await this.modalController.create({
+      component: SharedGroupModalComponent,
+      cssClass: 'shared-group-modal',
+      breakpoints: [0, 0.5, 0.9, 1],
+      initialBreakpoint: 0.9,
+      handle: true
     });
+    return await modal.present();
   }
 
   ngOnInit(): void {

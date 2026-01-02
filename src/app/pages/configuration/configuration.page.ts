@@ -1,5 +1,5 @@
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { IonContent, IonSpinner, NavController, ToastController, ModalController } from '@ionic/angular/standalone';
+import { IonContent, IonSpinner, NavController, ToastController, ModalController, ViewWillEnter } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../services/auth.service';
@@ -43,7 +43,7 @@ interface WiFiNetwork {
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class ConfigurationPage implements OnInit {
+export class ConfigurationPage implements OnInit, ViewWillEnter {
   // Iconos de Lucide
   readonly ChevronLeft = ChevronLeft;
   readonly Bluetooth = Bluetooth;
@@ -93,10 +93,13 @@ export class ConfigurationPage implements OnInit {
     private modalController: ModalController
   ) {}
 
-  async ngOnInit() {
-    // Inicializar Bluetooth cuando carga la página
+  ngOnInit() {
+    // No inicializar nada aquí para evitar problemas de navegación
+  }
+
+  async ionViewWillEnter() {
+    // Inicializar cuando la vista esté por entrar
     await this.initializeBluetooth();
-    // Cargar usuario actual
     this.loadUser();
   }
 

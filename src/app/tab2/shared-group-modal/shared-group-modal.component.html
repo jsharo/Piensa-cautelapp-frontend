@@ -1,0 +1,112 @@
+<div class="modal-wrapper">
+  <div class="modal-header">
+    <h2>
+      <ion-icon name="people-circle"></ion-icon>
+      Compartir Dispositivos
+    </h2>
+    <button class="btn-close" (click)="dismiss()">
+      <ion-icon name="close"></ion-icon>
+    </button>
+  </div>
+
+  <div class="modal-content">
+    <p class="group-description">
+      Crea un grupo para compartir notificaciones de tus dispositivos con familiares o cuidadores.
+    </p>
+
+    <!-- Loading -->
+    <div *ngIf="isLoadingGroup" class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Cargando...</p>
+    </div>
+
+    <!-- Sin grupo activo -->
+    <div *ngIf="!inviteCode && !isLoadingGroup" class="no-group">
+      <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+      <h3>No tienes un grupo activo</h3>
+      <p>Crea un grupo o únete usando un código de invitación</p>
+      <button class="btn-primary" (click)="createOrGetGroup()">
+        <ion-icon name="add-circle"></ion-icon>
+        Crear Grupo
+      </button>
+    </div>
+
+    <!-- Grupo activo -->
+    <div *ngIf="inviteCode && sharedGroup && !isLoadingGroup" class="active-group">
+      <div class="invite-code-container">
+        <div class="code-display">
+          <label>Código de Invitación</label>
+          <div class="code-box">
+            <span class="code-text">{{ inviteCode }}</span>
+            <button class="btn-copy" (click)="copyInviteCode()" title="Copiar código">
+              <ion-icon name="copy-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+        <p class="invite-instructions">
+          <ion-icon name="information-circle"></ion-icon>
+          Comparte este código para que otros se unan y reciban notificaciones
+        </p>
+      </div>
+
+      <!-- Miembros del grupo -->
+      <div class="members-section">
+        <h3>
+          <ion-icon name="people"></ion-icon>
+          Miembros ({{ sharedGroup.members?.length || 0 }})
+        </h3>
+        <div class="members-list">
+          <div *ngFor="let member of sharedGroup.members" class="member-item">
+            <ion-icon name="person-circle" class="member-icon"></ion-icon>
+            <div class="member-info">
+              <span class="member-name">{{ member.user?.nombre || 'Usuario ' + member.user_id }}</span>
+              <span class="member-email">{{ member.user?.email || '' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones del grupo -->
+      <div class="group-actions">
+        <button class="btn-secondary" (click)="createOrGetGroup()">
+          <ion-icon name="refresh"></ion-icon>
+          Actualizar
+        </button>
+        <button class="btn-danger" (click)="leaveGroup()">
+          <ion-icon name="exit-outline"></ion-icon>
+          Salir del Grupo
+        </button>
+      </div>
+    </div>
+
+    <!-- Unirse a un grupo -->
+    <div class="join-section">
+      <div class="divider">
+        <span>o</span>
+      </div>
+      <h3>¿Tienes un código de invitación?</h3>
+      <div class="join-form">
+        <div class="input-group">
+          <input 
+            type="text" 
+            [(ngModel)]="joinCode" 
+            maxlength="8" 
+            placeholder="Ingresa el código" 
+            class="join-input"
+            [disabled]="isLoadingGroup">
+          <button 
+            class="btn-join" 
+            (click)="joinGroupByCode()" 
+            [disabled]="isLoadingGroup || !joinCode.trim()">
+            <ion-icon name="enter-outline"></ion-icon>
+            Unirse
+          </button>
+        </div>
+        <div *ngIf="joinError" class="error-message">
+          <ion-icon name="alert-circle"></ion-icon>
+          {{ joinError }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
