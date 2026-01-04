@@ -5,9 +5,6 @@
     <h1 class="titulo">Dispositivos</h1>
   </div>
   <div class="header-right">
-    <button class="share-btn" (click)="openSharedGroupModal()" title="Compartir dispositivos">
-      <ion-icon name="people"></ion-icon>
-    </button>
     <button class="profile-btn" (click)="openProfileMenu($event)">
       <img *ngIf="userProfileImage" [src]="userProfileImage" alt="Perfil" class="profile-img">
       <ion-icon *ngIf="!userProfileImage" name="person-circle" class="profile-icon"></ion-icon>
@@ -24,7 +21,12 @@
         <h2 class="section-title">Adultos Mayores</h2>
         <p class="section-subtitle">{{ adultosMonitoreados.length }} monitoreado(s)</p>
       </div>
-      <button class="btn-add-device" (click)="openAddDevice()"><ion-icon name="add-circle"></ion-icon>Agregar</button>
+      <div class="section-actions">
+        <button class="share-btn" (click)="openSharedGroupDetail()" title="Compartir dispositivos">
+          <ion-icon name="people"></ion-icon>
+        </button>
+        <button class="btn-add-device" (click)="openAddDevice()"><ion-icon name="add-circle"></ion-icon>Agregar</button>
+      </div>
     </div>
 
     <!-- Lista de dispositivos -->

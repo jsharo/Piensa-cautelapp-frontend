@@ -38,4 +38,9 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/forgot-password/forgot-password.page').then(m => m.ForgotPasswordPage),
     canActivate: [noAuthGuard]
   },
+  {
+    path: 'shared-group-detail',
+    loadComponent: () => import('./pages/shared-group-detail/shared-group-detail.page').then(m => m.SharedGroupDetailPage),
+    canActivate: [authGuard]
+  },
 ];

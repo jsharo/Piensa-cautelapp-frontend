@@ -5,8 +5,9 @@ import { NavController, PopoverController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { ProfileMenuComponent } from './profile-menu/profile-menu.component';
+import { NotificationService, Notification } from '../services/notification.service';
 
-interface Notificacion {
+interface NotificacionUI {
   id: number;
   tipo: 'emergencia' | 'ayuda';
   usuario: string;
@@ -16,6 +17,7 @@ interface Notificacion {
   leida: boolean;
   resuelta?: boolean;
   etiquetas?: string[];
+  isShared?: boolean; // Indica si viene de un dispositivo compartido
 }
 
 type Filtro = 'todas' | 'emergencia' | 'ayuda';
@@ -30,51 +32,20 @@ type Filtro = 'todas' | 'emergencia' | 'ayuda';
 export class Tab1Page implements OnInit {
   filtroActivo: Filtro = 'todas';
   userProfileImage: string | null = null;
-  
-  notificaciones: Notificacion[] = [
-    {
-      id: 1,
-      tipo: 'emergencia',
-      usuario: 'María García',
-      descripcion: '¡Papá se ha caído en el baño! Necesito ayuda urgente.',
-      tiempo: 'Hace 5 min',
-      ubicacion: 'Casa Principal - Baño',
-      leida: false
-    },
-    {
-      id: 2,
-      tipo: 'ayuda',
-      usuario: 'Pedro Martínez',
-      descripcion: 'Necesito ayuda para encontrar mis medicamentos.',
-      tiempo: 'Hace 15 min',
-      ubicacion: 'Habitación Principal',
-      leida: false
-    },
-    {
-      id: 3,
-      tipo: 'ayuda',
-      usuario: 'Ana López',
-      descripcion: '¿Podrías ayudarme a recordar dónde dejé las llaves?',
-      tiempo: 'Ayer 18:30',
-      leida: true,
-      resuelta: true
-    },
-    {
-      id: 4,
-      tipo: 'emergencia',
-      usuario: 'Carlos Ruiz',
-      descripcion: 'Dolor en el pecho, llamen a emergencias.',
-      tiempo: 'Ayer 14:20',
-      leida: true,
-      resuelta: true
-    }
-  ];
+  notificaciones: NotificacionUI[] = [];
+  isLoading = false;
 
-  constructor(private navCtrl: NavController, private router: Router, private auth: AuthService, private popoverController: PopoverController) {}
+  constructor(
+    private navCtrl: NavController, 
+    private router: Router, 
+    private auth: AuthService, 
+    private popoverController: PopoverController,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit() {
-    // Cargar imagen del perfil del usuario
     this.loadUserProfileImage();
+    this.loadNotifications();
   }
 
   loadUserProfileImage() {
@@ -84,7 +55,63 @@ export class Tab1Page implements OnInit {
     }
   }
 
-  get notificacionesFiltradas(): Notificacion[] {
+  loadNotifications() {
+    const user = this.auth.getCurrentUser();
+    if (!user) return;
+
+    this.isLoading = true;
+    this.notificationService.getUserNotifications(user.id_usuario).subscribe({
+      next: (notifications: Notification[]) => {
+        this.notificaciones = notifications.map(n => this.transformNotification(n));
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error cargando notificaciones:', error);
+        this.isLoading = false;
+        // Mantener notificaciones vacías en caso de error
+        this.notificaciones = [];
+      }
+    });
+  }
+
+  transformNotification(n: Notification): NotificacionUI {
+    const tipo = n.tipo.toLowerCase() === 'emergencia' ? 'emergencia' : 'ayuda';
+    const usuario = n.adulto?.nombre || 'Usuario desconocido';
+    const descripcion = n.mensaje || (tipo === 'emergencia' 
+      ? `${usuario} necesita asistencia de inmediato.`
+      : `${usuario} necesita ayuda.`);
+    
+    const isShared = n.adulto?.sharedInGroups && n.adulto.sharedInGroups.length > 0;
+    
+    return {
+      id: n.id_notificacion,
+      tipo: tipo,
+      usuario: usuario,
+      descripcion: descripcion,
+      tiempo: this.getRelativeTime(n.fecha_hora),
+      ubicacion: n.adulto?.direccion,
+      leida: false,
+      isShared: isShared
+    };
+  }
+
+  getRelativeTime(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Ahora';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffHours < 24) return `Hace ${diffHours} h`;
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  }
+
+  get notificacionesFiltradas(): NotificacionUI[] {
     if (this.filtroActivo === 'todas') {
       return this.notificaciones;
     }

@@ -1,0 +1,494 @@
+@use 'sass:color';
+
+// Paleta Cautelapp
+$dark-blue: #002333;
+$teal: #159A9C;
+$light-gray: #B4BEC9;
+$light-mint: #DEEFE7;
+$white: #FFFFFF;
+$text: #1A202C;
+$text-light: #4A5568;
+$border: #E2E8F0;
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+// Estilos para modal centrado
+::ng-deep .alarm-modal-centered {
+  --width: 90%;
+  --max-width: 600px;
+  --height: 80vh;
+  --border-radius: 20px;
+  --box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+
+  @media (max-width: 768px) {
+    --width: 95%;
+    --height: 85vh;
+  }
+}
+
+.modal-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: $light-mint;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, $dark-blue 0%, color.adjust($dark-blue, $lightness: -5%) 100%);
+  color: $white;
+  box-shadow: 0 4px 12px rgba(0, 35, 51, 0.2);
+  flex-shrink: 0;
+  gap: 12px;
+  border-radius: 20px 20px 0 0;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    flex: 1;
+
+    ion-icon {
+      font-size: 24px;
+    }
+  }
+
+  .btn-save {
+    background: rgba(21, 154, 156, 0.2);
+    border: 2px solid rgba(21, 154, 156, 0.4);
+    color: $white;
+    cursor: pointer;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    font-weight: 700;
+    font-size: 14px;
+    white-space: nowrap;
+
+    ion-icon {
+      font-size: 20px;
+    }
+
+    &:active {
+      background: rgba(21, 154, 156, 0.4);
+      transform: scale(0.95);
+    }
+  }
+
+  .btn-close {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: $white;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+
+    ion-icon {
+      font-size: 24px;
+    }
+
+    &:active {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(0.9);
+    }
+  }
+}
+
+.modal-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  padding-bottom: 40px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Section Headers */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  .section-icon {
+    font-size: 20px;
+    color: $teal;
+  }
+
+  .section-label-main {
+    font-size: 15px;
+    font-weight: 700;
+    color: $dark-blue;
+    flex: 1;
+  }
+
+  .days-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: $teal;
+    background: rgba(21, 154, 156, 0.1);
+    padding: 4px 10px;
+    border-radius: 12px;
+  }
+}
+
+/* Time Picker Mejorado */
+.time-picker-section {
+  background: $white;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 35, 51, 0.08);
+  border: 2px solid rgba(21, 154, 156, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: rgba(21, 154, 156, 0.3);
+    box-shadow: 0 6px 16px rgba(0, 35, 51, 0.12);
+  }
+
+  .custom-datetime {
+    --background: #{$white};
+  }
+}
+
+.input-section {
+  margin-bottom: 20px;
+
+  &.enhanced {
+    background: $white;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 35, 51, 0.06);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 35, 51, 0.1);
+    }
+  }
+}
+
+.custom-input {
+  --background: #{$white};
+  --border-color: #{$border};
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  border-radius: 12px;
+  box-shadow: $shadow-sm;
+
+  &.enhanced {
+    --background: rgba(222, 239, 231, 0.3);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    box-shadow: none;
+
+    &:focus-within {
+      --background: #{$white};
+      border-color: $teal;
+    }
+  }
+
+  ion-input {
+    --color: #{$text};
+    --placeholder-color: #{$text-light};
+    font-size: 16px;
+
+    &.enhanced-input {
+      font-weight: 500;
+    }
+  }
+
+  &.textarea {
+    min-height: 60px;
+  }
+}
+
+/* Category Selector Mejorado */
+.category-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.category-btn {
+  background: $white;
+  border: 2px solid $border;
+  border-radius: 12px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-light;
+
+  &.enhanced {
+    background: rgba(222, 239, 231, 0.3);
+    border: 2px solid transparent;
+
+    .category-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+
+      ion-icon {
+        font-size: 24px;
+        color: $white;
+      }
+
+      &.medicamento {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      }
+
+      &.cita {
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      }
+
+      &.otro {
+        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+      }
+    }
+
+    span {
+      font-size: 13px;
+      font-weight: 600;
+      color: $dark-blue;
+    }
+  }
+
+  &:hover {
+    border-color: $teal;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(21, 154, 156, 0.2);
+  }
+
+  &.selected {
+    background: $teal;
+    border-color: $teal;
+    color: $white;
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(21, 154, 156, 0.3);
+
+    &.enhanced {
+      .category-icon {
+        transform: scale(1.1);
+      }
+
+      span {
+        color: $white;
+      }
+    }
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Days Selector Mejorado */
+.days-selector {
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+}
+
+.day-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(222, 239, 231, 0.3);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: $text-light;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  .day-letter {
+    font-size: 14px;
+    font-weight: 800;
+    color: $dark-blue;
+  }
+
+  &:hover {
+    border-color: $teal;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(21, 154, 156, 0.2);
+  }
+
+  &.selected {
+    background: linear-gradient(135deg, $teal 0%, #117B7D 100%);
+    border-color: $teal;
+    color: $white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(21, 154, 156, 0.4);
+
+    .day-letter {
+      color: $white;
+    }
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Alarm Preview Card */
+.alarm-preview-card {
+  background: $white;
+  border-radius: 20px;
+  padding: 20px;
+  margin-top: 24px;
+  box-shadow: 0 8px 24px rgba(21, 154, 156, 0.15);
+  border: 2px solid rgba(21, 154, 156, 0.2);
+  animation: slideInUp 0.4s ease-out;
+
+  .preview-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(21, 154, 156, 0.1);
+
+    ion-icon {
+      font-size: 20px;
+      color: $teal;
+    }
+
+    span {
+      font-size: 13px;
+      font-weight: 700;
+      color: $teal;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .preview-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .preview-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+
+    ion-icon {
+      font-size: 28px;
+      color: $white;
+    }
+
+    &[data-category="medicamento"] {
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    }
+
+    &[data-category="cita"] {
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    }
+
+    &[data-category="otro"] {
+      background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+    }
+  }
+
+  .preview-info {
+    flex: 1;
+  }
+
+  .preview-time {
+    font-size: 32px;
+    font-weight: 800;
+    color: $dark-blue;
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+
+  .preview-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: $text;
+    margin-top: 6px;
+  }
+
+  .preview-days {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .preview-day-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    background: rgba(21, 154, 156, 0.15);
+    color: $teal;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    border: 1px solid rgba(21, 154, 156, 0.2);
+  }
+}
+
+/* Animaciones */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .category-selector {
+    grid-template-columns: 1fr;
+
+    .category-btn {
+      flex-direction: row;
+      justify-content: flex-start;
+      padding: 12px 16px;
+    }
+  }
+}

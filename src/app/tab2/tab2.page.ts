@@ -7,7 +7,6 @@ import { BleService, ConnectedDevice } from '../services/ble.service';
 import { Router } from '@angular/router';
 import { DeviceApiService } from '../services/device-api.service';
 import { AdultInfoModalComponent } from '../pages/configuration/adult-info-modal/adult-info-modal.component';
-import { SharedGroupModalComponent } from './shared-group-modal/shared-group-modal.component';
 import { FormsModule } from '@angular/forms';
 
 interface Dispositivo {
@@ -52,15 +51,8 @@ export class Tab2Page implements OnInit {
     private toastController: ToastController
   ) { }
 
-  async openSharedGroupModal() {
-    const modal = await this.modalController.create({
-      component: SharedGroupModalComponent,
-      cssClass: 'shared-group-modal',
-      breakpoints: [0, 0.5, 0.9, 1],
-      initialBreakpoint: 0.9,
-      handle: true
-    });
-    return await modal.present();
+  openSharedGroupDetail() {
+    this.router.navigate(['/shared-group-detail']);
   }
 
   ngOnInit(): void {

@@ -2,13 +2,13 @@ import { Component, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA } from '@angular/c
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent,
-  IonItem, IonLabel, IonToggle,
-  IonButton, IonIcon, IonModal, IonDatetime,
-  IonButtons, IonFab, IonFabButton,
+  IonContent,
+  IonItem, IonToggle,
+  IonButton, IonIcon,
+  IonFab, IonFabButton,
   IonItemSliding, IonItemOptions, IonItemOption,
   AlertController, ToastController, PopoverController,
-  IonInput
+  ModalController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -20,6 +20,7 @@ import {
 import { AuthService } from '../services/auth.service';
 import { AlarmService } from '../services/alarm.service';
 import { ProfileMenuComponent } from '../tab1/profile-menu/profile-menu.component';
+import { AlarmModalComponent } from './alarm-modal/alarm-modal.component';
 // NUEVAS IMPORTACIONES:
 import { AlarmBackgroundService } from '../services/alarm.background.service';
 import { Inject } from '@angular/core';
@@ -45,23 +46,16 @@ interface Alarm {
   standalone: true,
   imports: [
     CommonModule, FormsModule,
-    IonHeader, IonToolbar, IonTitle, IonContent,
-    IonItem, IonLabel, IonToggle,
-    IonButton, IonIcon, IonModal, IonDatetime,
-    IonButtons, IonFab, IonFabButton,
-    IonItemSliding, IonItemOptions, IonItemOption,
-    IonInput
+    IonContent,
+    IonItem, IonToggle,
+    IonButton, IonIcon,
+    IonFab, IonFabButton,
+    IonItemSliding, IonItemOptions, IonItemOption
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class Tab3Page implements OnInit, OnDestroy {
   alarms: Alarm[] = [];
-  isModalOpen = false;
-  newAlarmTime: string = new Date().toISOString();
-  newAlarmLabel: string = '';
-  newAlarmCategory: 'medicamento' | 'cita' | 'otro' = 'medicamento';
-  newAlarmRepeatDays: number[] = [];
-  newAlarmNotes: string = '';
   private checkIntervalId: any;
   userProfileImage: string | null = null;
   selectedCategory: 'all' | 'medicamento' | 'cita' | 'otro' = 'all';
@@ -70,16 +64,6 @@ export class Tab3Page implements OnInit, OnDestroy {
   private audioContext: AudioContext | null = null;
   private isPlayingSound = false;
 
-  daysOfWeek = [
-    { label: 'D', value: 0 },
-    { label: 'L', value: 1 },
-    { label: 'M', value: 2 },
-    { label: 'X', value: 3 },
-    { label: 'J', value: 4 },
-    { label: 'V', value: 5 },
-    { label: 'S', value: 6 }
-  ];
-
   // CONSTRUCTOR MODIFICADO:
   constructor(
     private alertController: AlertController,
@@ -87,6 +71,7 @@ export class Tab3Page implements OnInit, OnDestroy {
     private auth: AuthService,
     private alarmService: AlarmService,
     private popoverController: PopoverController,
+    private modalController: ModalController,
     @Inject(AlarmBackgroundService) private alarmBackground: AlarmBackgroundService // <-- NUEVO INYECTADO
   ) {
     addIcons({
@@ -189,78 +174,26 @@ export class Tab3Page implements OnInit, OnDestroy {
     localStorage.setItem('cautela_alarms', JSON.stringify(this.alarms));
   }
 
-  openAddModal() {
-    this.editingAlarm = null;
-    this.newAlarmTime = new Date().toISOString();
-    this.newAlarmLabel = '';
-    this.newAlarmCategory = 'medicamento';
-    this.newAlarmRepeatDays = [];
-    this.newAlarmNotes = '';
-    this.isModalOpen = true;
-  }
+  async openAddModal() {
+    const modal = await this.modalController.create({
+      component: AlarmModalComponent,
+      cssClass: 'alarm-modal-centered'
+    });
 
-  editAlarm(alarm: Alarm) {
-    this.editingAlarm = alarm;
-    const [hours, minutes] = alarm.time.split(':');
-    const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes));
-    this.newAlarmTime = date.toISOString();
-    this.newAlarmLabel = alarm.label;
-    this.newAlarmCategory = alarm.category;
-    this.newAlarmRepeatDays = [...alarm.repeatDays];
-    this.newAlarmNotes = alarm.notes || '';
-    this.isModalOpen = true;
-  }
+    await modal.present();
 
-  closeModal() {
-    this.isModalOpen = false;
-    this.editingAlarm = null;
-  }
+    const { data, role } = await modal.onWillDismiss();
 
-  // MÉTODO saveAlarm COMPLETAMENTE MODIFICADO:
-  async saveAlarm() {
-    if (!this.newAlarmLabel.trim()) {
-      this.showToast('Por favor ingresa un título');
-      return;
-    }
-
-    const time = new Date(this.newAlarmTime);
-    const alarmTime = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
-
-    if (this.editingAlarm) {
-      // Cancelar notificación existente
-      if (this.editingAlarm.notificationId) {
-        await this.alarmBackground.cancelAlarm(this.editingAlarm.id);
-      }
-
-      // Editar alarma existente
-      this.editingAlarm.time = alarmTime;
-      this.editingAlarm.label = this.newAlarmLabel;
-      this.editingAlarm.category = this.newAlarmCategory;
-      this.editingAlarm.repeatDays = [...this.newAlarmRepeatDays];
-      this.editingAlarm.notes = this.newAlarmNotes;
-
-      // Reprogramar si está habilitada
-      if (this.editingAlarm.enabled) {
-        try {
-          const notificationId = await this.alarmBackground.scheduleAlarm(this.editingAlarm);
-          this.editingAlarm.notificationId = notificationId;
-        } catch (error) {
-          console.error('Error reprogramando alarma:', error);
-        }
-      }
-
-      this.showToast('Alarma actualizada');
-    } else {
+    if (role === 'save' && data) {
       // Crear nueva alarma
       const newAlarm: Alarm = {
         id: Date.now().toString(),
-        time: alarmTime,
-        label: this.newAlarmLabel,
+        time: this.formatTimeFromISO(data.time),
+        label: data.label,
         enabled: true,
-        category: this.newAlarmCategory,
-        repeatDays: [...this.newAlarmRepeatDays],
-        notes: this.newAlarmNotes
+        category: data.category,
+        repeatDays: data.repeatDays,
+        notes: data.notes
       };
 
       // Programar notificación
@@ -272,41 +205,58 @@ export class Tab3Page implements OnInit, OnDestroy {
       }
 
       this.alarms.push(newAlarm);
+      this.alarms.sort((a, b) => a.time.localeCompare(b.time));
+      this.saveAlarms();
       this.showToast('Alarma creada');
     }
-
-    this.alarms.sort((a, b) => a.time.localeCompare(b.time));
-    this.saveAlarms();
-    this.closeModal();
   }
 
-  setOpen(isOpen: boolean) {
-    this.isModalOpen = isOpen;
-    if (isOpen) {
-      this.newAlarmTime = new Date().toISOString();
-      this.newAlarmLabel = '';
+  async editAlarm(alarm: Alarm) {
+    const modal = await this.modalController.create({
+      component: AlarmModalComponent,
+      componentProps: {
+        editingAlarm: alarm
+      },
+      cssClass: 'alarm-modal-centered'
+    });
+
+    await modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+
+    if (role === 'save' && data) {
+      // Cancelar notificación existente
+      if (alarm.notificationId) {
+        await this.alarmBackground.cancelAlarm(alarm.id);
+      }
+
+      // Actualizar alarma
+      alarm.time = this.formatTimeFromISO(data.time);
+      alarm.label = data.label;
+      alarm.category = data.category;
+      alarm.repeatDays = data.repeatDays;
+      alarm.notes = data.notes;
+
+      // Reprogramar si está habilitada
+      if (alarm.enabled) {
+        try {
+          const notificationId = await this.alarmBackground.scheduleAlarm(alarm);
+          alarm.notificationId = notificationId;
+        } catch (error) {
+          console.error('Error reprogramando alarma:', error);
+        }
+      }
+
+      this.saveAlarms();
+      this.showToast('Alarma actualizada');
     }
   }
 
-  // MÉTODO ELIMINAR O MANTENER (ya no se usa pero puedes dejarlo):
-  addAlarm() {
-    const time = new Date(this.newAlarmTime);
-    const alarmTime = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
-
-    const newAlarm: Alarm = {
-      id: Date.now().toString(),
-      time: alarmTime,
-      label: this.newAlarmLabel || 'Alarma',
-      enabled: true,
-      category: 'otro',
-      repeatDays: []
-    };
-
-    this.alarms.push(newAlarm);
-    this.alarms.sort((a, b) => a.time.localeCompare(b.time));
-    this.saveAlarms();
-    this.setOpen(false);
-    this.showToast('Alarma agregada');
+  formatTimeFromISO(isoString: string): string {
+    const date = new Date(isoString);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
   }
 
   // MÉTODO deleteAlarm MODIFICADO:
@@ -385,19 +335,6 @@ export class Tab3Page implements OnInit, OnDestroy {
   getDayAbbr(day: number): string {
     const days = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
     return days[day];
-  }
-
-  isDaySelected(day: number): boolean {
-    return this.newAlarmRepeatDays.includes(day);
-  }
-
-  toggleDay(day: number) {
-    const index = this.newAlarmRepeatDays.indexOf(day);
-    if (index > -1) {
-      this.newAlarmRepeatDays.splice(index, 1);
-    } else {
-      this.newAlarmRepeatDays.push(day);
-    }
   }
 
   // MÉTODO NUEVO: scheduleAllAlarms (reemplaza a startAlarmCheck)

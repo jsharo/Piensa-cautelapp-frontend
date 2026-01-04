@@ -138,19 +138,19 @@ export class ConfigurationPage implements OnInit, ViewWillEnter {
       this.bluetoothDevices = [];
       
       console.log('🔍 Escaneando dispositivos BLE...');
+      console.log('📋 Búsqueda: Todos los dispositivos (sin filtro)');
       
+      // Escanear SIN filtro de nombre primero para diagnóstico
       await BleClient.requestLEScan(
-        {
-          // Filtrar solo dispositivos CautelApp (opcional, puedes eliminar este filtro)
-          namePrefix: 'CautelApp'
-        },
+        {},
         (result: ScanResult) => {
           // Verificar si el dispositivo ya está en la lista
           const existingIndex = this.bluetoothDevices.findIndex(d => d.id === result.device.deviceId);
           
+          const deviceName = result.device.name || 'Dispositivo Sin Nombre';
           const device: BluetoothDevice = {
             id: result.device.deviceId,
-            name: result.device.name || 'Dispositivo Desconocido',
+            name: deviceName,
             rssi: result.rssi,
             connected: false
           };
@@ -161,21 +161,41 @@ export class ConfigurationPage implements OnInit, ViewWillEnter {
           } else {
             // Agregar nuevo dispositivo
             this.bluetoothDevices.push(device);
+            
+            // Log detallado para diagnóstico
+            console.log('📡 Dispositivo encontrado:', {
+              nombre: deviceName,
+              id: result.device.deviceId,
+              rssi: result.rssi,
+              esCautelApp: deviceName.includes('CautelApp'),
+              servicios: result.uuids || []
+            });
           }
           
-          console.log('📡 Dispositivo encontrado:', device.name, `(${device.rssi} dBm)`);
+          // También log cada actualización si es un dispositivo CautelApp
+          if (deviceName.includes('CautelApp')) {
+            console.log('✅ ¡Dispositivo CautelApp detectado!', deviceName, `(${result.rssi} dBm)`);
+          }
         }
       );
       
-      // Detener escaneo automáticamente después de 10 segundos
+      // Detener escaneo automáticamente después de 15 segundos (más tiempo para diagnóstico)
       setTimeout(() => {
         this.stopScan();
-      }, 10000);
+        if (this.bluetoothDevices.length === 0) {
+          this.showToast('No se encontraron dispositivos. Verifica que el ESP32 esté encendido y cerca.', 'warning');
+        } else {
+          const cautelappDevices = this.bluetoothDevices.filter(d => d.name.includes('CautelApp'));
+          if (cautelappDevices.length === 0) {
+            this.showToast(`Se encontraron ${this.bluetoothDevices.length} dispositivo(s), pero ninguno es CautelApp`, 'warning');
+          }
+        }
+      }, 15000);
       
     } catch (error) {
       console.error('❌ Error escaneando:', error);
       this.isScanning = false;
-      this.showToast('Error al escanear dispositivos BLE', 'danger');
+      this.showToast('Error al escanear dispositivos BLE. Verifica los permisos de Bluetooth y ubicación.', 'danger');
     }
   }
 

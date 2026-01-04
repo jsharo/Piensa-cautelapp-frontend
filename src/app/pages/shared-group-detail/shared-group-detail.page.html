@@ -1,0 +1,312 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="goBack()">
+        <ion-icon name="arrow-back" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>
+      <ion-icon name="people-circle"></ion-icon>
+      Grupo Compartido
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="page-container">
+    <div class="group-description">
+      <ion-icon name="information-circle-outline"></ion-icon>
+      <p>Comparte notificaciones de tus dispositivos con familiares o cuidadores</p>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoadingGroup" class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Cargando grupo...</p>
+    </div>
+
+    <!-- Sin grupo activo -->
+    <div *ngIf="!inviteCode && !isLoadingGroup" class="no-group-card">
+      <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+      <h3>No tienes un grupo activo</h3>
+      <p>Crea un grupo o únete usando un código de invitación</p>
+      <ion-button expand="block" (click)="createOrGetGroup()" class="create-btn">
+        <ion-icon name="add-circle" slot="start"></ion-icon>
+        Crear Grupo
+      </ion-button>
+    </div>
+
+    <!-- Grupo activo -->
+    <div *ngIf="inviteCode && sharedGroup && !isLoadingGroup" class="active-group-container">
+      
+      <!-- Código de invitación -->
+      <ion-card class="invite-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="key"></ion-icon>
+            Código de Invitación
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="code-display">
+            <div class="code-box">
+              <span class="code-text">{{ inviteCode }}</span>
+            </div>
+            <ion-button (click)="copyInviteCode()" fill="clear" class="copy-btn">
+              <ion-icon name="copy-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+          <div class="invite-tip">
+            <ion-icon name="bulb-outline"></ion-icon>
+            <span>Comparte este código para invitar miembros</span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Miembros del grupo -->
+      <ion-card class="members-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="people"></ion-icon>
+            Miembros ({{ sharedGroup.members.length || 0 }})
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="members-list">
+            <div *ngFor="let member of sharedGroup.members" class="member-item">
+              <ion-avatar class="member-avatar">
+                <ion-icon name="person-circle"></ion-icon>
+              </ion-avatar>
+              <div class="member-info">
+                <div class="member-header">
+                  <span class="member-name">{{ member.user?.nombre || 'Usuario ' + member.user_id }}</span>
+                  <ion-chip 
+                    [color]="member.user_id === sharedGroup.created_by ? 'primary' : 'medium'" 
+                    class="member-badge">
+                    <ion-label>{{ getMemberRole(member) }}</ion-label>
+                  </ion-chip>
+                </div>
+                <span class="member-email">{{ member.user?.email || '' }}</span>
+                <div class="member-meta">
+                  <ion-icon name="calendar-outline"></ion-icon>
+                  <span>{{ member.joined_at | date:'dd/MM/yyyy' }}</span>
+                  <span *ngIf="member.invited_by" class="invited-by">
+                    · Por {{ getInvitedByName(member) }}
+                  </span>
+                </div>
+              </div>
+              <ion-button 
+                *ngIf="isGroupCreator() && member.user_id !== sharedGroup.created_by"
+                (click)="removeMember(member)"
+                [disabled]="isLoadingGroup"
+                fill="clear"
+                color="danger"
+                size="small"
+                class="remove-btn">
+                <ion-icon name="person-remove" slot="icon-only"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Mis Dispositivos -->
+      <ion-card class="devices-card">
+        <ion-card-header>
+          <div class="card-header-actions">
+            <ion-card-title>
+              <ion-icon name="watch"></ion-icon>
+              Mis Dispositivos
+            </ion-card-title>
+            <ion-button 
+              *ngIf="myDevices.length > 0"
+              (click)="toggleSelectionMode()"
+              [color]="selectionMode ? 'danger' : 'primary'"
+              fill="outline"
+              size="small">
+              <ion-icon [name]="selectionMode ? 'close' : 'checkmark-circle-outline'" slot="start"></ion-icon>
+              {{ selectionMode ? 'Cancelar' : 'Seleccionar' }}
+            </ion-button>
+          </div>
+          <p class="card-subtitle">Selecciona qué dispositivos compartir con el grupo</p>
+        </ion-card-header>
+        <ion-card-content>
+          
+          <!-- Loading dispositivos -->
+          <div *ngIf="isLoadingDevices" class="loading-devices">
+            <ion-spinner name="crescent"></ion-spinner>
+            <span>Cargando dispositivos...</span>
+          </div>
+
+          <!-- Empty state -->
+          <div *ngIf="!isLoadingDevices && myDevices.length === 0" class="empty-devices">
+            <ion-icon name="watch-outline"></ion-icon>
+            <p>No tienes dispositivos vinculados</p>
+          </div>
+
+          <!-- Toolbar de selección -->
+          <div *ngIf="selectionMode && myDevices.length > 0" class="selection-toolbar">
+            <div class="selection-info">
+              <ion-icon name="information-circle"></ion-icon>
+              <span>{{ selectedCount === 0 ? 'Ninguno seleccionado' : selectedCount + ' seleccionado(s)' }}</span>
+            </div>
+            <div class="selection-actions">
+              <ion-button (click)="selectAll()" [disabled]="selectedCount === myDevices.length" size="small" fill="clear">
+                <ion-icon name="checkbox-outline" slot="start"></ion-icon>
+                Todos
+              </ion-button>
+              <ion-button (click)="deselectAll()" [disabled]="selectedCount === 0" size="small" fill="clear">
+                <ion-icon name="square-outline" slot="start"></ion-icon>
+                Ninguno
+              </ion-button>
+            </div>
+          </div>
+
+          <!-- Lista de dispositivos -->
+          <div class="devices-list">
+            <ion-item 
+              *ngFor="let device of myDevices" 
+              [class.selected]="selectionMode && isDeviceSelected(device.id_adulto)"
+              [class.shared]="isDeviceShared(device.id_adulto)"
+              [button]="selectionMode"
+              (click)="selectionMode ? toggleDeviceSelection(device.id_adulto) : null"
+              lines="none"
+              class="device-item">
+              
+              <!-- Checkbox en modo selección -->
+              <ion-checkbox 
+                *ngIf="selectionMode"
+                slot="start"
+                [checked]="isDeviceSelected(device.id_adulto)"
+                (ionChange)="toggleDeviceSelection(device.id_adulto)">
+              </ion-checkbox>
+
+              <ion-icon name="watch" slot="start" class="device-icon"></ion-icon>
+              
+              <ion-label>
+                <h3>{{ device.nombre }}</h3>
+                <p>{{ calcularEdad(device.fecha_nacimiento) }} años · Batería: {{ device.dispositivo?.bateria }}%</p>
+              </ion-label>
+
+              <!-- Badge compartido -->
+              <ion-chip *ngIf="isDeviceShared(device.id_adulto) && !selectionMode" color="success" slot="end">
+                <ion-icon name="checkmark-circle"></ion-icon>
+                <ion-label>Compartido</ion-label>
+              </ion-chip>
+
+              <!-- Botones de acción individual -->
+              <ion-button 
+                *ngIf="!selectionMode && !isDeviceShared(device.id_adulto)"
+                (click)="shareDevice(device)"
+                [disabled]="isLoadingDevices"
+                slot="end"
+                fill="clear"
+                color="primary">
+                <ion-icon name="share-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+              <ion-button 
+                *ngIf="!selectionMode && isDeviceShared(device.id_adulto)"
+                (click)="unshareDevice(device.id_adulto, device.nombre)"
+                [disabled]="isLoadingDevices"
+                slot="end"
+                fill="clear"
+                color="danger">
+                <ion-icon name="close-circle" slot="icon-only"></ion-icon>
+              </ion-button>
+            </ion-item>
+          </div>
+
+          <!-- Botones de acción bulk -->
+          <div *ngIf="selectionMode && selectedCount > 0" class="bulk-actions">
+            <ion-button 
+              *ngIf="selectedUnsharedCount > 0"
+              (click)="shareSelectedDevices()"
+              [disabled]="isLoadingDevices"
+              expand="block"
+              color="primary">
+              <ion-icon name="share-social" slot="start"></ion-icon>
+              Compartir {{ selectedUnsharedCount }} dispositivo(s)
+            </ion-button>
+            <ion-button 
+              *ngIf="selectedSharedCount > 0"
+              (click)="unshareSelectedDevices()"
+              [disabled]="isLoadingDevices"
+              expand="block"
+              color="danger">
+              <ion-icon name="close-circle" slot="start"></ion-icon>
+              Descompartir {{ selectedSharedCount }} dispositivo(s)
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Dispositivos Compartidos en el Grupo -->
+      <ion-card *ngIf="sharedDevices.length > 0" class="shared-devices-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="share-social"></ion-icon>
+            Dispositivos Compartidos ({{ sharedDevices.length }})
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-list class="shared-devices-list">
+            <ion-item *ngFor="let shared of sharedDevices" lines="none">
+              <ion-icon name="watch" slot="start" color="success"></ion-icon>
+              <ion-label>
+                <h3>{{ shared.adulto?.nombre }}</h3>
+                <p>{{ calcularEdad(shared.adulto?.fecha_nacimiento) }} años</p>
+              </ion-label>
+              <ion-icon name="checkmark-circle" slot="end" color="success"></ion-icon>
+            </ion-item>
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Acciones del grupo -->
+      <div class="group-actions">
+        <ion-button (click)="createOrGetGroup()" expand="block" fill="outline" color="medium">
+          <ion-icon name="refresh" slot="start"></ion-icon>
+          Actualizar
+        </ion-button>
+        <ion-button (click)="leaveGroup()" expand="block" color="danger">
+          <ion-icon name="exit-outline" slot="start"></ion-icon>
+          Salir del Grupo
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Unirse a un grupo -->
+    <ion-card class="join-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="enter-outline"></ion-icon>
+          ¿Tienes un código?
+        </ion-card-title>
+        <p class="card-subtitle">Únete a un grupo existente</p>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="join-form">
+          <ion-input
+            [(ngModel)]="joinCode"
+            placeholder="Ingresa el código"
+            maxlength="8"
+            [disabled]="isLoadingGroup"
+            class="join-input">
+          </ion-input>
+          <ion-button 
+            (click)="joinGroupByCode()" 
+            [disabled]="isLoadingGroup || !joinCode.trim()"
+            expand="block"
+            class="join-btn">
+            <ion-icon name="enter-outline" slot="start"></ion-icon>
+            Unirse al Grupo
+          </ion-button>
+          <div *ngIf="joinError" class="error-message">
+            <ion-icon name="alert-circle"></ion-icon>
+            {{ joinError }}
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

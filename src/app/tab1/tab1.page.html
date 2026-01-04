@@ -29,8 +29,14 @@
 
   <!-- LISTA DE NOTIFICACIONES -->
   <div class="lista">
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Cargando notificaciones...</p>
+    </div>
+
     <!-- Mostrar notificaciones filtradas -->
-    <ng-container *ngIf="notificacionesFiltradas.length > 0">
+    <ng-container *ngIf="!isLoading && notificacionesFiltradas.length > 0">
       <div *ngFor="let noti of notificacionesFiltradas; let i = index" 
            [ngClass]="['noti', noti.tipo]" 
            (click)="marcarLeida(i)">
@@ -38,6 +44,9 @@
           <div class="noti-info">
             <div class="noti-titulo">
               <span [ngClass]="['badge', noti.tipo + '-badge']">{{ noti.tipo === 'emergencia' ? 'Emergencia' : 'Ayuda' }}</span>
+              <span *ngIf="noti.isShared" class="shared-badge" title="Dispositivo compartido">
+                <ion-icon name="share-social"></ion-icon>
+              </span>
               <span class="tiempo">{{ noti.tiempo }}</span>
             </div>
             <div class="usuario">{{ noti.usuario }}</div>
@@ -50,7 +59,7 @@
     </ng-container>
 
     <!-- Estado vacío -->
-    <div *ngIf="notificacionesFiltradas.length === 0" class="estado-vacio">
+    <div *ngIf="!isLoading && notificacionesFiltradas.length === 0" class="estado-vacio">
       <ion-icon name="notifications-off-outline"></ion-icon>
       <p>No hay notificaciones</p>
       <span>Cuando recibas notificaciones aparecerán aquí</span>

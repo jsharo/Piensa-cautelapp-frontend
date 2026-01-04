@@ -26,4 +26,8 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+    // No limpiar directorios de node_modules para evitar bloqueos
+    doLast {
+        println "Limpieza completada. Si hay errores con node_modules, cierra Android Studio y ejecuta gradlew clean desde terminal"
+    }
 }

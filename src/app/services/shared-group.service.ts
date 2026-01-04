@@ -10,14 +10,28 @@ export interface SharedGroup {
   created_by: number;
   created_at: string;
   members: SharedGroupMember[];
+  sharedDevices?: SharedGroupDevice[];
 }
 
 export interface SharedGroupMember {
   id: number;
   group_id: number;
   user_id: number;
+  invited_by?: number;
   joined_at: string;
+  is_creator?: boolean;
   user?: any;
+}
+
+export interface SharedGroupDevice {
+  id: number;
+  group_id: number;
+  adulto_id: number;
+  shared_by: number;
+  shared_at: string;
+  adulto?: any;
+  groupName?: string;
+  groupCode?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -44,5 +58,33 @@ export class SharedGroupService {
 
   leaveGroup(userId: number, groupId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/leave`, { userId, groupId });
+  }
+
+  // ========== MÉTODOS PARA DISPOSITIVOS COMPARTIDOS ==========
+
+  shareDevice(groupId: number, adultoId: number, userId: number): Observable<SharedGroupDevice> {
+    return this.http.post<SharedGroupDevice>(`${this.apiUrl}/share-device`, { groupId, adultoId, userId });
+  }
+
+  unshareDevice(groupId: number, adultoId: number, userId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/unshare-device`, { groupId, adultoId, userId });
+  }
+
+  getGroupDevices(groupId: number): Observable<SharedGroupDevice[]> {
+    return this.http.get<SharedGroupDevice[]>(`${this.apiUrl}/devices/${groupId}`);
+  }
+
+  getMySharedDevices(userId: number): Observable<SharedGroupDevice[]> {
+    return this.http.get<SharedGroupDevice[]>(`${this.apiUrl}/my-shared-devices/${userId}`);
+  }
+
+  // ========== GESTIÓN DE MIEMBROS ==========
+
+  removeMember(requesterId: number, groupId: number, memberIdToRemove: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/remove-member`, { requesterId, groupId, memberIdToRemove });
+  }
+
+  getGroupMembers(groupId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/members/${groupId}`);
   }
 }

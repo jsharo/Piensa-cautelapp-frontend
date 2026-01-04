@@ -129,7 +129,7 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 
 ion-input {
   --padding-start: 16px;
-  --padding-end: 48px;
+  --padding-end: 28px;
   --padding-top: 12px;
   --padding-bottom: 12px;
   border: 2px solid $light-gray;
@@ -157,7 +157,8 @@ ion-input {
   color: $dark-blue;
   font-size: 20px;
   cursor: pointer;
-  padding: 8px;
+  padding: 4px 0px 4px 8px;
+  margin-right: -4px;
   transition: opacity 0.2s ease;
 
   &:hover {
