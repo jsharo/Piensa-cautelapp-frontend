@@ -4,9 +4,9 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
 import { ProfileMenuComponent } from '../tab1/profile-menu/profile-menu.component';
 import { BleService, ConnectedDevice } from '../services/ble.service';
-import { Router } from '@angular/router';
 import { DeviceApiService } from '../services/device-api.service';
 import { AdultInfoModalComponent } from '../pages/configuration/adult-info-modal/adult-info-modal.component';
+import { SharedGroupDetailPage } from '../pages/shared-group-detail/shared-group-detail.page';
 import { FormsModule } from '@angular/forms';
 
 interface Dispositivo {
@@ -45,14 +45,17 @@ export class Tab2Page implements OnInit {
     private auth: AuthService,
     private popoverController: PopoverController,
     private bleService: BleService,
-    private router: Router,
     private deviceApiService: DeviceApiService,
     private modalController: ModalController,
     private toastController: ToastController
   ) { }
 
-  openSharedGroupDetail() {
-    this.router.navigate(['/shared-group-detail']);
+  async openSharedGroupDetail() {
+    const modal = await this.modalController.create({
+      component: SharedGroupDetailPage,
+      cssClass: 'fullscreen-modal'
+    });
+    return await modal.present();
   }
 
   ngOnInit(): void {
@@ -147,7 +150,8 @@ export class Tab2Page implements OnInit {
   }
 
   openAddDevice() {
-    this.router.navigate(['/configuration']);
+    // Navegar a configuración sin especificar método
+    window.location.href = '/configuration';
   }
 
   viewDevice(adulto: AdultoMayor) {

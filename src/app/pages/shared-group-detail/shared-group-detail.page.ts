@@ -1,8 +1,7 @@
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { ToastController } from '@ionic/angular/standalone';
+import { ModalController, ToastController } from '@ionic/angular/standalone';
 import { SharedGroupService, SharedGroup, SharedGroupDevice, SharedGroupMember } from '../../services/shared-group.service';
 import { AuthService } from '../../services/auth.service';
 import { DeviceApiService, DispositivoVinculado } from '../../services/device-api.service';
@@ -34,7 +33,7 @@ export class SharedGroupDetailPage implements OnInit {
   selectionMode = false;
 
   constructor(
-    private router: Router,
+    private modalController: ModalController,
     private sharedGroupService: SharedGroupService,
     private auth: AuthService,
     private toastController: ToastController,
@@ -95,12 +94,14 @@ export class SharedGroupDetailPage implements OnInit {
         if (groups.length > 0) {
           this.sharedGroup = groups[0];
           this.inviteCode = groups[0].code;
+          this.sharedDevices = groups[0].sharedDevices || [];
           this.isLoadingGroup = false;
         } else {
           this.sharedGroupService.createGroup(user.id_usuario).subscribe(
             (group: any) => {
               this.sharedGroup = group;
               this.inviteCode = group.code;
+              this.sharedDevices = group.sharedDevices || [];
               this.isLoadingGroup = false;
               this.showToast('Grupo creado exitosamente', 'success');
             },
@@ -126,6 +127,7 @@ export class SharedGroupDetailPage implements OnInit {
       async (group: any) => {
         this.sharedGroup = group;
         this.inviteCode = group.code;
+        this.sharedDevices = group.sharedDevices || [];
         this.isLoadingGroup = false;
         this.joinCode = '';
         await this.showToast('¡Te has unido al grupo exitosamente!', 'success');
@@ -455,6 +457,6 @@ export class SharedGroupDetailPage implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/tabs/tab2']);
+    this.modalController.dismiss();
   }
 }

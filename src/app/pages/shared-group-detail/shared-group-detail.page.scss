@@ -123,6 +123,7 @@ ion-content {
   background: $white;
   border-radius: 16px;
   padding: 40px 24px;
+  margin-bottom: 32px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
@@ -593,6 +594,7 @@ ion-card {
 // =========================
 .join-card {
   background: $white;
+  margin-top: 24px;
 
   .join-form {
     display: flex;
