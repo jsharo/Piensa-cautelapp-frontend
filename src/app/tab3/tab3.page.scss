@@ -60,11 +60,6 @@ ion-content {
   justify-content: flex-end;
   gap: 8px;
 
-  .test-sound-btn {
-    --padding-start: 8px;
-    --padding-end: 8px;
-  }
-
   .profile-btn {
     background: none;
     border: none;
@@ -102,6 +97,71 @@ ion-content {
       object-fit: cover;
       border: 2px solid $white;
     }
+  }
+}
+
+// Modo de selección
+.header.selection-mode {
+  background: $dark-blue;
+}
+
+.selection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  
+  .close-selection-btn,
+  .delete-selection-btn {
+    background: none;
+    border: none;
+    color: $white;
+    font-size: 24px;
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    
+    ion-icon {
+      font-size: 28px;
+    }
+    
+    &:hover {
+      background: rgba(206, 206, 206, 0.1);
+    }
+    
+    &:active {
+      background: rgba(143, 143, 143, 0.2);
+      transform: scale(0.95);
+    }
+    
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+  }
+  
+  .selection-count {
+    flex: 1;
+    text-align: center;
+    color: $white;
+    font-size: 18px;
+    font-weight: 600;
+  }
+}
+
+// Overlay completo sobre la alarma seleccionada
+.alarm-card.selected {
+  background: #F5F5F5 !important; // Gris muy claro
+  --background: #F5F5F5 !important;
+  
+  // Mantener el contenido visible
+  > * {
+    position: relative;
+    z-index: 2;
   }
 }
 
@@ -230,6 +290,16 @@ ion-content {
   gap: 16px;
   cursor: pointer;
   margin-bottom: 4px;
+  
+  // Prevenir selección de texto durante long press
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  // Prevenir menú contextual en móviles
+  -webkit-touch-callout: none;
+  // Prevenir highlight en tap
+  -webkit-tap-highlight-color: transparent;
 
   &:hover {
     box-shadow: $shadow-md;

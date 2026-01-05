@@ -67,3 +67,14 @@ ion-menu {
 ion-button {
   text-transform: none !important;
 }
+
+/* Toast personalizado */
+.custom-toast {
+  --border-radius: 12px;
+  --box-shadow: 0 4px 16px rgba(21, 154, 156, 0.25);
+  
+  &::part(message) {
+    font-weight: 500;
+    font-size: 15px;
+  }
+}

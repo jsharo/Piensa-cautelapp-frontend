@@ -3,29 +3,26 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   IonContent,
-  IonItem, IonToggle,
+  IonItem, IonToggle, IonCheckbox,
   IonButton, IonIcon,
   IonFab, IonFabButton,
-  IonItemSliding, IonItemOptions, IonItemOption,
   AlertController, ToastController, PopoverController,
-  ModalController
+  ModalController, GestureController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   add, addOutline, trashOutline, alarmOutline, timeOutline, closeOutline,
   checkmarkOutline, personCircle, medicalOutline, calendarOutline,
   notificationsOutline, checkmarkCircleOutline, filterOutline,
-  volumeHighOutline, playOutline
+  playOutline
 } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
 import { AlarmService } from '../services/alarm.service';
 import { ProfileMenuComponent } from '../tab1/profile-menu/profile-menu.component';
 import { AlarmModalComponent } from './alarm-modal/alarm-modal.component';
-// NUEVAS IMPORTACIONES:
 import { AlarmBackgroundService } from '../services/alarm.background.service';
 import { Inject } from '@angular/core';
-import { App } from '@capacitor/app';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 // INTERFACE MODIFICADA:
 interface Alarm {
@@ -47,10 +44,9 @@ interface Alarm {
   imports: [
     CommonModule, FormsModule,
     IonContent,
-    IonItem, IonToggle,
+    IonItem, IonToggle, IonCheckbox,
     IonButton, IonIcon,
-    IonFab, IonFabButton,
-    IonItemSliding, IonItemOptions, IonItemOption
+    IonFab, IonFabButton
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
@@ -63,6 +59,13 @@ export class Tab3Page implements OnInit, OnDestroy {
   private audio: HTMLAudioElement | null = null;
   private audioContext: AudioContext | null = null;
   private isPlayingSound = false;
+  private triggeredAlarmsToday: Set<string> = new Set(); // Track alarmas ya disparadas hoy
+  
+  // Modo de selección múltiple
+  isSelectionMode = false;
+  selectedAlarms: Set<string> = new Set(); // IDs de alarmas seleccionadas
+  private longPressTimer: any;
+  private longPressDelay = 500; // milisegundos
 
   // CONSTRUCTOR MODIFICADO:
   constructor(
@@ -72,6 +75,7 @@ export class Tab3Page implements OnInit, OnDestroy {
     private alarmService: AlarmService,
     private popoverController: PopoverController,
     private modalController: ModalController,
+    private gestureCtrl: GestureController,
     @Inject(AlarmBackgroundService) private alarmBackground: AlarmBackgroundService // <-- NUEVO INYECTADO
   ) {
     addIcons({
@@ -88,7 +92,6 @@ export class Tab3Page implements OnInit, OnDestroy {
       'notifications-outline': notificationsOutline,
       'checkmark-circle-outline': checkmarkCircleOutline,
       'filter-outline': filterOutline,
-      'volume-high-outline': volumeHighOutline,
       'play-outline': playOutline
     });
     // Inicializar audio solo si estamos en un navegador (no en Android nativo)
@@ -100,10 +103,13 @@ export class Tab3Page implements OnInit, OnDestroy {
     }
   }
 
-  // ngOnInit MODIFICADO COMPLETAMENTE:
+  // ngOnInit MODIFICADO:
   async ngOnInit() {
     this.loadAlarms();
     this.loadUserProfileImage();
+
+    // Verificar y solicitar permisos de notificación
+    await this.checkAndRequestPermissions();
 
     // Programar todas las alarmas cargadas
     await this.scheduleAllAlarms();
@@ -117,16 +123,44 @@ export class Tab3Page implements OnInit, OnDestroy {
       }
     });
 
-    // Escuchar cuando la app se vuelve activa
-    App.addListener('appStateChange', async (state) => {
-      if (state.isActive) {
-        // Verificar si hay alarmas pendientes cuando la app se abre
-        await this.checkMissedAlarms();
-      }
-    });
-
-    // Iniciar monitoreo en primer plano (cada 10 segundos)
+    // Iniciar monitoreo en primer plano (cada 10 segundos) - solo como fallback
     this.startForegroundCheck();
+  }
+
+  // Nuevo método para verificar permisos
+  private async checkAndRequestPermissions(): Promise<void> {
+    const hasPermissions = await this.alarmBackground.checkPermissions();
+    
+    if (!hasPermissions) {
+      const alert = await this.alertController.create({
+        header: '🔔 Permisos de Notificación',
+        message: 'Para que las alarmas funcionen correctamente en segundo plano, necesitamos los siguientes permisos:\n\n' +
+                 '• Notificaciones\n' +
+                 '• Alarmas y recordatorios exactos\n\n' +
+                 'Si las alarmas no funcionan, verifica en: Ajustes > Apps > CautelApp > Permisos',
+        buttons: [
+          {
+            text: 'Cancelar',
+            role: 'cancel',
+            cssClass: 'secondary'
+          },
+          {
+            text: 'Permitir',
+            handler: async () => {
+              const granted = await this.alarmBackground.requestPermissionsManually();
+              if (!granted) {
+                this.showToast('⚠️ Sin permisos, las alarmas no sonarán en segundo plano', 5000);
+              } else {
+                this.showToast('✅ Permisos concedidos. Verifica "Alarmas y recordatorios" en ajustes si es necesario', 5000);
+              }
+            }
+          }
+        ],
+        cssClass: 'premium-alert'
+      });
+      
+      await alert.present();
+    }
   }
 
   ngOnDestroy() {
@@ -185,16 +219,24 @@ export class Tab3Page implements OnInit, OnDestroy {
     const { data, role } = await modal.onWillDismiss();
 
     if (role === 'save' && data) {
+      console.log('📥 Data recibida del modal:', data);
+      console.log('🕐 Hora ISO recibida:', data.time);
+      
       // Crear nueva alarma
+      const timeFormatted = this.formatTimeFromISO(data.time);
+      console.log('🕐 Hora formateada HH:mm:', timeFormatted);
+      
       const newAlarm: Alarm = {
         id: Date.now().toString(),
-        time: this.formatTimeFromISO(data.time),
+        time: timeFormatted,
         label: data.label,
         enabled: true,
         category: data.category,
         repeatDays: data.repeatDays,
         notes: data.notes
       };
+
+      console.log('✅ Alarma creada:', newAlarm);
 
       // Programar notificación
       try {
@@ -225,17 +267,22 @@ export class Tab3Page implements OnInit, OnDestroy {
     const { data, role } = await modal.onWillDismiss();
 
     if (role === 'save' && data) {
+      console.log('📝 === EDITANDO ALARMA ===');
+      console.log('📥 Data recibida:', data);
+      
       // Cancelar notificación existente
       if (alarm.notificationId) {
         await this.alarmBackground.cancelAlarm(alarm.id);
       }
 
-      // Actualizar alarma
+      // Actualizar todos los campos de la alarma
       alarm.time = this.formatTimeFromISO(data.time);
       alarm.label = data.label;
       alarm.category = data.category;
-      alarm.repeatDays = data.repeatDays;
+      alarm.repeatDays = [...data.repeatDays]; // Copiar array
       alarm.notes = data.notes;
+
+      console.log('✅ Alarma actualizada:', alarm);
 
       // Reprogramar si está habilitada
       if (alarm.enabled) {
@@ -243,12 +290,12 @@ export class Tab3Page implements OnInit, OnDestroy {
           const notificationId = await this.alarmBackground.scheduleAlarm(alarm);
           alarm.notificationId = notificationId;
         } catch (error) {
-          console.error('Error reprogramando alarma:', error);
+          console.error('❌ Error reprogramando alarma:', error);
         }
       }
 
       this.saveAlarms();
-      this.showToast('Alarma actualizada');
+      this.showToast('✅ Alarma actualizada');
     }
   }
 
@@ -257,6 +304,104 @@ export class Tab3Page implements OnInit, OnDestroy {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
+  }
+
+  // MÉTODO onTouchStart: inicia el temporizador para long press
+  onTouchStart(alarm: Alarm, event: TouchEvent) {
+    // Si ya está en modo selección, no activar long press
+    if (this.isSelectionMode) return;
+    
+    this.longPressTimer = setTimeout(async () => {
+      // Haptic feedback
+      await Haptics.impact({ style: ImpactStyle.Medium });
+      
+      // Activar modo de selección y seleccionar esta alarma
+      this.isSelectionMode = true;
+      this.selectedAlarms.add(alarm.id);
+      
+      console.log('🔒 Modo selección activado');
+    }, this.longPressDelay);
+  }
+
+  // MÉTODO onTouchEnd: cancela el temporizador si se suelta antes
+  onTouchEnd(event: TouchEvent) {
+    if (this.longPressTimer) {
+      clearTimeout(this.longPressTimer);
+      this.longPressTimer = null;
+    }
+  }
+
+  // MÉTODO onTouchMove: cancela el long press si el dedo se mueve
+  onTouchMove(event: TouchEvent) {
+    if (this.longPressTimer) {
+      clearTimeout(this.longPressTimer);
+      this.longPressTimer = null;
+    }
+  }
+
+  // MÉTODO toggleAlarmSelection: selecciona/deselecciona una alarma
+  toggleAlarmSelection(alarm: Alarm, event: Event) {
+    event.stopPropagation();
+    
+    if (this.selectedAlarms.has(alarm.id)) {
+      this.selectedAlarms.delete(alarm.id);
+    } else {
+      this.selectedAlarms.add(alarm.id);
+      Haptics.impact({ style: ImpactStyle.Light });
+    }
+  }
+
+  // MÉTODO exitSelectionMode: sale del modo de selección
+  exitSelectionMode() {
+    this.isSelectionMode = false;
+    this.selectedAlarms.clear();
+  }
+
+  // MÉTODO deleteSelectedAlarms: elimina todas las alarmas seleccionadas
+  async deleteSelectedAlarms() {
+    const count = this.selectedAlarms.size;
+    
+    if (count === 0) return;
+
+    // Mostrar confirmación
+    const alert = await this.alertController.create({
+      header: '¿Eliminar alarmas?',
+      message: `Se eliminarán ${count} alarma${count > 1 ? 's' : ''}`,
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Eliminar',
+          role: 'destructive',
+          handler: async () => {
+            // Cancelar notificaciones
+            for (const alarmId of this.selectedAlarms) {
+              await this.alarmBackground.cancelAlarm(alarmId);
+            }
+            
+            // Eliminar alarmas
+            this.alarms = this.alarms.filter(a => !this.selectedAlarms.has(a.id));
+            this.saveAlarms();
+            
+            // Feedback
+            await Haptics.notification({ type: NotificationType.Success });
+            this.showToast(`${count} alarma${count > 1 ? 's eliminadas' : ' eliminada'}`);
+            
+            // Salir del modo de selección
+            this.exitSelectionMode();
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  // MÉTODO isAlarmSelected: verifica si una alarma está seleccionada
+  isAlarmSelected(alarm: Alarm): boolean {
+    return this.selectedAlarms.has(alarm.id);
   }
 
   // MÉTODO deleteAlarm MODIFICADO:
@@ -268,6 +413,9 @@ export class Tab3Page implements OnInit, OnDestroy {
 
     this.alarms = this.alarms.filter(a => a.id !== alarm.id);
     this.saveAlarms();
+    
+    // Haptic feedback al eliminar
+    await Haptics.notification({ type: NotificationType.Success });
     this.showToast('Alarma eliminada');
   }
 
@@ -359,85 +507,64 @@ export class Tab3Page implements OnInit, OnDestroy {
     }
   }
 
-  async testAlarm() {
-    this.playAlarmSound();
-    const alert = await this.alertController.create({
-      header: 'Prueba de Alarma',
-      message: 'Esta es una prueba del sistema de sonido.',
-      buttons: [{
-        text: 'Detener',
-        handler: () => {
-          this.stopAlarmSound();
-        }
-      }],
-      cssClass: 'premium-alert'
-    });
-    await alert.present();
 
-    // Notify backend anyway to test connectivity
-    this.alarmService.triggerAlarm({
-      id: 'test',
-      label: 'Prueba de Sistema',
-      time: 'AHORA',
-      category: 'otro', // Valor de ejemplo
-      timestamp: new Date().toISOString() // Valor actual
-    }).subscribe();
-  }
+
+
 
   async triggerAlarm(alarm: Alarm) {
-    // Desactivar alarma para que no se repita
-    // Desactivar alarma para que no se repita
-    alarm.enabled = false;
-
-    // Pequeño delay para asegurar que el evento se procese tras la notificación
-    setTimeout(async () => {
-      // Cancelar notificación
+    console.log('⏰ Disparando alarma:', alarm.label);
+    
+    // Solo desactivar si NO tiene días de repetición (alarma de una sola vez)
+    const isRecurring = alarm.repeatDays && alarm.repeatDays.length > 0;
+    
+    if (!isRecurring) {
+      alarm.enabled = false;
+      // Cancelar notificación programada
       if (alarm.notificationId) {
         await this.alarmBackground.cancelAlarm(alarm.id);
         alarm.notificationId = undefined;
       }
-
       this.saveAlarms();
+    }
 
-      // Reproducir sonido
-      this.playAlarmSound();
+    // Reproducir sonido y vibrar
+    this.playAlarmSound();
 
-      // Call backend service
-      this.alarmService.triggerAlarm({
-        ...alarm,
-        timestamp: new Date().toISOString()
-      }).subscribe({
-        next: () => console.log('Backend notified of alarm'),
-        error: (err) => console.error('Error notifying backend', err)
-      });
+    // Notificar al backend (opcional)
+    this.alarmService.triggerAlarm({
+      ...alarm,
+      timestamp: new Date().toISOString()
+    }).subscribe({
+      next: () => console.log('✅ Backend notificado'),
+      error: (err) => console.error('❌ Error notificando backend', err)
+    });
 
-      // Mostrar alerta en la app
-      const alert = await this.alertController.create({
-        header: '¡Alarma!',
-        subHeader: alarm.label,
-        message: alarm.notes ? `${this.formatTime(alarm.time)}\n${alarm.notes}` : `Son las ${this.formatTime(alarm.time)}`,
-        buttons: [
-          {
-            text: 'Posponer 10 min',
-            role: 'cancel',
-            handler: () => {
-              this.stopAlarmSound();
-              this.snoozeAlarm(alarm);
-            }
-          },
-          {
-            text: 'OK',
-            role: 'confirm',
-            handler: () => {
-              this.stopAlarmSound();
-            }
+    // Mostrar alerta en la app
+    const alert = await this.alertController.create({
+      header: '⏰ ¡Alarma!',
+      subHeader: alarm.label,
+      message: alarm.notes ? `${this.formatTime(alarm.time)}\n${alarm.notes}` : `Son las ${this.formatTime(alarm.time)}`,
+      buttons: [
+        {
+          text: 'Posponer 10 min',
+          role: 'cancel',
+          handler: () => {
+            this.stopAlarmSound();
+            this.snoozeAlarm(alarm);
           }
-        ],
-        cssClass: 'alarm-alert'
-      });
+        },
+        {
+          text: 'OK',
+          role: 'confirm',
+          handler: () => {
+            this.stopAlarmSound();
+          }
+        }
+      ],
+      cssClass: 'alarm-alert'
+    });
 
-      await alert.present();
-    }, 500);
+    await alert.present();
   }
 
   snoozeAlarm(alarm: Alarm) {
@@ -475,6 +602,9 @@ export class Tab3Page implements OnInit, OnDestroy {
       clearInterval(this.checkIntervalId);
     }
 
+    // Limpiar el set de alarmas disparadas cada día a medianoche
+    this.resetTriggeredAlarmsAtMidnight();
+
     this.checkIntervalId = setInterval(() => {
       const now = new Date();
       const currentH = now.getHours().toString().padStart(2, '0');
@@ -483,19 +613,45 @@ export class Tab3Page implements OnInit, OnDestroy {
       const currentDay = now.getDay();
 
       this.alarms.forEach(alarm => {
+        // Clave única para esta alarma en este minuto
+        const alarmKey = `${alarm.id}-${currentTime}`;
+        
+        // Evitar disparar la misma alarma múltiples veces en el mismo minuto
+        if (this.triggeredAlarmsToday.has(alarmKey)) {
+          return;
+        }
+
         if (alarm.enabled && alarm.time === currentTime) {
           // Si tiene repetición, verificar el día
           if (alarm.repeatDays && alarm.repeatDays.length > 0) {
             if (alarm.repeatDays.includes(currentDay)) {
+              this.triggeredAlarmsToday.add(alarmKey);
               this.triggerAlarm(alarm);
             }
           } else {
-            // Si no tiene repetición, disparar directamente
+            // Si no tiene repetición, disparar solo una vez
+            this.triggeredAlarmsToday.add(alarmKey);
             this.triggerAlarm(alarm);
           }
         }
       });
     }, 10000); // Verificar cada 10 segundos
+  }
+
+  // Resetear alarmas disparadas a medianoche
+  private resetTriggeredAlarmsAtMidnight() {
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0); // Próxima medianoche
+    
+    const msUntilMidnight = midnight.getTime() - now.getTime();
+    
+    setTimeout(() => {
+      this.triggeredAlarmsToday.clear();
+      console.log('🔄 Alarmas disparadas hoy reseteadas');
+      // Configurar el próximo reset
+      this.resetTriggeredAlarmsAtMidnight();
+    }, msUntilMidnight);
   }
 
   // MÉTODO NUEVO: checkMissedAlarms
@@ -575,10 +731,10 @@ export class Tab3Page implements OnInit, OnDestroy {
     // Detener vibración (ya se detendrá automáticamente con isPlayingSound = false)
   }
 
-  async showToast(message: string) {
+  async showToast(message: string, duration: number = 2000) {
     const toast = await this.toastController.create({
       message: message,
-      duration: 2000,
+      duration: duration,
       position: 'bottom',
       cssClass: 'custom-toast'
     });

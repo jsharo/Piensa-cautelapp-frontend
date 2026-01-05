@@ -1,15 +1,24 @@
 <!-- HEADER SUPERIOR -->
-<div class="header">
-  <div class="header-left">
+<div class="header" [class.selection-mode]="isSelectionMode">
+  <!-- Header normal -->
+  <div class="header-left" *ngIf="!isSelectionMode">
     <div class="titulo">Alarmas</div>
   </div>
-  <div class="header-right">
-    <ion-button fill="clear" color="light" (click)="testAlarm()" class="test-sound-btn">
-      <ion-icon name="volume-high-outline" slot="icon-only"></ion-icon>
-    </ion-button>
+  <div class="header-right" *ngIf="!isSelectionMode">
     <button class="profile-btn" (click)="openProfileMenu($event)">
       <img *ngIf="userProfileImage" [src]="userProfileImage" alt="Perfil" class="profile-img">
       <ion-icon *ngIf="!userProfileImage" name="person-circle" class="profile-icon"></ion-icon>
+    </button>
+  </div>
+
+  <!-- Header modo selección -->
+  <div class="selection-header" *ngIf="isSelectionMode">
+    <button class="close-selection-btn" (click)="exitSelectionMode()">
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+    <div class="selection-count">{{ selectedAlarms.size }} elemento{{ selectedAlarms.size !== 1 ? 's' : '' }} seleccionado{{ selectedAlarms.size !== 1 ? 's' : '' }}</div>
+    <button class="delete-selection-btn" (click)="deleteSelectedAlarms()" [disabled]="selectedAlarms.size === 0">
+      <ion-icon name="trash-outline"></ion-icon>
     </button>
   </div>
 </div>
@@ -65,28 +74,45 @@
 
     <!-- Alarms List -->
     <div class="alarms-list" *ngIf="getFilteredAlarms().length > 0">
-      <ion-item-sliding *ngFor="let alarm of getFilteredAlarms()">
-        <ion-item class="alarm-card" [class.disabled]="!alarm.enabled" (click)="editAlarm(alarm)" lines="none">
-          <div class="alarm-icon" [attr.data-category]="alarm.category" slot="start">
-            <ion-icon [name]="getCategoryIcon(alarm.category)"></ion-icon>
+      <ion-item 
+        *ngFor="let alarm of getFilteredAlarms()"
+        class="alarm-card" 
+        [class.disabled]="!alarm.enabled" 
+        [class.selected]="isAlarmSelected(alarm)"
+        (click)="isSelectionMode ? toggleAlarmSelection(alarm, $event) : editAlarm(alarm)"
+        (touchstart)="onTouchStart(alarm, $event)"
+        (touchend)="onTouchEnd($event)"
+        (touchmove)="onTouchMove($event)"
+        lines="none">
+        
+        <!-- Checkbox en modo selección -->
+        <ion-checkbox 
+          *ngIf="isSelectionMode" 
+          slot="start" 
+          [checked]="isAlarmSelected(alarm)"
+          (ionChange)="toggleAlarmSelection(alarm, $event)"></ion-checkbox>
+        
+        <!-- Icono de categoría (solo cuando NO está en modo selección) -->
+        <div class="alarm-icon" [attr.data-category]="alarm.category" slot="start" *ngIf="!isSelectionMode">
+          <ion-icon [name]="getCategoryIcon(alarm.category)"></ion-icon>
+        </div>
+        
+        <div class="alarm-content">
+          <div class="alarm-time">{{ formatTime(alarm.time) }}</div>
+          <div class="alarm-label">{{ alarm.label || 'Sin título' }}</div>
+          <div class="alarm-days" *ngIf="alarm.repeatDays && alarm.repeatDays.length > 0">
+            <span class="day-badge" *ngFor="let day of alarm.repeatDays">{{ getDayAbbr(day) }}</span>
           </div>
-          <div class="alarm-content">
-            <div class="alarm-time">{{ formatTime(alarm.time) }}</div>
-            <div class="alarm-label">{{ alarm.label || 'Sin título' }}</div>
-            <div class="alarm-days" *ngIf="alarm.repeatDays && alarm.repeatDays.length > 0">
-              <span class="day-badge" *ngFor="let day of alarm.repeatDays">{{ getDayAbbr(day) }}</span>
-            </div>
-          </div>
-          <ion-toggle slot="end" [checked]="alarm.enabled" (ionChange)="toggleAlarm(alarm, $event)"
-            (click)="$event.stopPropagation()"></ion-toggle>
-        </ion-item>
-
-        <ion-item-options side="end">
-          <ion-item-option color="danger" (click)="deleteAlarm(alarm)">
-            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-          </ion-item-option>
-        </ion-item-options>
-      </ion-item-sliding>
+        </div>
+        
+        <!-- Toggle solo visible cuando NO está en modo selección -->
+        <ion-toggle 
+          *ngIf="!isSelectionMode"
+          slot="end" 
+          [checked]="alarm.enabled" 
+          (ionChange)="toggleAlarm(alarm, $event)"
+          (click)="$event.stopPropagation()"></ion-toggle>
+      </ion-item>
     </div>
 
     <div *ngIf="getFilteredAlarms().length === 0" class="empty-state">

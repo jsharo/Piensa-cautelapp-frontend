@@ -109,7 +109,7 @@ export class LoginPage implements OnInit {
         this.loading = false;
         
         // Login exitoso
-        await this.showToast('¡Bienvenido! Iniciando sesión...', 'success');
+        await this.showToast('¡Bienvenido! Iniciando sesión...', 'primary');
         
         // Navegar a tabs
         setTimeout(() => {
@@ -144,18 +144,13 @@ export class LoginPage implements OnInit {
     this.navCtrl.navigateForward('/forgot-password');
   }
 
-  private async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {
+  private async showToast(message: string, color: 'success' | 'danger' | 'warning' | 'primary' = 'primary') {
     const toast = await this.toastCtrl.create({
       message,
-      duration: 3000,
+      duration: 2500,
       position: 'top',
       color,
-      buttons: [
-        {
-          text: 'Cerrar',
-          role: 'cancel'
-        }
-      ]
+      cssClass: 'custom-toast'
     });
     await toast.present();
   }

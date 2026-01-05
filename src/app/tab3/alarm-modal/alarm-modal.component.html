@@ -1,15 +1,15 @@
 <div class="modal-wrapper">
   <div class="modal-header">
     <h2>
-      <ion-icon [name]="editingAlarm ? 'pencil-outline' : 'alarm-outline'"></ion-icon>
+      <lucide-icon [img]="editingAlarm ? Pencil : AlarmClock" [size]="20"></lucide-icon>
       {{ editingAlarm ? 'Editar alarma' : 'Nueva alarma' }}
     </h2>
     <button class="btn-save" (click)="saveAlarm()">
-      <ion-icon name="checkmark-circle"></ion-icon>
+      <lucide-icon [img]="CheckCircle" [size]="18"></lucide-icon>
       Guardar
     </button>
     <button class="btn-close" (click)="dismiss()">
-      <ion-icon name="close-outline"></ion-icon>
+      <lucide-icon [img]="X" [size]="18"></lucide-icon>
     </button>
   </div>
 
@@ -17,12 +17,13 @@
     <!-- Selector de Hora Mejorado -->
     <div class="time-picker-section">
       <div class="section-header">
-        <ion-icon name="time-outline" class="section-icon"></ion-icon>
+        <lucide-icon [img]="Clock" [size]="18" class="section-icon"></lucide-icon>
         <label class="section-label-main">Hora de la alarma</label>
       </div>
       <ion-datetime 
         presentation="time" 
-        [(ngModel)]="newAlarmTime" 
+        [(ngModel)]="newAlarmTime"
+        (ionChange)="onTimeChange($event)"
         [preferWheel]="true"
         class="custom-datetime"
         [hourCycle]="'h23'"
@@ -33,15 +34,17 @@
     <!-- Título Mejorado -->
     <div class="input-section enhanced">
       <div class="section-header">
-        <ion-icon name="text-outline" class="section-icon"></ion-icon>
+        <lucide-icon [img]="Type" [size]="18" class="section-icon"></lucide-icon>
         <label class="section-label-main">Título</label>
       </div>
       <ion-item class="custom-input enhanced" lines="none">
         <ion-input 
           type="text" 
-          [(ngModel)]="newAlarmLabel" 
+          [(ngModel)]="newAlarmLabel"
+          (ionInput)="onLabelChange($event)"
           placeholder="Ej. Tomar aspirina"
           class="enhanced-input"
+          [clearInput]="true"
         ></ion-input>
       </ion-item>
     </div>
@@ -49,28 +52,28 @@
     <!-- Categoría Mejorada -->
     <div class="input-section enhanced">
       <div class="section-header">
-        <ion-icon name="pricetag-outline" class="section-icon"></ion-icon>
+        <lucide-icon [img]="Tag" [size]="18" class="section-icon"></lucide-icon>
         <label class="section-label-main">Categoría</label>
       </div>
       <div class="category-selector enhanced">
         <button class="category-btn enhanced" [class.selected]="newAlarmCategory === 'medicamento'"
           (click)="newAlarmCategory = 'medicamento'">
           <div class="category-icon medicamento">
-            <ion-icon name="medical-outline"></ion-icon>
+            <lucide-icon [img]="Pill" [size]="20"></lucide-icon>
           </div>
           <span>Medicamento</span>
         </button>
         <button class="category-btn enhanced" [class.selected]="newAlarmCategory === 'cita'"
           (click)="newAlarmCategory = 'cita'">
           <div class="category-icon cita">
-            <ion-icon name="calendar-outline"></ion-icon>
+            <lucide-icon [img]="Calendar" [size]="20"></lucide-icon>
           </div>
           <span>Cita médica</span>
         </button>
         <button class="category-btn enhanced" [class.selected]="newAlarmCategory === 'otro'"
           (click)="newAlarmCategory = 'otro'">
           <div class="category-icon otro">
-            <ion-icon name="notifications-outline"></ion-icon>
+            <lucide-icon [img]="Bell" [size]="20"></lucide-icon>
           </div>
           <span>Otro</span>
         </button>
@@ -80,7 +83,7 @@
     <!-- Días de repetición Mejorados -->
     <div class="input-section enhanced">
       <div class="section-header">
-        <ion-icon name="repeat-outline" class="section-icon"></ion-icon>
+        <lucide-icon [img]="Repeat" [size]="18" class="section-icon"></lucide-icon>
         <label class="section-label-main">Repetir</label>
         <span class="days-count" *ngIf="newAlarmRepeatDays.length > 0">
           {{ newAlarmRepeatDays.length }} {{ newAlarmRepeatDays.length === 1 ? 'día' : 'días' }}
@@ -97,7 +100,7 @@
     <!-- Notas adicionales Mejoradas -->
     <div class="input-section enhanced">
       <div class="section-header">
-        <ion-icon name="document-text-outline" class="section-icon"></ion-icon>
+        <lucide-icon [img]="FileText" [size]="18" class="section-icon"></lucide-icon>
         <label class="section-label-main">Notas (opcional)</label>
       </div>
       <ion-item class="custom-input enhanced textarea" lines="none">
@@ -113,12 +116,12 @@
     <!-- Preview Card -->
     <div class="alarm-preview-card" *ngIf="newAlarmLabel">
       <div class="preview-header">
-        <ion-icon name="eye-outline"></ion-icon>
+        <lucide-icon [img]="Eye" [size]="16"></lucide-icon>
         <span>Vista previa</span>
       </div>
       <div class="preview-content">
         <div class="preview-icon" [attr.data-category]="newAlarmCategory">
-          <ion-icon [name]="getCategoryIcon(newAlarmCategory)"></ion-icon>
+          <lucide-icon [img]="getCategoryIcon(newAlarmCategory)" [size]="24"></lucide-icon>
         </div>
         <div class="preview-info">
           <div class="preview-time">{{ formatTime(newAlarmTime) }}</div>
