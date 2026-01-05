@@ -7,13 +7,13 @@ $light-gray: #B4BEC9;
 $light-mint: #DEEFE7;
 $white: #FFFFFF;
 
-/* Tab Bar - Transparent with Gradient - Professional */
+/* Tab Bar - Completely Transparent */
 .transparent-tab-bar {
     --background: transparent !important;
     --border: 0 !important;
-    background: linear-gradient(to top, rgba($white, 1) 0%, rgba($white, 0.9) 30%, transparent 100%) !important;
+    background: transparent !important;
     border-top: none !important;
-    height: 70px;
+    height: 60px;
     padding-bottom: env(safe-area-inset-bottom, 0);
     animation: slideUp 0.4s ease-out;
 }
@@ -76,28 +76,10 @@ ion-tab-button {
         color: #6B7280; // Darker gray for better visibility
     }
 
-    /* Label styling - Below the button container */
+    /* Label hidden */
+    /* Label hidden */
     ion-label {
-        font-size: 10px;
-        font-weight: 600;
-        margin-top: 0;
-        opacity: 1;
-        color: $dark-blue;
-        white-space: nowrap;
-        transition: all 0.3s ease;
-        z-index: 1;
-        display: block;
-        position: absolute;
-        bottom: -16px;
-        left: 50%;
-        transform: translateX(-50%);
-    }
-
-    /* Show label on selected tab */
-    &.tab-selected ion-label {
-        opacity: 1;
-        color: $teal;
-        font-weight: 700;
+        display: none;
     }
 
     /* White icon on selected tab */

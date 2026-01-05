@@ -35,7 +35,13 @@
         <div *ngFor="let adulto of adultosMonitoreados" class="device-card">
           <div class="device-header">
             <div class="device-info">
-              <h3 class="device-name">{{ adulto.nombre }}</h3>
+              <div class="device-name-row">
+                <h3 class="device-name">{{ adulto.nombre }}</h3>
+                <span *ngIf="adulto.isShared" class="shared-badge">
+                  <ion-icon name="people"></ion-icon>
+                  Compartido
+                </span>
+              </div>
               <p class="device-age">{{ adulto.edad }} años</p>
               <p class="device-status" [ngClass]="{'status-online': adulto.conectado, 'status-offline': !adulto.conectado}">
                 {{ adulto.conectado ? 'En línea' : 'Desconectado' }}
@@ -49,8 +55,8 @@
 
           <div class="device-actions">
             <button class="btn-action btn-view" (click)="viewDevice(adulto)"><ion-icon name="eye"></ion-icon>Ver Detalles</button>
-            <button class="btn-action btn-edit" (click)="editAdult(adulto)"><ion-icon name="create-outline"></ion-icon>Editar</button>
-            <button class="btn-action btn-remove" (click)="removeDevice(adulto)"><ion-icon name="trash"></ion-icon>Dejar de Monitorear</button>
+            <button *ngIf="!adulto.isShared" class="btn-action btn-edit" (click)="editAdult(adulto)"><ion-icon name="create-outline"></ion-icon>Editar</button>
+            <button *ngIf="!adulto.isShared" class="btn-action btn-remove" (click)="removeDevice(adulto)"><ion-icon name="trash"></ion-icon>Dejar de Monitorear</button>
           </div>
         </div>
       </ng-container>

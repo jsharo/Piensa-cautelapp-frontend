@@ -8,6 +8,7 @@ import { DeviceApiService } from '../services/device-api.service';
 import { AdultInfoModalComponent } from '../pages/configuration/adult-info-modal/adult-info-modal.component';
 import { SharedGroupDetailPage } from '../pages/shared-group-detail/shared-group-detail.page';
 import { FormsModule } from '@angular/forms';
+import { SharedGroupService, SharedGroupDevice } from '../services/shared-group.service';
 
 interface Dispositivo {
   id_dispositivo: number;
@@ -25,6 +26,8 @@ interface AdultoMayor {
   conectado?: boolean;
   ultimaActividad?: string;
   deviceId?: string; // ID del dispositivo BLE real
+  isShared?: boolean; // Indica si es un dispositivo compartido
+  sharedBy?: number; // ID del usuario que compartió el dispositivo
 }
 
 @Component({
@@ -47,7 +50,8 @@ export class Tab2Page implements OnInit {
     private bleService: BleService,
     private deviceApiService: DeviceApiService,
     private modalController: ModalController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private sharedGroupService: SharedGroupService
   ) { }
 
   async openSharedGroupDetail() {
@@ -68,10 +72,17 @@ export class Tab2Page implements OnInit {
   }
 
   cargarDispositivosGuardados() {
+    const user = this.auth.getCurrentUser();
+    if (!user) {
+      console.error('No hay usuario autenticado');
+      return;
+    }
+
+    // Cargar mis dispositivos propios
     this.deviceApiService.obtenerMisDispositivos().subscribe({
       next: (dispositivos: any[]) => {
         console.log('RESPUESTA BACKEND obtenerMisDispositivos:', dispositivos);
-        this.dispositivosBackend = dispositivos.map((disp: any) => ({
+        const misDispositivos = dispositivos.map((disp: any) => ({
           id_adulto: disp.id_adulto,
           nombre: disp.nombre,
           fecha_nacimiento: disp.fecha_nacimiento,
@@ -79,10 +90,47 @@ export class Tab2Page implements OnInit {
           dispositivo: disp.dispositivo,
           edad: this.calcularEdad(disp.fecha_nacimiento),
           conectado: false,
-          ultimaActividad: 'Sin conexión reciente'
+          ultimaActividad: 'Sin conexión reciente',
+          isShared: false
         }));
-        this.combinarDispositivos();
-        this.adultosMonitoreados = this.dispositivosBackend.filter((d: any) => d.dispositivo);
+
+        // Cargar dispositivos compartidos conmigo
+        this.sharedGroupService.getMySharedDevices(user.id_usuario).subscribe({
+          next: (sharedDevices: SharedGroupDevice[]) => {
+            console.log('DISPOSITIVOS COMPARTIDOS:', sharedDevices);
+            
+            // IDs de mis dispositivos propios para evitar duplicados
+            const misDispositivosIds = new Set(misDispositivos.map((d: AdultoMayor) => d.id_adulto));
+            
+            // Agregar solo los dispositivos compartidos que NO son míos
+            const dispositivosCompartidos = sharedDevices
+              .filter((sd: SharedGroupDevice) => !misDispositivosIds.has(sd.adulto_id))
+              .map((sd: SharedGroupDevice) => ({
+                id_adulto: sd.adulto.id_adulto,
+                nombre: sd.adulto.nombre,
+                fecha_nacimiento: sd.adulto.fecha_nacimiento,
+                direccion: sd.adulto.direccion,
+                dispositivo: sd.adulto.dispositivo,
+                edad: this.calcularEdad(sd.adulto.fecha_nacimiento),
+                conectado: false,
+                ultimaActividad: 'Sin conexión reciente',
+                isShared: true,
+                sharedBy: sd.shared_by
+              }));
+            
+            // Combinar mis dispositivos + compartidos
+            this.dispositivosBackend = [...misDispositivos, ...dispositivosCompartidos];
+            this.combinarDispositivos();
+            this.adultosMonitoreados = this.dispositivosBackend.filter((d: any) => d.dispositivo);
+          },
+          error: (error: any) => {
+            console.error('Error cargando dispositivos compartidos:', error);
+            // Si falla la carga de compartidos, al menos mostrar los propios
+            this.dispositivosBackend = misDispositivos;
+            this.combinarDispositivos();
+            this.adultosMonitoreados = this.dispositivosBackend.filter((d: any) => d.dispositivo);
+          }
+        });
       },
       error: (error: any) => {
         console.error('Error cargando dispositivos guardados:', error);

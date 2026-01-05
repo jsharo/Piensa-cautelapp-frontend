@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { NavController, PopoverController } from '@ionic/angular';
@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { ProfileMenuComponent } from './profile-menu/profile-menu.component';
 import { NotificationService, Notification } from '../services/notification.service';
+import { LocalNotificationService } from '../services/local-notification.service';
 
 interface NotificacionUI {
   id: number;
@@ -29,23 +30,111 @@ type Filtro = 'todas' | 'emergencia' | 'ayuda';
   standalone: true,
   imports: [IonicModule, CommonModule],
 })
-export class Tab1Page implements OnInit {
+export class Tab1Page implements OnInit, OnDestroy {
   filtroActivo: Filtro = 'todas';
   userProfileImage: string | null = null;
   notificaciones: NotificacionUI[] = [];
   isLoading = false;
+  
+  // Para detectar nuevas notificaciones
+  private previousNotificationIds: Set<number> = new Set();
+  private pollingInterval: any = null;
 
   constructor(
     private navCtrl: NavController, 
     private router: Router, 
     private auth: AuthService, 
     private popoverController: PopoverController,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private localNotificationService: LocalNotificationService
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     this.loadUserProfileImage();
-    this.loadNotifications();
+    
+    // Solicitar permisos de notificaciones locales
+    await this.localNotificationService.requestPermissions();
+    
+    // Cargar notificaciones iniciales
+    await this.loadNotifications();
+    
+    // Iniciar polling cada 10 segundos para verificar nuevas notificaciones
+    this.startPolling();
+  }
+  
+  ngOnDestroy() {
+    // Limpiar el polling cuando se destruya el componente
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+    }
+  }
+  
+  /**
+   * Inicia el polling para verificar nuevas notificaciones cada 10 segundos
+   */
+  private startPolling() {
+    this.pollingInterval = setInterval(() => {
+      this.checkForNewNotifications();
+    }, 10000); // 10 segundos
+  }
+  
+  /**
+   * Verifica si hay nuevas notificaciones y envía notificaciones locales
+   */
+  private async checkForNewNotifications() {
+    const user = this.auth.getCurrentUser();
+    if (!user) return;
+
+    this.notificationService.getUserNotifications(user.id_usuario).subscribe({
+      next: async (notifications: Notification[]) => {
+        const newNotifications = notifications.filter(n => 
+          !this.previousNotificationIds.has(n.id_notificacion)
+        );
+        
+        // Enviar notificación local para cada nueva notificación
+        for (const notification of newNotifications) {
+          await this.sendLocalNotificationForAlert(notification);
+          this.previousNotificationIds.add(notification.id_notificacion);
+        }
+        
+        // Actualizar la UI
+        this.notificaciones = notifications.map(n => this.transformNotification(n));
+      },
+      error: (error) => {
+        console.error('Error verificando nuevas notificaciones:', error);
+      }
+    });
+  }
+  
+  /**
+   * Envía una notificación local cuando llega una alerta del dispositivo
+   */
+  private async sendLocalNotificationForAlert(notification: Notification) {
+    const usuario = notification.adulto?.nombre || 'Usuario';
+    const tipo = notification.tipo.toUpperCase() as 'EMERGENCIA' | 'AYUDA';
+    const mensaje = notification.mensaje || 'Sin mensaje';
+    
+    let title = '';
+    let body = '';
+    
+    if (tipo === 'EMERGENCIA') {
+      title = '🚨 EMERGENCIA';
+      body = `${usuario} necesita asistencia de inmediato: ${mensaje}`;
+    } else if (tipo === 'AYUDA') {
+      title = '⚠️ SOLICITUD DE AYUDA';
+      body = `${usuario} necesita ayuda: ${mensaje}`;
+    } else {
+      title = '📢 Notificación';
+      body = mensaje;
+    }
+    
+    // Enviar notificación local
+    await this.localNotificationService.sendNotification(
+      title,
+      body,
+      tipo,
+      { notificationId: notification.id_notificacion }
+    );
   }
 
   loadUserProfileImage() {
@@ -55,7 +144,7 @@ export class Tab1Page implements OnInit {
     }
   }
 
-  loadNotifications() {
+  async loadNotifications() {
     const user = this.auth.getCurrentUser();
     if (!user) return;
 
@@ -63,6 +152,10 @@ export class Tab1Page implements OnInit {
     this.notificationService.getUserNotifications(user.id_usuario).subscribe({
       next: (notifications: Notification[]) => {
         this.notificaciones = notifications.map(n => this.transformNotification(n));
+        
+        // Guardar IDs para detectar nuevas notificaciones en el polling
+        this.previousNotificationIds = new Set(notifications.map(n => n.id_notificacion));
+        
         this.isLoading = false;
       },
       error: (error) => {

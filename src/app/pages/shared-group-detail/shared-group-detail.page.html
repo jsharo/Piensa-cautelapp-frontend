@@ -185,7 +185,7 @@
               
               <ion-label>
                 <h3>{{ device.nombre }}</h3>
-                <p>{{ calcularEdad(device.fecha_nacimiento) }} años · Batería: {{ device.dispositivo?.bateria }}%</p>
+                <p>{{ calcularEdad(device.fecha_nacimiento) }} años · Batería: {{ device.dispositivo.bateria }}%</p>
               </ion-label>
 
               <!-- Badge compartido -->
@@ -288,14 +288,20 @@
         <div class="join-form">
           <ion-input
             [(ngModel)]="joinCode"
-            placeholder="Ingresa el código"
+            placeholder="Ingresa el código (8 caracteres)"
             maxlength="8"
             [disabled]="isLoadingGroup"
+            (ionInput)="formatJoinCode($event)"
+            type="text"
             class="join-input">
           </ion-input>
+          <div class="code-hint">
+            <ion-icon name="information-circle-outline"></ion-icon>
+            <span>El código debe tener 8 caracteres (ejemplo: a1b2c3d4)</span>
+          </div>
           <ion-button 
             (click)="joinGroupByCode()" 
-            [disabled]="isLoadingGroup || !joinCode.trim()"
+            [disabled]="isLoadingGroup || !joinCode.trim() || joinCode.trim().length !== 8"
             expand="block"
             class="join-btn">
             <ion-icon name="enter-outline" slot="start"></ion-icon>

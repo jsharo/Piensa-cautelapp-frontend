@@ -121,23 +121,68 @@ export class SharedGroupDetailPage implements OnInit {
   async joinGroupByCode(): Promise<void> {
     this.joinError = '';
     const user = this.auth.getCurrentUser();
-    if (!user || !this.joinCode.trim()) return;
+    
+    if (!user) {
+      this.joinError = 'Debes iniciar sesión para unirte a un grupo';
+      await this.showToast('Debes iniciar sesión', 'danger');
+      return;
+    }
+    
+    const code = this.joinCode.trim().toLowerCase();
+    
+    if (!code) {
+      this.joinError = 'Debes ingresar un código de invitación';
+      await this.showToast('Ingresa un código válido', 'warning');
+      return;
+    }
+    
+    // Validar que el código tenga el formato correcto (8 caracteres hexadecimales)
+    if (code.length !== 8 || !/^[0-9a-fA-F]+$/.test(code)) {
+      this.joinError = 'El código debe tener 8 caracteres hexadecimales';
+      await this.showToast('Formato de código inválido', 'warning');
+      return;
+    }
+    
     this.isLoadingGroup = true;
-    this.sharedGroupService.joinGroup(user.id_usuario, this.joinCode.trim()).subscribe(
+    this.sharedGroupService.joinGroup(user.id_usuario, code).subscribe(
       async (group: any) => {
+        console.log('Grupo obtenido exitosamente:', group);
         this.sharedGroup = group;
         this.inviteCode = group.code;
         this.sharedDevices = group.sharedDevices || [];
         this.isLoadingGroup = false;
         this.joinCode = '';
+        this.joinError = '';
         await this.showToast('¡Te has unido al grupo exitosamente!', 'success');
+        
+        // Recargar mis dispositivos para actualizar la UI
+        this.loadMyDevices();
       },
-      async (_err: any) => {
-        this.joinError = 'Código inválido o ya eres miembro.';
+      async (err: any) => {
+        console.error('Error al unirse al grupo:', err);
         this.isLoadingGroup = false;
-        await this.showToast('No se pudo unir al grupo', 'danger');
+        
+        // Mensaje de error más específico
+        if (err.error?.message) {
+          this.joinError = err.error.message;
+        } else if (err.status === 404) {
+          this.joinError = 'Código de invitación no encontrado';
+        } else if (err.status === 400) {
+          this.joinError = 'Código inválido o ya eres miembro';
+        } else {
+          this.joinError = 'No se pudo unir al grupo. Verifica el código e intenta nuevamente';
+        }
+        
+        await this.showToast(this.joinError, 'danger');
       }
     );
+  }
+
+  formatJoinCode(event: any): void {
+    let value = event.target.value || '';
+    // Convertir a minúsculas y eliminar caracteres no hexadecimales
+    value = value.toLowerCase().replace(/[^0-9a-f]/g, '');
+    this.joinCode = value;
   }
 
   async copyInviteCode(): Promise<void> {
