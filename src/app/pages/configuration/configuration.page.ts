@@ -9,6 +9,7 @@ import { BleClient, ScanResult } from '@capacitor-community/bluetooth-le';
 import { LucideAngularModule, ChevronLeft, Bluetooth, Mail, Info, CheckCircle2, AlertCircle, Edit, PlusCircle, Trash2, XCircle, ArrowRight, RefreshCw, Wifi, ChevronRight, WifiOff } from 'lucide-angular';
 import { BleService, ConnectedDevice } from '../../services/ble.service';
 import { AdultInfoModalComponent } from './adult-info-modal/adult-info-modal.component';
+import { Router } from '@angular/router';
 
 // UUIDs del ESP32 - DEBEN COINCIDIR EXACTAMENTE con el código del ESP32
 const BLE_SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
@@ -72,9 +73,12 @@ export class ConfigurationPage implements OnInit, ViewWillEnter {
   manualSSID = '';
   wifiPassword = '';
   isConnectingWiFi = false;
+  wifiConnected = false;
+  wifiStatus: 'idle' | 'sending' | 'waiting' | 'connected' | 'failed' = 'idle';
+  private wifiTimeoutId: any = null;
 
   // Estados generales
-  connectionStep: 'bluetooth' | 'wifi-manual' = 'bluetooth';
+  connectionStep: 'bluetooth' | 'wifi-manual' | 'adult-info' = 'bluetooth';
 
   // Email de recuperación
   user: User | null = null;
@@ -90,7 +94,8 @@ export class ConfigurationPage implements OnInit, ViewWillEnter {
     private http: HttpClient,
     private toastCtrl: ToastController,
     private bleService: BleService,
-    private modalController: ModalController
+    private modalController: ModalController,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -231,36 +236,13 @@ export class ConfigurationPage implements OnInit, ViewWillEnter {
       device.connected = true;
       this.connectedDevice = device;
       
-      // Abrir modal para capturar datos del adulto mayor
-      const adultInfo = await this.openAdultInfoModal();
-      
-      // Agregar dispositivo al servicio BLE con información del adulto mayor
-      const deviceToAdd: ConnectedDevice = {
-        id: device.id,
-        name: device.name,
-        rssi: device.rssi,
-        mac_address: device.id, // En Android puede ser la MAC, en iOS un UUID
-        bateria: 100, // Valor inicial, se actualizará después
-        connected: true,
-        ultimaActividad: 'Ahora',
-        adulto: adultInfo ? {
-          id_adulto: 0,
-          nombre: adultInfo.nombre,
-          fecha_nacimiento: adultInfo.fecha_nacimiento || '1950-01-01',
-          direccion: adultInfo.direccion || 'No especificada'
-        } : undefined
-      };
-      
-      console.log('📱 Dispositivo a agregar:', JSON.stringify(deviceToAdd, null, 2));
-      console.log('📅 Fecha de nacimiento:', adultInfo?.fecha_nacimiento);
-      
-      this.bleService.addConnectedDevice(deviceToAdd);
-      
       // Suscribirse a notificaciones de estado WiFi
       await this.subscribeToWiFiStatus();
       
+      // Ir directo a configuración WiFi (los datos del adulto se pedirán después)
       this.connectionStep = 'wifi-manual';
-      this.showToast('Dispositivo conectado exitosamente', 'success');
+      this.wifiConnected = false;
+      this.showToast('Dispositivo conectado. Ahora configura el WiFi.', 'success');
       
     } catch (error) {
       console.error('❌ Error conectando:', error);
@@ -287,6 +269,12 @@ export class ConfigurationPage implements OnInit, ViewWillEnter {
   }
 
   handleDisconnection() {
+    // Limpiar timeout si existe
+    if (this.wifiTimeoutId) {
+      clearTimeout(this.wifiTimeoutId);
+      this.wifiTimeoutId = null;
+    }
+    
     if (this.connectedDevice) {
       this.connectedDevice.connected = false;
       this.connectedDevice = null;
@@ -294,6 +282,9 @@ export class ConfigurationPage implements OnInit, ViewWillEnter {
     this.connectionStep = 'bluetooth';
     this.manualSSID = '';
     this.wifiPassword = '';
+    this.wifiConnected = false;
+    this.wifiStatus = 'idle';
+    this.isConnectingWiFi = false;
   }
 
   async subscribeToWiFiStatus() {
@@ -306,17 +297,44 @@ export class ConfigurationPage implements OnInit, ViewWillEnter {
         BLE_WIFI_STATUS_CHAR_UUID,
         (value: DataView) => {
           const decoder = new TextDecoder();
-          const status = decoder.decode(value);
-          console.log('📊 Estado WiFi:', status);
+          const status = decoder.decode(value).trim();
+          console.log('📊 Estado WiFi recibido:', status, '| Longitud:', status.length);
+          
+          // Limpiar timeout si existe
+          if (this.wifiTimeoutId) {
+            clearTimeout(this.wifiTimeoutId);
+            this.wifiTimeoutId = null;
+          }
           
           // Manejar diferentes estados
-          if (status === 'CONNECTING') {
-            this.showToast('Conectando a WiFi...', 'medium');
-          } else if (status === 'CONNECTED') {
-            this.showToast('¡ESP32 conectado a WiFi exitosamente!', 'success');
-            // Aquí podrías navegar a otra pantalla o actualizar el estado
-          } else if (status === 'FAILED') {
-            this.showToast('Error: No se pudo conectar a WiFi', 'danger');
+          if (status === 'CONNECTING' || status.includes('CONNECTING')) {
+            this.wifiStatus = 'waiting';
+            // No mostrar toast aquí si ya estamos en tab2
+          } else if (status === 'CONNECTED' || status.includes('CONNECTED')) {
+            this.wifiConnected = true;
+            this.isConnectingWiFi = false;
+            this.wifiStatus = 'connected';
+            
+            // Notificar al BleService que WiFi se conectó
+            if (this.connectedDevice) {
+              const deviceToNotify: ConnectedDevice = {
+                id: this.connectedDevice.id,
+                name: this.connectedDevice.name,
+                rssi: this.connectedDevice.rssi,
+                mac_address: this.connectedDevice.id,
+                bateria: 100,
+                connected: true,
+                ultimaActividad: 'Ahora'
+              };
+              this.bleService.notifyWifiConnected(deviceToNotify);
+            }
+          } else if (status === 'FAILED' || status.includes('FAILED') || status.includes('ERROR')) {
+            this.wifiConnected = false;
+            this.isConnectingWiFi = false;
+            this.wifiStatus = 'failed';
+            this.showToast('Error: No se pudo conectar a WiFi. Verifica las credenciales.', 'danger');
+          } else {
+            console.log('🟡 Estado WiFi desconocido:', status);
           }
         }
       );
@@ -337,9 +355,11 @@ export class ConfigurationPage implements OnInit, ViewWillEnter {
     }
 
     this.isConnectingWiFi = true;
+    this.wifiStatus = 'sending';
     
     try {
       console.log('📤 Enviando credenciales WiFi al ESP32...');
+      console.log('📶 SSID:', this.manualSSID);
       
       // 1. Enviar SSID
       const ssidEncoder = new TextEncoder();
@@ -355,7 +375,7 @@ export class ConfigurationPage implements OnInit, ViewWillEnter {
       console.log('✅ SSID enviado:', this.manualSSID);
       
       // Pequeña pausa para asegurar que el ESP32 procese
-      await this.delay(300);
+      await this.delay(500);
       
       // 2. Enviar contraseña
       const passwordEncoder = new TextEncoder();
@@ -370,15 +390,40 @@ export class ConfigurationPage implements OnInit, ViewWillEnter {
       );
       console.log('✅ Contraseña enviada');
       
-      this.showToast('Credenciales enviadas. Esperando conexión...', 'success');
+      this.wifiStatus = 'waiting';
       
-      // El estado se recibirá por notificaciones (ya suscritas)
+      // Guardar dispositivo pendiente en el servicio BLE
+      const pendingDevice: ConnectedDevice = {
+        id: this.connectedDevice.id,
+        name: this.connectedDevice.name,
+        rssi: this.connectedDevice.rssi,
+        mac_address: this.connectedDevice.id,
+        bateria: 100,
+        connected: true,
+        ultimaActividad: 'Ahora'
+      };
+      this.bleService.setPendingDevice(pendingDevice, this.manualSSID);
+      
+      this.showToast('Credenciales enviadas. Redirigiendo a dispositivos...', 'success');
+      
+      // Configurar timeout de 30 segundos (se manejará en tab2)
+      this.wifiTimeoutId = setTimeout(() => {
+        if (this.wifiStatus === 'waiting' || this.wifiStatus === 'sending') {
+          console.log('⏰ Timeout: No se recibió respuesta del ESP32');
+          this.wifiStatus = 'failed';
+          this.isConnectingWiFi = false;
+        }
+      }, 30000);
+      
+      // Navegar al tab de dispositivos después de un momento
+      await this.delay(1000);
+      this.router.navigate(['/tabs/tab2']);
       
     } catch (error) {
       console.error('❌ Error enviando credenciales:', error);
-      this.showToast('Error al enviar credenciales', 'danger');
-    } finally {
+      this.showToast('Error al enviar credenciales: ' + (error as Error).message, 'danger');
       this.isConnectingWiFi = false;
+      this.wifiStatus = 'failed';
     }
   }
 
@@ -418,6 +463,49 @@ export class ConfigurationPage implements OnInit, ViewWillEnter {
       position: 'top',
     });
     await toast.present();
+  }
+
+  // =====================
+  // GUARDAR DATOS DEL ADULTO (después de conectar WiFi)
+  // =====================
+
+  async saveAdultInfo() {
+    if (!this.connectedDevice) return;
+
+    // Abrir modal para capturar datos del adulto mayor
+    const adultInfo = await this.openAdultInfoModal();
+    
+    if (!adultInfo) {
+      this.showToast('Debes completar los datos del adulto mayor', 'warning');
+      return;
+    }
+
+    // Agregar dispositivo al servicio BLE con información del adulto mayor
+    const deviceToAdd: ConnectedDevice = {
+      id: this.connectedDevice.id,
+      name: this.connectedDevice.name,
+      rssi: this.connectedDevice.rssi,
+      mac_address: this.connectedDevice.id, // En Android puede ser la MAC, en iOS un UUID
+      bateria: 100, // Valor inicial, se actualizará después
+      connected: true,
+      ultimaActividad: 'Ahora',
+      adulto: {
+        id_adulto: 0,
+        nombre: adultInfo.nombre,
+        fecha_nacimiento: adultInfo.fecha_nacimiento || '1950-01-01',
+        direccion: adultInfo.direccion || 'No especificada'
+      }
+    };
+    
+    console.log('📱 Dispositivo a agregar:', JSON.stringify(deviceToAdd, null, 2));
+    console.log('📅 Fecha de nacimiento:', adultInfo.fecha_nacimiento);
+    
+    this.bleService.addConnectedDevice(deviceToAdd);
+    
+    this.showToast('¡Dispositivo configurado exitosamente!', 'success');
+    
+    // Volver a la pantalla anterior o a la lista de dispositivos
+    this.navController.back();
   }
 
   // =====================

@@ -1,5 +1,5 @@
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { IonContent, PopoverController, ModalController, ToastController } from '@ionic/angular/standalone';
+import { IonContent, IonIcon, PopoverController, ModalController, ToastController } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
 import { ProfileMenuComponent } from '../tab1/profile-menu/profile-menu.component';
@@ -9,6 +9,13 @@ import { AdultInfoModalComponent } from '../pages/configuration/adult-info-modal
 import { SharedGroupDetailPage } from '../pages/shared-group-detail/shared-group-detail.page';
 import { FormsModule } from '@angular/forms';
 import { SharedGroupService, SharedGroupDevice } from '../services/shared-group.service';
+import { addIcons } from 'ionicons';
+import { 
+  personCircle, wifi, bluetooth, person, people, 
+  addCircle, checkmarkCircle, closeCircle, 
+  batteryHalf, eye, createOutline, trash, 
+  peopleOutline, close 
+} from 'ionicons/icons';
 
 interface Dispositivo {
   id_dispositivo: number;
@@ -35,7 +42,7 @@ interface AdultoMayor {
   templateUrl: 'tab2.page.html',
   styleUrls: ['tab2.page.scss'],
   standalone: true,
-  imports: [IonContent, CommonModule, FormsModule],
+  imports: [IonContent, IonIcon, CommonModule, FormsModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class Tab2Page implements OnInit {
@@ -43,6 +50,10 @@ export class Tab2Page implements OnInit {
   adultosMonitoreados: AdultoMayor[] = [];
   dispositivosBackend: AdultoMayor[] = [];
   dispositivosReales: ConnectedDevice[] = [];
+  
+  // Estado del dispositivo pendiente de configuración
+  pendingDevice: {device: ConnectedDevice, ssid: string} | null = null;
+  showPendingCard = false;
 
   constructor(
     private auth: AuthService,
@@ -52,7 +63,25 @@ export class Tab2Page implements OnInit {
     private modalController: ModalController,
     private toastController: ToastController,
     private sharedGroupService: SharedGroupService
-  ) { }
+  ) {
+    // Registrar iconos de Ionic
+    addIcons({
+      'person-circle': personCircle,
+      'wifi': wifi,
+      'bluetooth': bluetooth,
+      'person': person,
+      'people': people,
+      'add-circle': addCircle,
+      'checkmark-circle': checkmarkCircle,
+      'close-circle': closeCircle,
+      'battery-half': batteryHalf,
+      'eye': eye,
+      'create-outline': createOutline,
+      'trash': trash,
+      'people-outline': peopleOutline,
+      'close': close
+    });
+  }
 
   async openSharedGroupDetail() {
     const modal = await this.modalController.create({
@@ -62,12 +91,48 @@ export class Tab2Page implements OnInit {
     return await modal.present();
   }
 
+  ionViewWillEnter() {
+    // Recargar datos cada vez que se entra a la vista
+    console.log('🔄 Entrando a Tab2, recargando dispositivos...');
+    this.cargarDispositivosGuardados();
+    
+    // Verificar si hay un dispositivo pendiente de configuración
+    this.pendingDevice = this.bleService.getPendingDevice();
+    if (this.pendingDevice) {
+      console.log('📱 Dispositivo pendiente detectado:', this.pendingDevice.device.name);
+      this.showPendingCard = true;
+    }
+  }
+
   ngOnInit(): void {
     this.loadUserProfileImage();
     this.cargarDispositivosGuardados();
     this.bleService.connectedDevices$.subscribe((devices: ConnectedDevice[]) => {
       this.dispositivosReales = devices;
       this.combinarDispositivos();
+    });
+    
+    // Suscribirse a eventos de dispositivos vinculados para recargar datos
+    this.bleService.deviceLinked$.subscribe((linked) => {
+      if (linked) {
+        console.log('🔄 Dispositivo vinculado, recargando datos del backend...');
+        this.cargarDispositivosGuardados();
+      }
+    });
+    
+    // Suscribirse a cambios en el dispositivo pendiente
+    this.bleService.pendingDevice$.subscribe((pending) => {
+      this.pendingDevice = pending;
+      this.showPendingCard = !!pending;
+      console.log('📱 Dispositivo pendiente actualizado:', pending?.device?.name || 'ninguno');
+    });
+    
+    // Suscribirse a eventos de WiFi conectado para mostrar modal de datos del adulto
+    this.bleService.wifiConnected$.subscribe(async (device) => {
+      if (device && this.pendingDevice) {
+        console.log('📶 WiFi conectado! Mostrando modal de datos del adulto...');
+        await this.showAdultInfoModal(device);
+      }
     });
   }
 
@@ -120,6 +185,10 @@ export class Tab2Page implements OnInit {
             
             // Combinar mis dispositivos + compartidos
             this.dispositivosBackend = [...misDispositivos, ...dispositivosCompartidos];
+            
+            // Actualizar estado WiFi desde el backend
+            this.actualizarEstadoWiFi();
+            
             this.combinarDispositivos();
             this.adultosMonitoreados = this.dispositivosBackend.filter((d: any) => d.dispositivo);
           },
@@ -127,6 +196,7 @@ export class Tab2Page implements OnInit {
             console.error('Error cargando dispositivos compartidos:', error);
             // Si falla la carga de compartidos, al menos mostrar los propios
             this.dispositivosBackend = misDispositivos;
+            this.actualizarEstadoWiFi();
             this.combinarDispositivos();
             this.adultosMonitoreados = this.dispositivosBackend.filter((d: any) => d.dispositivo);
           }
@@ -173,6 +243,40 @@ export class Tab2Page implements OnInit {
     this.adultosMonitoreados = dispositivosCombinados;
   }
 
+  // Actualizar el estado de conexión WiFi de los dispositivos desde el backend
+  actualizarEstadoWiFi() {
+    this.deviceApiService.getDevicesStatus().subscribe({
+      next: (response) => {
+        if (response.status === 'ok' && response.devices) {
+          console.log('📶 Estado WiFi de dispositivos:', response.devices);
+          
+          // Actualizar el estado de cada dispositivo en dispositivosBackend
+          this.dispositivosBackend = this.dispositivosBackend.map((disp: AdultoMayor) => {
+            if (disp.dispositivo && disp.dispositivo.mac_address) {
+              // Buscar el estado WiFi correspondiente
+              const wifiStatus = response.devices.find(
+                (d) => d.macAddress === disp.dispositivo.mac_address
+              );
+              
+              if (wifiStatus && wifiStatus.isOnline) {
+                return {
+                  ...disp,
+                  conectado: true,
+                  ultimaActividad: 'Conectado vía WiFi',
+                  wifiConnected: true
+                };
+              }
+            }
+            return disp;
+          });
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error obteniendo estado WiFi:', error);
+      }
+    });
+  }
+
   calcularEdad(fechaNacimiento: string): number {
     const hoy = new Date();
     const nacimiento = new Date(fechaNacimiento);
@@ -203,12 +307,15 @@ export class Tab2Page implements OnInit {
   }
 
   viewDevice(adulto: AdultoMayor) {
+    const connectionType = (adulto as any).wifiConnected ? 'WiFi' : 
+                          adulto.conectado ? 'Bluetooth' : 'Ninguna';
     const infoTexto = `Información de ${adulto.nombre}\n\n` +
       `Edad: ${adulto.edad} años\n` +
       `Dirección: ${adulto.direccion}\n` +
       `Dispositivo: ${adulto.dispositivo?.mac_address || 'No asignado'}\n` +
       `Batería: ${adulto.dispositivo?.bateria || 0}%\n` +
       `Estado: ${adulto.conectado ? 'En línea' : 'Desconectado'}\n` +
+      `Conexión: ${connectionType}\n` +
       `Última actividad: ${adulto.ultimaActividad}`;
     alert(infoTexto);
   }
@@ -299,5 +406,53 @@ export class Tab2Page implements OnInit {
       cssClass: 'profile-popover'
     });
     return await popover.present();
+  }
+
+  // Mostrar modal para configurar datos del adulto mayor después de conectar WiFi
+  async showAdultInfoModal(device: ConnectedDevice) {
+    const modal = await this.modalController.create({
+      component: AdultInfoModalComponent,
+      cssClass: 'adult-info-modal'
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    
+    if (data) {
+      // Agregar dispositivo con datos del adulto al servicio BLE
+      const deviceToAdd: ConnectedDevice = {
+        ...device,
+        adulto: {
+          id_adulto: 0,
+          nombre: data.nombre,
+          fecha_nacimiento: data.fecha_nacimiento || '1950-01-01',
+          direccion: data.direccion || 'No especificada'
+        }
+      };
+      
+      console.log('📱 Registrando dispositivo con datos del adulto:', deviceToAdd);
+      this.bleService.addConnectedDevice(deviceToAdd);
+      
+      // Limpiar dispositivo pendiente
+      this.bleService.clearPendingDevice();
+      this.bleService.clearWifiConnected();
+      this.showPendingCard = false;
+      
+      await this.showToast('¡Dispositivo configurado exitosamente!', 'success');
+      
+      // Recargar dispositivos
+      this.cargarDispositivosGuardados();
+    } else {
+      await this.showToast('Configuración cancelada', 'warning');
+    }
+  }
+
+  // Cancelar configuración pendiente
+  cancelPendingDevice() {
+    this.bleService.clearPendingDevice();
+    this.bleService.clearWifiConnected();
+    this.showPendingCard = false;
+    this.pendingDevice = null;
   }
 }

@@ -174,10 +174,35 @@
       <div class="mini-device-card">
         <lucide-angular [img]="Bluetooth" [size]="20"></lucide-angular>
         <span>{{ connectedDevice.name }}</span>
+        <span class="status-dot connected"></span>
+      </div>
+
+      <!-- Estado de conexión WiFi -->
+      <div class="wifi-status-card" *ngIf="wifiStatus !== 'idle'">
+        <div class="status-row" [ngClass]="wifiStatus">
+          <lucide-angular 
+            *ngIf="wifiStatus === 'sending' || wifiStatus === 'waiting'" 
+            [img]="RefreshCw" [size]="20" class="spin">
+          </lucide-angular>
+          <lucide-angular 
+            *ngIf="wifiStatus === 'connected'" 
+            [img]="CheckCircle2" [size]="20">
+          </lucide-angular>
+          <lucide-angular 
+            *ngIf="wifiStatus === 'failed'" 
+            [img]="AlertCircle" [size]="20">
+          </lucide-angular>
+          <div class="status-text">
+            <span *ngIf="wifiStatus === 'sending'">Enviando credenciales al ESP32...</span>
+            <span *ngIf="wifiStatus === 'waiting'">Esperando que el ESP32 conecte a WiFi...</span>
+            <span *ngIf="wifiStatus === 'connected'">¡Conectado a WiFi exitosamente!</span>
+            <span *ngIf="wifiStatus === 'failed'">Error al conectar. Intenta de nuevo.</span>
+          </div>
+        </div>
       </div>
 
       <!-- Formulario de credenciales WiFi -->
-      <div class="wifi-form">
+      <div class="wifi-form" [class.disabled]="isConnectingWiFi">
         <div class="form-group">
           <label class="input-label">Nombre de la red (SSID)</label>
           <input 
@@ -185,6 +210,7 @@
             class="wifi-input"
             placeholder="Mi-Red-WiFi"
             [(ngModel)]="manualSSID"
+            [disabled]="isConnectingWiFi"
             autocomplete="off">
           <div class="help-text">
             <lucide-angular [img]="Info" [size]="14"></lucide-angular>
@@ -199,6 +225,7 @@
             class="wifi-input"
             placeholder="Contraseña de la red"
             [(ngModel)]="wifiPassword"
+            [disabled]="isConnectingWiFi"
             autocomplete="off">
           <div class="help-text">
             <lucide-angular [img]="Info" [size]="14"></lucide-angular>
@@ -211,6 +238,7 @@
       <div class="config-actions">
         <button 
           class="btn-secondary" 
+          [disabled]="isConnectingWiFi"
           (click)="connectionStep = 'bluetooth'">
           <lucide-angular [img]="ChevronLeft" [size]="18"></lucide-angular>
           Volver
@@ -221,7 +249,55 @@
           (click)="sendWiFiCredentials()">
           <lucide-angular *ngIf="isConnectingWiFi" [img]="RefreshCw" [size]="18" class="spin"></lucide-angular>
           <lucide-angular *ngIf="!isConnectingWiFi" [img]="Wifi" [size]="18"></lucide-angular>
-          {{ isConnectingWiFi ? 'Conectando...' : 'Conectar' }}
+          <span *ngIf="wifiStatus === 'idle' || wifiStatus === 'failed'">Conectar WiFi</span>
+          <span *ngIf="wifiStatus === 'sending'">Enviando...</span>
+          <span *ngIf="wifiStatus === 'waiting'">Esperando...</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- PASO 3: INFORMACIÓN DEL ADULTO MAYOR (después de conectar WiFi) -->
+    <div *ngIf="connectionStep === 'adult-info' && connectedDevice && wifiConnected" class="step-section">
+      <div class="section-header">
+        <h2 class="section-title">Configurar Dispositivo</h2>
+        <p class="section-subtitle">WiFi conectado exitosamente. Ahora ingresa los datos del adulto mayor.</p>
+      </div>
+
+      <!-- Estado de conexión -->
+      <div class="connection-status-cards">
+        <div class="status-card success">
+          <lucide-angular [img]="Bluetooth" [size]="24"></lucide-angular>
+          <div class="status-info">
+            <span class="status-label">Bluetooth</span>
+            <span class="status-value">{{ connectedDevice.name }}</span>
+          </div>
+          <lucide-angular [img]="CheckCircle2" [size]="20" class="status-icon"></lucide-angular>
+        </div>
+        <div class="status-card success">
+          <lucide-angular [img]="Wifi" [size]="24"></lucide-angular>
+          <div class="status-info">
+            <span class="status-label">WiFi</span>
+            <span class="status-value">{{ manualSSID }}</span>
+          </div>
+          <lucide-angular [img]="CheckCircle2" [size]="20" class="status-icon"></lucide-angular>
+        </div>
+      </div>
+
+      <!-- Botón para abrir modal de datos -->
+      <div class="adult-info-section">
+        <div class="info-card">
+          <div class="info-icon">
+            <lucide-angular [img]="Info" [size]="24"></lucide-angular>
+          </div>
+          <div class="info-text">
+            <p><strong>Último paso</strong></p>
+            <p>Ingresa el nombre y datos del adulto mayor que usará este dispositivo.</p>
+          </div>
+        </div>
+
+        <button class="btn-primary btn-large" (click)="saveAdultInfo()">
+          <lucide-angular [img]="PlusCircle" [size]="20"></lucide-angular>
+          Configurar datos del adulto mayor
         </button>
       </div>
     </div>

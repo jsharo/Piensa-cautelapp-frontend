@@ -399,6 +399,69 @@ lucide-angular.spin {
   ion-icon {
     font-size: 18px;
   }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-left: auto;
+    
+    &.connected {
+      background: $success;
+      box-shadow: 0 0 6px rgba(52, 199, 89, 0.5);
+    }
+  }
+}
+
+// Tarjeta de estado WiFi
+.wifi-status-card {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: $white;
+  border: 2px solid $border;
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    &.sending, &.waiting {
+      color: $warning;
+      
+      lucide-angular {
+        color: $warning;
+      }
+    }
+
+    &.connected {
+      color: $success;
+      
+      lucide-angular {
+        color: $success;
+      }
+    }
+
+    &.failed {
+      color: $error;
+      
+      lucide-angular {
+        color: $error;
+      }
+    }
+
+    .status-text {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+    }
+  }
+}
+
+// Formulario WiFi deshabilitado mientras conecta
+.wifi-form.disabled {
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .networks-list {
@@ -555,6 +618,78 @@ lucide-angular.spin {
 
     &::placeholder {
       color: $text-light;
+    }
+  }
+}
+
+// Tarjetas de estado de conexión (Bluetooth y WiFi conectados)
+.connection-status-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  .status-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: $white;
+    border-radius: 12px;
+    border: 2px solid $border;
+    
+    &.success {
+      border-color: $success;
+      background: rgba(52, 199, 89, 0.05);
+      
+      lucide-angular:first-child {
+        color: $success;
+      }
+      
+      .status-icon {
+        color: $success;
+      }
+    }
+
+    .status-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      .status-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: $text-light;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .status-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: $text;
+      }
+    }
+
+    .status-icon {
+      flex-shrink: 0;
+    }
+  }
+}
+
+// Sección de información del adulto
+.adult-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .btn-large {
+    padding: 16px 24px;
+    font-size: 16px;
+    
+    lucide-angular {
+      margin-right: 8px;
     }
   }
 }

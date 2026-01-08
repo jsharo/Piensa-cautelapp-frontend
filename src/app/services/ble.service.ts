@@ -34,6 +34,17 @@ export class BleService {
   private connectedDevicesSubject = new BehaviorSubject<ConnectedDevice[]>([]);
   public connectedDevices$: Observable<ConnectedDevice[]> = this.connectedDevicesSubject.asObservable();
 
+  private deviceLinkedSubject = new BehaviorSubject<any>(null);
+  public deviceLinked$: Observable<any> = this.deviceLinkedSubject.asObservable();
+
+  // Dispositivo pendiente de configuración (esperando conexión WiFi)
+  private pendingDeviceSubject = new BehaviorSubject<{device: ConnectedDevice, ssid: string} | null>(null);
+  public pendingDevice$: Observable<{device: ConnectedDevice, ssid: string} | null> = this.pendingDeviceSubject.asObservable();
+
+  // Evento cuando WiFi se conecta exitosamente
+  private wifiConnectedSubject = new BehaviorSubject<ConnectedDevice | null>(null);
+  public wifiConnected$: Observable<ConnectedDevice | null> = this.wifiConnectedSubject.asObservable();
+
   private initialized = false;
 
   constructor(private deviceApiService: DeviceApiService, private platform: Platform) {
@@ -139,6 +150,8 @@ export class BleService {
     }).subscribe({
       next: (response) => {
         console.log('✅ Dispositivo vinculado en el backend:', response);
+        // Emitir evento para que otros componentes puedan actualizar sus datos
+        this.deviceLinkedSubject.next(response);
       },
       error: (error) => {
         console.error('❌ Error vinculando dispositivo en el backend:', error);
@@ -182,5 +195,33 @@ export class BleService {
 
   clearAllDevices() {
     this.connectedDevicesSubject.next([]);
+  }
+
+  // Establecer dispositivo pendiente de configuración WiFi
+  setPendingDevice(device: ConnectedDevice, ssid: string) {
+    console.log('📱 Dispositivo pendiente establecido:', device.name, 'SSID:', ssid);
+    this.pendingDeviceSubject.next({ device, ssid });
+  }
+
+  // Obtener dispositivo pendiente
+  getPendingDevice(): {device: ConnectedDevice, ssid: string} | null {
+    return this.pendingDeviceSubject.value;
+  }
+
+  // Limpiar dispositivo pendiente
+  clearPendingDevice() {
+    console.log('🧹 Limpiando dispositivo pendiente');
+    this.pendingDeviceSubject.next(null);
+  }
+
+  // Notificar que WiFi se conectó exitosamente
+  notifyWifiConnected(device: ConnectedDevice) {
+    console.log('📶 WiFi conectado para dispositivo:', device.name);
+    this.wifiConnectedSubject.next(device);
+  }
+
+  // Limpiar notificación de WiFi conectado
+  clearWifiConnected() {
+    this.wifiConnectedSubject.next(null);
   }
 }

@@ -30,11 +30,30 @@ export interface DispositivoVinculado {
   };
 }
 
+export interface DeviceStatus {
+  id: number;
+  deviceId: string;
+  macAddress: string;
+  isOnline: boolean;
+  lastSeen: Date | null;
+  battery: number;
+  adultos: Array<{
+    id_adulto: number;
+    nombre: string;
+  }>;
+}
+
+export interface DevicesStatusResponse {
+  status: string;
+  devices: DeviceStatus[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class DeviceApiService {
   private apiUrl = `${environment.apiUrl}/device`;
+  private baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
@@ -52,5 +71,15 @@ export class DeviceApiService {
 
   actualizarAdultoMayor(adultoId: number, dto: UpdateAdultoMayorDto): Observable<DispositivoVinculado> {
     return this.http.patch<DispositivoVinculado>(`${this.apiUrl}/adulto-mayor/${adultoId}`, dto);
+  }
+
+  // Obtener el estado de conexión de todos los dispositivos
+  getDevicesStatus(): Observable<DevicesStatusResponse> {
+    return this.http.get<DevicesStatusResponse>(`${this.baseUrl}/devices/status`);
+  }
+
+  // Obtener el estado de conexión de un dispositivo específico
+  getDeviceStatus(deviceId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/devices/${deviceId}/status`);
   }
 }

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { DeviceConnectionEventsService } from './device-connection-events.service';
 
 export interface User {
   id_usuario: number;
@@ -43,7 +44,10 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private deviceConnectionEvents: DeviceConnectionEventsService
+  ) {
     this.loadStoredUser();
   }
 
@@ -58,6 +62,8 @@ export class AuthService {
       try {
         const user = JSON.parse(userStr);
         this.currentUserSubject.next(user);
+        // Conectar a eventos SSE al cargar sesión existente
+        this.deviceConnectionEvents.connect(token);
       } catch (error) {
         console.error('Error parsing stored user:', error);
         this.clearSession();
@@ -99,6 +105,8 @@ export class AuthService {
    * Cierra sesión
    */
   logout(): void {
+    // Desconectar eventos SSE
+    this.deviceConnectionEvents.disconnect();
     this.clearSession();
     this.currentUserSubject.next(null);
   }
@@ -122,6 +130,9 @@ export class AuthService {
     
     // Actualizar estado
     this.currentUserSubject.next(response.user);
+
+    // Conectar a eventos SSE del dispositivo
+    this.deviceConnectionEvents.connect(response.access_token);
   }
 
   /**

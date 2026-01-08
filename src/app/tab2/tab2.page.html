@@ -13,6 +13,35 @@
 </header>
 
 <ion-content [fullscreen]="true" class="dispositivos-content">
+  <!-- TARJETA DE DISPOSITIVO PENDIENTE DE CONFIGURACIÓN -->
+  <div *ngIf="showPendingCard && pendingDevice" class="pending-device-card">
+    <div class="pending-header">
+      <ion-icon name="wifi" class="pending-icon spinning"></ion-icon>
+      <div class="pending-info">
+        <h3>Configurando dispositivo...</h3>
+        <p>{{ pendingDevice.device.name }}</p>
+      </div>
+      <button class="btn-cancel-pending" (click)="cancelPendingDevice()">
+        <ion-icon name="close"></ion-icon>
+      </button>
+    </div>
+    <div class="pending-status">
+      <div class="status-item">
+        <ion-icon name="bluetooth" class="status-icon success"></ion-icon>
+        <span>Bluetooth conectado</span>
+      </div>
+      <div class="status-item">
+        <ion-icon name="wifi" class="status-icon waiting"></ion-icon>
+        <span>Conectando a WiFi: {{ pendingDevice.ssid }}</span>
+      </div>
+      <div class="status-item pending">
+        <ion-icon name="person" class="status-icon"></ion-icon>
+        <span>Esperando configuración de datos...</span>
+      </div>
+    </div>
+    <p class="pending-hint">Cuando el dispositivo se conecte a WiFi, podrás configurar los datos del adulto mayor.</p>
+  </div>
+
   <!-- SECCIÓN DE DISPOSITIVOS -->
   <div class="dispositivos-container">
     <!-- Encabezado mejorado -->
@@ -43,9 +72,15 @@
                 </span>
               </div>
               <p class="device-age">{{ adulto.edad }} años</p>
-              <p class="device-status" [ngClass]="{'status-online': adulto.conectado, 'status-offline': !adulto.conectado}">
-                {{ adulto.conectado ? 'En línea' : 'Desconectado' }}
-              </p>
+              <div class="device-connection-status">
+                <p class="device-status" [ngClass]="{'status-online': adulto.conectado, 'status-offline': !adulto.conectado}">
+                  <ion-icon [name]="adulto.conectado ? 'checkmark-circle' : 'close-circle'"></ion-icon>
+                  {{ adulto.conectado ? 'En línea' : 'Desconectado' }}
+                </p>
+                <p class="device-activity" *ngIf="adulto.ultimaActividad">
+                  {{ adulto.ultimaActividad }}
+                </p>
+              </div>
             </div>
             <div class="device-battery" [ngClass]="'battery-' + getBatteryClass(adulto.dispositivo.bateria)">
               <ion-icon name="battery-half"></ion-icon>
