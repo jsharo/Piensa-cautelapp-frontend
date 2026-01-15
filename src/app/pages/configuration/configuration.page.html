@@ -256,51 +256,8 @@
       </div>
     </div>
 
-    <!-- PASO 3: INFORMACIÓN DEL ADULTO MAYOR (después de conectar WiFi) -->
-    <div *ngIf="connectionStep === 'adult-info' && connectedDevice && wifiConnected" class="step-section">
-      <div class="section-header">
-        <h2 class="section-title">Configurar Dispositivo</h2>
-        <p class="section-subtitle">WiFi conectado exitosamente. Ahora ingresa los datos del adulto mayor.</p>
-      </div>
-
-      <!-- Estado de conexión -->
-      <div class="connection-status-cards">
-        <div class="status-card success">
-          <lucide-angular [img]="Bluetooth" [size]="24"></lucide-angular>
-          <div class="status-info">
-            <span class="status-label">Bluetooth</span>
-            <span class="status-value">{{ connectedDevice.name }}</span>
-          </div>
-          <lucide-angular [img]="CheckCircle2" [size]="20" class="status-icon"></lucide-angular>
-        </div>
-        <div class="status-card success">
-          <lucide-angular [img]="Wifi" [size]="24"></lucide-angular>
-          <div class="status-info">
-            <span class="status-label">WiFi</span>
-            <span class="status-value">{{ manualSSID }}</span>
-          </div>
-          <lucide-angular [img]="CheckCircle2" [size]="20" class="status-icon"></lucide-angular>
-        </div>
-      </div>
-
-      <!-- Botón para abrir modal de datos -->
-      <div class="adult-info-section">
-        <div class="info-card">
-          <div class="info-icon">
-            <lucide-angular [img]="Info" [size]="24"></lucide-angular>
-          </div>
-          <div class="info-text">
-            <p><strong>Último paso</strong></p>
-            <p>Ingresa el nombre y datos del adulto mayor que usará este dispositivo.</p>
-          </div>
-        </div>
-
-        <button class="btn-primary btn-large" (click)="saveAdultInfo()">
-          <lucide-angular [img]="PlusCircle" [size]="20"></lucide-angular>
-          Configurar datos del adulto mayor
-        </button>
-      </div>
-    </div>
+    <!-- PASO 3: INFORMACIÓN DEL ADULTO MAYOR ya no se usa aquí -->
+    <!-- El modal se abre automáticamente después de la conexión WiFi exitosa -->
   </div>
 
   <!-- Modal para editar email de recuperación -->
