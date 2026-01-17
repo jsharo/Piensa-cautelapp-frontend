@@ -67,9 +67,9 @@ export class AppComponent {
             'Authorization': `Bearer ${this.authService.getToken()}`
           },
           body: JSON.stringify({
-            mac_address: event.macAddress,
+            mac_address: event.deviceId,
             bateria: 100,
-            nombre_adulto: `Dispositivo ${event.macAddress.slice(-8)}`,
+            nombre_adulto: `Dispositivo ${event.deviceId.slice(-8)}`,
             direccion: 'Ubicación no especificada'
           })
         });

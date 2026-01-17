@@ -148,10 +148,10 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
         console.log('✅ Evento de conexión recibido:', event);
         
         // Verificar si es el dispositivo que estamos configurando
-        // event.macAddress contiene el nombre del dispositivo (ej: "CautelApp-D1")
+        // event.deviceId contiene el nombre del dispositivo (ej: "CautelApp-D1")
         if (this.connectedDevice && 
-            (event.macAddress === this.connectedDevice.name || 
-             event.macAddress === this.connectedDevice.id)) {
+            (event.deviceId === this.connectedDevice.name || 
+             event.deviceId === this.connectedDevice.id)) {
           this.handleWiFiConnectionSuccess(event);
         }
       },
@@ -420,37 +420,15 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
       console.log('📤 Enviando credenciales WiFi al ESP32...');
       console.log('📶 SSID:', this.manualSSID);
       
-      // 1. Enviar SSID
-      const ssidEncoder = new TextEncoder();
-      const ssidArray = ssidEncoder.encode(this.manualSSID);
-      const ssidData = new DataView(ssidArray.buffer);
-      
-      await BleClient.write(
-        this.connectedDevice.id,
-        BLE_SERVICE_UUID,
-        BLE_WIFI_SSID_CHAR_UUID,
-        ssidData
-      );
-      console.log('✅ SSID enviado:', this.manualSSID);
-      
-      // Pequeña pausa para asegurar que el ESP32 procese
-      await this.delay(500);
-      
-      // 2. Enviar User ID ANTES del password (el password activa la conexión WiFi)
-      console.log('🔍 DEBUG - Usuario completo:', this.user);
-      console.log('🔍 DEBUG - id_usuario:', this.user?.id_usuario);
-      
+      // 1. Enviar User ID
       if (this.user && this.user.id_usuario) {
         const userIdEncoder = new TextEncoder();
         const userIdString = String(this.user.id_usuario);
         console.log('🔍 DEBUG - userIdString generado:', userIdString);
-        
         const userIdArray = userIdEncoder.encode(userIdString);
         console.log('🔍 DEBUG - userIdArray length:', userIdArray.length);
         console.log('🔍 DEBUG - userIdArray:', userIdArray);
-        
         const userIdData = new DataView(userIdArray.buffer);
-        
         await BleClient.write(
           this.connectedDevice.id,
           BLE_SERVICE_UUID,
@@ -463,15 +441,25 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
         console.error('  - this.user:', this.user);
         console.error('  - this.user.id_usuario:', this.user?.id_usuario);
       }
-      
-      // Pequeña pausa
       await this.delay(500);
-      
-      // 3. Enviar contraseña AL FINAL (esto activa el proceso de conexión WiFi)
+
+      // 2. Enviar SSID
+      const ssidEncoder = new TextEncoder();
+      const ssidArray = ssidEncoder.encode(this.manualSSID);
+      const ssidData = new DataView(ssidArray.buffer);
+      await BleClient.write(
+        this.connectedDevice.id,
+        BLE_SERVICE_UUID,
+        BLE_WIFI_SSID_CHAR_UUID,
+        ssidData
+      );
+      console.log('✅ SSID enviado:', this.manualSSID);
+      await this.delay(500);
+
+      // 3. Enviar contraseña
       const passwordEncoder = new TextEncoder();
       const passwordArray = passwordEncoder.encode(this.wifiPassword);
       const passwordData = new DataView(passwordArray.buffer);
-      
       await BleClient.write(
         this.connectedDevice.id,
         BLE_SERVICE_UUID,
@@ -479,7 +467,6 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
         passwordData
       );
       console.log('✅ Contraseña enviada');
-      
       this.wifiStatus = 'waiting';
       
       // No guardar dispositivo pendiente ni navegar
