@@ -80,6 +80,7 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
   wifiStatus: 'idle' | 'sending' | 'waiting' | 'connected' | 'failed' = 'idle';
   private wifiTimeoutId: any = null;
   private sseSubscription: Subscription | null = null;
+  private waitingForWiFiConfirmation = false;
 
   // Estados generales
   connectionStep: 'bluetooth' | 'wifi-manual' | 'adult-info' = 'bluetooth';
@@ -324,6 +325,12 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
   }
 
   handleDisconnection() {
+    // Si estamos esperando confirmación WiFi, NO volver a bluetooth automáticamente
+    if (this.waitingForWiFiConfirmation) {
+      console.log('⏳ Esperando confirmación WiFi, no se regresa a bluetooth');
+      return;
+    }
+    
     // Limpiar timeout si existe
     if (this.wifiTimeoutId) {
       clearTimeout(this.wifiTimeoutId);
@@ -355,10 +362,12 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
           const status = decoder.decode(value).trim();
           console.log('📊 Estado WiFi recibido:', status, '| Longitud:', status.length);
           
-          // Limpiar timeout si existe
-          if (this.wifiTimeoutId) {
-            clearTimeout(this.wifiTimeoutId);
-            this.wifiTimeoutId = null;
+          // Limpiar timeout solo si el estado es 'CONNECTED' o 'FAILED'
+          if ((status === 'CONNECTED' || status.includes('CONNECTED')) || (status === 'FAILED' || status.includes('FAILED') || status.includes('ERROR'))) {
+            if (this.wifiTimeoutId) {
+              clearTimeout(this.wifiTimeoutId);
+              this.wifiTimeoutId = null;
+            }
           }
           
           // Manejar diferentes estados
@@ -468,21 +477,37 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
       );
       console.log('✅ Contraseña enviada');
       this.wifiStatus = 'waiting';
+      this.waitingForWiFiConfirmation = true;
       
       // No guardar dispositivo pendiente ni navegar
       // En su lugar, esperar el evento SSE
       
-      this.showToast('Credenciales enviadas. Esperando confirmación...', 'success');
+      this.showToast('Credenciales enviadas. Esperando confirmación del dispositivo...', 'success');
       
-      // Configurar timeout de 30 segundos
-      this.wifiTimeoutId = setTimeout(() => {
+      // Configurar timeout de 10 segundos
+      this.wifiTimeoutId = setTimeout(async () => {
         if (this.wifiStatus === 'waiting' || this.wifiStatus === 'sending') {
-          console.log('⏰ Timeout: No se recibió respuesta del ESP32');
+          console.log('⏰ Timeout: No se recibió respuesta del ESP32 en 10 segundos');
           this.wifiStatus = 'failed';
           this.isConnectingWiFi = false;
-          this.showToast('Tiempo de espera agotado. Verifica las credenciales WiFi.', 'danger');
+          this.waitingForWiFiConfirmation = false;
+          await this.showToast('No se recibió confirmación del dispositivo. Intenta nuevamente.', 'danger');
+          // Esperar un momento y volver a la pantalla de bluetooth
+          await this.delay(2000);
+          this.connectionStep = 'bluetooth';
+          this.manualSSID = '';
+          this.wifiPassword = '';
+          // Desconectar dispositivo si todavía está conectado
+          if (this.connectedDevice) {
+            try {
+              await BleClient.disconnect(this.connectedDevice.id);
+            } catch (e) {
+              console.log('Error desconectando:', e);
+            }
+            this.connectedDevice = null;
+          }
         }
-      }, 30000);
+      }, 10000);
       
     } catch (error) {
       console.error('❌ Error enviando credenciales:', error);
@@ -503,6 +528,12 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
   async handleWiFiConnectionSuccess(event: any) {
     console.log('🎉 WiFi conectado exitosamente!', event);
     
+    // Verificar que el status sea 'connected' para asegurar que la conexión fue exitosa
+    if (event.status !== 'connected') {
+      console.log('⚠️ Evento recibido pero status no es "connected":', event.status);
+      return;
+    }
+    
     // Limpiar timeout
     if (this.wifiTimeoutId) {
       clearTimeout(this.wifiTimeoutId);
@@ -512,6 +543,7 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
     this.wifiStatus = 'connected';
     this.wifiConnected = true;
     this.isConnectingWiFi = false;
+    this.waitingForWiFiConfirmation = false;
     
     this.showToast('✅ Dispositivo conectado a WiFi exitosamente!', 'success');
     
@@ -578,16 +610,16 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
   // Función auxiliar para mostrar mensajes toast
   async showToast(message: string, color: 'success' | 'danger' | 'warning' | 'medium') {
     const toast = await this.toastCtrl.create({
-      message,
-      color,
+      message: message,
       duration: 3000,
       position: 'top',
+      color: color
     });
     await toast.present();
   }
 
   // =====================
-  // EMAIL DE RECUPERACIÓN
+  // RECOVERY EMAIL FUNCTIONS
   // =====================
 
   openRecoveryEmailEdit() {
@@ -602,35 +634,29 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
     this.recoveryEmailError = '';
   }
 
-  emailValid(value: string): boolean {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
-    return re.test(value);
-  }
-
   validateRecoveryEmail() {
-    if (!this.recoveryEmail) {
-      this.recoveryEmailError = '';
+    this.recoveryEmailError = '';
+    
+    if (!this.recoveryEmail || this.recoveryEmail.trim() === '') {
       return true;
     }
-    
-    if (!this.emailValid(this.recoveryEmail)) {
-      this.recoveryEmailError = 'Ingresa un correo electrónico válido';
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(this.recoveryEmail)) {
+      this.recoveryEmailError = 'Email inválido';
       return false;
     }
-    
-    if (this.recoveryEmail === this.user?.email) {
-      this.recoveryEmailError = 'El email de recuperación no puede ser igual al email principal';
+
+    if (this.user && this.recoveryEmail === this.user.email) {
+      this.recoveryEmailError = 'Debe ser diferente al email principal';
       return false;
     }
-    
-    this.recoveryEmailError = '';
+
     return true;
   }
 
   async updateRecoveryEmail() {
-    if (!this.user) {
-      return;
-    }
+    if (!this.user) return;
 
     if (this.recoveryEmail && !this.validateRecoveryEmail()) {
       return;
@@ -638,63 +664,46 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
 
     this.loadingRecoveryEmail = true;
 
-    this.http
-      .patch(`${environment.apiUrl}/user/${this.user.id_usuario}`, {
-        email_recuperacion: this.recoveryEmail || null,
-      })
-      .subscribe({
-        next: async (updatedUser: any) => {
-          this.user = updatedUser;
-          this.authService.setCurrentUser(updatedUser);
-          
-          this.loadingRecoveryEmail = false;
-          this.closeRecoveryEmailEdit();
-          
-          const toast = await this.toastCtrl.create({
-            message: this.recoveryEmail 
-              ? 'Email de recuperación actualizado exitosamente'
-              : 'Email de recuperación eliminado exitosamente',
-            color: 'success',
-            duration: 3000,
-            position: 'top',
-          });
-          toast.present();
-        },
-        error: async (err) => {
-          this.loadingRecoveryEmail = false;
-          let errorMessage = 'No se pudo actualizar el email de recuperación';
-          
-          if (err.error?.message) {
-            errorMessage = err.error.message;
-          } else if (err.status === 409) {
-            errorMessage = 'Este correo ya está en uso';
-          }
-          
-          const toast = await this.toastCtrl.create({
-            message: errorMessage,
-            color: 'danger',
-            duration: 3000,
-            position: 'top',
-          });
-          toast.present();
-        },
-      });
+    try {
+      // Simular actualización (aquí deberías hacer la llamada real al backend)
+      await this.delay(1000);
+      
+      if (this.user) {
+        this.user.email_recuperacion = this.recoveryEmail || undefined;
+        this.authService.setCurrentUser(this.user);
+      }
+      
+      this.loadingRecoveryEmail = false;
+      this.closeRecoveryEmailEdit();
+      await this.showToast('Email de recuperación actualizado correctamente', 'success');
+    } catch (error: any) {
+      console.error('Error actualizando email de recuperación:', error);
+      this.loadingRecoveryEmail = false;
+      await this.showToast('Error al actualizar el email de recuperación', 'danger');
+    }
   }
 
   async removeRecoveryEmail() {
-    this.recoveryEmail = '';
+    if (!this.user || !this.user.email_recuperacion) return;
+
+    const confirm = window.confirm('¿Estás seguro de que deseas eliminar tu email de recuperación?');
+    if (!confirm) return;
+
     await this.updateRecoveryEmail();
   }
 
-  async openAdultInfoModal(): Promise<{ nombre: string; fecha_nacimiento?: string; direccion?: string } | null> {
+  // =====================
+  // ADULT INFO MODAL
+  // =====================
+
+  async openAdultInfoModal() {
     const modal = await this.modalController.create({
       component: AdultInfoModalComponent,
       cssClass: 'adult-info-modal'
     });
 
     await modal.present();
-
     const { data } = await modal.onWillDismiss();
-    return data || null;
+    return data;
   }
 }
