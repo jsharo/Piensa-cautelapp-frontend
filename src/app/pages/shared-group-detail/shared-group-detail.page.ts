@@ -72,7 +72,7 @@ export class SharedGroupDetailPage implements OnInit {
         this.myDevices = devices;
         this.isLoadingDevices = false;
       },
-      (error) => {
+      (error: any) => {
         console.error('Error cargando dispositivos:', error);
         this.isLoadingDevices = false;
       }

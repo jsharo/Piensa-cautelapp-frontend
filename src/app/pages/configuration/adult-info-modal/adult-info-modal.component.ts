@@ -1,7 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonItem, IonLabel, IonInput, ModalController } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonTitle, IonContent, IonDatetime, ModalController } from '@ionic/angular/standalone';
 import { LucideAngularModule, User, Calendar, MapPin, X, Check } from 'lucide-angular';
 
 export interface AdultInfo {
@@ -22,10 +22,7 @@ export interface AdultInfo {
     IonToolbar,
     IonTitle,
     IonContent,
-    IonButton,
-    IonItem,
-    IonLabel,
-    IonInput,
+    IonDatetime,
     LucideAngularModule
   ]
 })
@@ -35,6 +32,8 @@ export class AdultInfoModalComponent {
   @Input() direccion: string = '';
   @Input() isEditMode: boolean = false;
   @Input() title: string = 'Información del Adulto Mayor';
+
+  @ViewChild('fechaPicker') fechaPicker!: IonDatetime;
 
   // Iconos de Lucide
   readonly UserIcon = User;
@@ -46,6 +45,7 @@ export class AdultInfoModalComponent {
   constructor(private modalController: ModalController) {}
 
   dismiss() {
+    console.log('❌ Modal cerrado sin guardar');
     this.modalController.dismiss();
   }
 
@@ -55,13 +55,53 @@ export class AdultInfoModalComponent {
     }
 
     const dataToReturn = {
-      nombre: this.nombre,
+      nombre: this.nombre.trim(),
       fecha_nacimiento: this.fecha_nacimiento || undefined,
-      direccion: this.direccion || undefined
+      direccion: this.direccion?.trim() || undefined
     };
     
-    console.log('📝 Datos del modal:', JSON.stringify(dataToReturn, null, 2));
+    console.log('✅ Modal guardado con datos:', JSON.stringify(dataToReturn, null, 2));
 
     this.modalController.dismiss(dataToReturn);
+  }
+
+  /**
+   * Retorna la fecha máxima permitida (hoy)
+   * Se usa para evitar que se seleccionen fechas futuras
+   */
+  getMaxDate(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Abre el picker de fecha
+   */
+  abrirFechaPicker() {
+    if (this.fechaPicker) {
+      (this.fechaPicker as any).open();
+    }
+  }
+
+  /**
+   * Formatea la fecha en formato legible
+   */
+  formatearFecha(fecha: string): string {
+    if (!fecha) return '';
+    
+    try {
+      const date = new Date(fecha);
+      const opciones: Intl.DateTimeFormatOptions = {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      };
+      return date.toLocaleDateString('es-ES', opciones);
+    } catch (e) {
+      return fecha;
+    }
   }
 }

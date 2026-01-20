@@ -220,13 +220,26 @@
 
         <div class="form-group">
           <label class="input-label">Contraseña</label>
-          <input 
-            type="password" 
-            class="wifi-input"
-            placeholder="Contraseña de la red"
-            [(ngModel)]="wifiPassword"
-            [disabled]="isConnectingWiFi"
-            autocomplete="off">
+          <div class="password-field-container">
+            <input 
+              [type]="wifiPasswordVisible ? 'text' : 'password'" 
+              class="wifi-input"
+              placeholder="Contraseña de la red"
+              [(ngModel)]="wifiPassword"
+              [disabled]="isConnectingWiFi"
+              autocomplete="off">
+            <button 
+              type="button"
+              class="password-toggle-btn"
+              (click)="togglePasswordVisibility()"
+              [disabled]="isConnectingWiFi"
+              tabindex="-1">
+              <lucide-angular 
+                [img]="wifiPasswordVisible ? EyeOff : Eye" 
+                [size]="18">
+              </lucide-angular>
+            </button>
+          </div>
           <div class="help-text">
             <lucide-angular [img]="Info" [size]="14"></lucide-angular>
             <span>La contraseña de tu red WiFi</span>

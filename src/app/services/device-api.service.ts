@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface VincularDispositivoDto {
@@ -59,6 +60,21 @@ export class DeviceApiService {
 
   deleteDispositivo(id_dispositivo: number) {
     return this.http.delete(`${this.apiUrl}/${id_dispositivo}`);
+  }
+
+  /**
+   * Dejar de monitorear un dispositivo/adulto mayor
+   * Utiliza id_adulto (no id_dispositivo)
+   */
+  stopMonitoringDevice(adultoId: number) {
+    console.log(`[DEVICE_API] POST /device/stop-monitoring/${adultoId}`);
+    return this.http.post(`${this.apiUrl}/stop-monitoring/${adultoId}`, {}).pipe(
+      tap((response: any) => console.log(`[DEVICE_API] ✓ Respuesta de eliminación:`, response)),
+      catchError((error: any) => {
+        console.error(`[DEVICE_API] ✗ Error en eliminación:`, error);
+        throw error;
+      })
+    );
   }
 
   vincularDispositivo(dto: VincularDispositivoDto): Observable<any> {

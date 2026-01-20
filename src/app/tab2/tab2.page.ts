@@ -1,5 +1,5 @@
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { IonContent, IonIcon, PopoverController, ModalController, ToastController } from '@ionic/angular/standalone';
+import { IonContent, IonIcon, PopoverController, ModalController, ToastController, IonRefresher } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
 import { ProfileMenuComponent } from '../tab1/profile-menu/profile-menu.component';
@@ -42,7 +42,7 @@ interface AdultoMayor {
   templateUrl: 'tab2.page.html',
   styleUrls: ['tab2.page.scss'],
   standalone: true,
-  imports: [IonContent, IonIcon, CommonModule, FormsModule],
+  imports: [IonContent, IonIcon, CommonModule, FormsModule, IonRefresher],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class Tab2Page implements OnInit {
@@ -136,17 +136,36 @@ export class Tab2Page implements OnInit {
     });
   }
 
+  /**
+   * Maneja el evento de pull-to-refresh
+   * Recarga los dispositivos y completa el refresher
+   */
+  handleRefresh(event: any) {
+    console.log('🔄 Pull-to-Refresh: Recargando dispositivos...');
+    this.cargarDispositivosGuardados();
+    
+    // Completar el refresher después de 1 segundo
+    setTimeout(() => {
+      event.detail.complete();
+      console.log('✅ Refresh completado');
+    }, 1000);
+  }
+
   cargarDispositivosGuardados() {
     const user = this.auth.getCurrentUser();
     if (!user) {
-      console.error('No hay usuario autenticado');
+      console.error('❌ No hay usuario autenticado');
       return;
     }
+
+    console.log(`📥 [CARGAR] Iniciando carga de dispositivos para usuario ${user.id_usuario}`);
 
     // Cargar mis dispositivos propios
     this.deviceApiService.obtenerMisDispositivos().subscribe({
       next: (dispositivos: any[]) => {
-        console.log('RESPUESTA BACKEND obtenerMisDispositivos:', dispositivos);
+        console.log(`✅ [CARGAR] RESPUESTA obtenerMisDispositivos:`, dispositivos);
+        console.log(`   Total recibidos: ${dispositivos.length}`);
+        
         const misDispositivos = dispositivos.map((disp: any) => ({
           id_adulto: disp.id_adulto,
           nombre: disp.nombre,
@@ -159,13 +178,17 @@ export class Tab2Page implements OnInit {
           isShared: false
         }));
 
+        console.log(`   Mapeados: ${misDispositivos.length}`, misDispositivos.map((d: any) => ({ id: d.id_adulto, nombre: d.nombre })));
+
         // Cargar dispositivos compartidos conmigo
         this.sharedGroupService.getMySharedDevices(user.id_usuario).subscribe({
           next: (sharedDevices: SharedGroupDevice[]) => {
-            console.log('DISPOSITIVOS COMPARTIDOS:', sharedDevices);
+            console.log(`✅ [CARGAR] DISPOSITIVOS COMPARTIDOS:`, sharedDevices);
+            console.log(`   Total compartidos: ${sharedDevices.length}`);
             
             // IDs de mis dispositivos propios para evitar duplicados
             const misDispositivosIds = new Set(misDispositivos.map((d: AdultoMayor) => d.id_adulto));
+            console.log(`   IDs propios: ${Array.from(misDispositivosIds).join(', ')}`);
             
             // Agregar solo los dispositivos compartidos que NO son míos
             const dispositivosCompartidos = sharedDevices
@@ -183,17 +206,24 @@ export class Tab2Page implements OnInit {
                 sharedBy: sd.shared_by
               }));
             
+            console.log(`   Compartidos filtrados: ${dispositivosCompartidos.length}`, dispositivosCompartidos.map((d: any) => ({ id: d.id_adulto, nombre: d.nombre })));
+            
             // Combinar mis dispositivos + compartidos
             this.dispositivosBackend = [...misDispositivos, ...dispositivosCompartidos];
+            console.log(`📦 [CARGAR] Total en backend: ${this.dispositivosBackend.length}`);
+            this.dispositivosBackend.forEach((d: any) => {
+              console.log(`   - ${d.nombre} (id: ${d.id_adulto}, mac: ${d.dispositivo?.mac_address || 'sin MAC'})`);
+            });
             
             // Actualizar estado WiFi desde el backend
             this.actualizarEstadoWiFi();
             
             this.combinarDispositivos();
             this.adultosMonitoreados = this.dispositivosBackend.filter((d: any) => d.dispositivo);
+            console.log(`✅ [CARGAR] Carga completada. Monitoreados: ${this.adultosMonitoreados.length}`);
           },
           error: (error: any) => {
-            console.error('Error cargando dispositivos compartidos:', error);
+            console.error('❌ [CARGAR] Error cargando dispositivos compartidos:', error);
             // Si falla la carga de compartidos, al menos mostrar los propios
             this.dispositivosBackend = misDispositivos;
             this.actualizarEstadoWiFi();
@@ -203,50 +233,71 @@ export class Tab2Page implements OnInit {
         });
       },
       error: (error: any) => {
-        console.error('Error cargando dispositivos guardados:', error);
+        console.error('❌ [CARGAR] Error cargando dispositivos guardados:', error);
       }
     });
   }
 
   combinarDispositivos() {
     if (!this.dispositivosBackend) return;
+    
+    console.log(`🔄 [COMBINAR] Iniciando combinación de dispositivos`);
+    console.log(`   - Backend: ${this.dispositivosBackend.length} dispositivos`);
+    console.log(`   - BLE: ${this.dispositivosReales?.length || 0} dispositivos reales`);
+    
     const dispositivosBLE = this.dispositivosReales || [];
     const dispositivosCombinados: AdultoMayor[] = [];
+    const anadidos = new Set<number>(); // Usar id_adulto para evitar duplicados
     
     // Filtrar dispositivos BLE válidos
     const bleValidos = dispositivosBLE.filter((d: any) => d && d.dispositivo && d.dispositivo.mac_address);
     const macsConectadas = new Set(bleValidos.map((d: any) => d.dispositivo.mac_address));
     
+    console.log(`   - MACs conectadas: ${Array.from(macsConectadas).join(', ')}`);
+    
+    // Agregar dispositivos BLE que están conectados
     bleValidos.forEach((dispBLE: any) => {
       const dispBackend = this.dispositivosBackend.find(
         (db: any) => db && db.dispositivo && db.dispositivo.mac_address === dispBLE.dispositivo.mac_address
       );
       if (dispBackend) {
+        console.log(`   ✓ BLE Match: ${dispBackend.nombre} (${dispBackend.id_adulto})`);
         dispositivosCombinados.push({
           ...dispBackend,
           conectado: true,
           ultimaActividad: 'Ahora',
           deviceId: dispBLE.deviceId
         });
+        anadidos.add(dispBackend.id_adulto);
       } else {
+        console.log(`   ⚠️ BLE Sin match en backend: ${dispBLE.dispositivo?.mac_address}`);
         dispositivosCombinados.push(dispBLE);
       }
     });
     
+    // Agregar dispositivos del backend que NO estén conectados
     this.dispositivosBackend.forEach((dispBackend: any) => {
       if (dispBackend && dispBackend.dispositivo && dispBackend.dispositivo.mac_address) {
-        if (!macsConectadas.has(dispBackend.dispositivo.mac_address)) {
+        if (!macsConectadas.has(dispBackend.dispositivo.mac_address) && !anadidos.has(dispBackend.id_adulto)) {
+          console.log(`   - Backend desconectado: ${dispBackend.nombre} (${dispBackend.id_adulto})`);
           dispositivosCombinados.push(dispBackend);
+          anadidos.add(dispBackend.id_adulto);
         }
       }
     });
+    
+    console.log(`✅ [COMBINAR] Total dispositivos finales: ${dispositivosCombinados.length}`);
+    dispositivosCombinados.forEach((d: any) => {
+      console.log(`   - ${d.nombre} (id: ${d.id_adulto}, mac: ${d.dispositivo?.mac_address})`);
+    });
+    
     this.adultosMonitoreados = dispositivosCombinados;
   }
 
   // Actualizar el estado de conexión WiFi de los dispositivos desde el backend
   actualizarEstadoWiFi() {
     this.deviceApiService.getDevicesStatus().subscribe({
-      next: (response) => {
+      next: (response: any) => {
         if (response.status === 'ok' && response.devices) {
           console.log('📶 Estado WiFi de dispositivos:', response.devices);
           
@@ -255,7 +306,7 @@ export class Tab2Page implements OnInit {
             if (disp.dispositivo && disp.dispositivo.mac_address) {
               // Buscar el estado WiFi correspondiente
               const wifiStatus = response.devices.find(
-                (d) => d.macAddress === disp.dispositivo.mac_address
+                (d: any) => d.macAddress === disp.dispositivo.mac_address
               );
               
               if (wifiStatus && wifiStatus.isOnline) {
@@ -271,7 +322,7 @@ export class Tab2Page implements OnInit {
           });
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('❌ Error obteniendo estado WiFi:', error);
       }
     });
@@ -365,17 +416,55 @@ export class Tab2Page implements OnInit {
   async removeDevice(adulto: AdultoMayor) {
     const confirmed = confirm(`¿Dejar de monitorear a ${adulto.nombre}?`);
     if (!confirmed) return;
+    
+    console.log(`🗑️ Iniciando eliminación de dispositivo:`, {
+      id_adulto: adulto.id_adulto,
+      nombre: adulto.nombre,
+      id_dispositivo: adulto.dispositivo?.id_dispositivo
+    });
+
+    // Desconectar BLE si está conectado
     if (adulto.deviceId) {
+      console.log(`🔌 Desconectando BLE: ${adulto.deviceId}`);
       await this.bleService.disconnectDevice(adulto.deviceId);
     }
-    if (adulto.dispositivo?.id_dispositivo) {
-      this.deviceApiService.deleteDispositivo(adulto.dispositivo.id_dispositivo).subscribe({
-        next: async () => {
+
+    // PASO CRÍTICO: Eliminar de la lista local INMEDIATAMENTE
+    // Esto hace que la UI se actualice al instante
+    const indexToRemove = this.adultosMonitoreados.findIndex(a => a.id_adulto === adulto.id_adulto);
+    if (indexToRemove !== -1) {
+      console.log(`🗑️ Eliminando de lista local en posición ${indexToRemove}`);
+      this.adultosMonitoreados = this.adultosMonitoreados.filter(a => a.id_adulto !== adulto.id_adulto);
+      
+      // También eliminar del backend local
+      const indexBackend = this.dispositivosBackend.findIndex(a => a.id_adulto === adulto.id_adulto);
+      if (indexBackend !== -1) {
+        this.dispositivosBackend.splice(indexBackend, 1);
+      }
+    }
+
+    // Eliminar del backend (servidor)
+    if (adulto.id_adulto) {
+      console.log(`📡 Llamando stopMonitoringDevice con id_adulto: ${adulto.id_adulto}`);
+      this.deviceApiService.stopMonitoringDevice(adulto.id_adulto).subscribe({
+        next: async (response: any) => {
+          console.log(`✅ Respuesta del servidor:`, response);
           await this.showToast('Dispositivo eliminado correctamente', 'success');
-          this.cargarDispositivosGuardados();
+          
+          // Agregar pequeño delay para asegurar que la BD está actualizada
+          setTimeout(() => {
+            console.log(`🔄 Recargando dispositivos guardados después de eliminación...`);
+            this.cargarDispositivosGuardados();
+          }, 500);
         },
         error: async (error: any) => {
           let errorMsg = 'Error al eliminar el dispositivo';
+          console.error(`❌ Error en eliminación:`, error);
+          
+          // IMPORTANTE: Si falla en el servidor, restaurar la lista local
+          console.warn(`⚠️ Restaurando dispositivo en lista local debido a error`);
+          this.cargarDispositivosGuardados(); // Recargar desde BD
+          
           if (error && error.error) {
             if (typeof error.error === 'string') {
               errorMsg += ': ' + error.error;
@@ -385,10 +474,16 @@ export class Tab2Page implements OnInit {
               errorMsg += ': ' + JSON.stringify(error.error);
             }
           }
-          console.error('Error eliminando dispositivo:', error);
+          
+          console.error('Detalles del error:', error);
           await this.showToast(errorMsg, 'danger');
         }
       });
+    } else {
+      console.error('⚠️ No se encontró id_adulto para eliminar');
+      await this.showToast('Error: No se puede identificar el dispositivo', 'danger');
+      // Restaurar lista si falla
+      this.cargarDispositivosGuardados();
     }
   }
 
@@ -420,31 +515,83 @@ export class Tab2Page implements OnInit {
     const { data } = await modal.onWillDismiss();
     
     if (data) {
-      // Agregar dispositivo con datos del adulto al servicio BLE
-      const deviceToAdd: ConnectedDevice = {
-        ...device,
-        adulto: {
-          id_adulto: 0,
-          nombre: data.nombre,
-          fecha_nacimiento: data.fecha_nacimiento || '1950-01-01',
-          direccion: data.direccion || 'No especificada'
-        }
+      console.log('✅ [MODAL] Datos del adulto recibidos:', data);
+      console.log('✅ [MODAL] Dispositivo BLE:', {
+        mac: device.mac_address,
+        bateria: device.bateria,
+        nombre: device.name
+      });
+      
+      // 🔴 CRÍTICO: Guardar en BD ANTES de agregar a la lista local
+      // Esto asegura que el dispositivo está guardado en la base de datos
+      const vincularDto = {
+        mac_address: device.mac_address || '',
+        bateria: device.bateria || 0,
+        nombre_adulto: data.nombre,
+        fecha_nacimiento: data.fecha_nacimiento || '1950-01-01',
+        direccion: data.direccion || 'No especificada'
       };
       
-      console.log('📱 Registrando dispositivo con datos del adulto:', deviceToAdd);
-      this.bleService.addConnectedDevice(deviceToAdd);
+      console.log('📡 [MODAL] Llamando vincularDispositivo con:', vincularDto);
+      
+      this.deviceApiService.vincularDispositivo(vincularDto).subscribe({
+        next: async (response: any) => {
+          console.log('✅ [MODAL] Respuesta del servidor vincularDispositivo:', response);
+          
+          // Crear el dispositivo agregado al servicio BLE con los datos de la respuesta
+          const deviceToAdd: ConnectedDevice = {
+            ...device,
+            adulto: {
+              id_adulto: response?.adultoMayor?.id_adulto || 0,
+              nombre: data.nombre,
+              fecha_nacimiento: data.fecha_nacimiento || '1950-01-01',
+              direccion: data.direccion || 'No especificada'
+            }
+          };
+          
+          console.log('📱 [MODAL] Registrando dispositivo en BLE con datos del adulto:', deviceToAdd);
+          this.bleService.addConnectedDevice(deviceToAdd);
+          
+          // Limpiar dispositivo pendiente
+          this.bleService.clearPendingDevice();
+          this.bleService.clearWifiConnected();
+          this.showPendingCard = false;
+          
+          await this.showToast('¡Dispositivo configurado exitosamente en la BD!', 'success');
+          
+          // Recargar dispositivos después de un pequeño delay para asegurar que BD está actualizada
+          setTimeout(() => {
+            console.log('🔄 [MODAL] Recargando dispositivos guardados...');
+            this.cargarDispositivosGuardados();
+          }, 500);
+        },
+        error: async (error: any) => {
+          console.error('❌ [MODAL] Error guardando dispositivo en BD:', error);
+          let errorMsg = 'Error al guardar el dispositivo en la base de datos';
+          
+          if (error && error.error) {
+            if (typeof error.error === 'string') {
+              errorMsg += ': ' + error.error;
+            } else if (error.error.message) {
+              errorMsg += ': ' + error.error.message;
+            }
+          }
+          
+          await this.showToast(errorMsg, 'danger');
+          
+          // Limpiar dispositivo pendiente incluso si hay error
+          this.bleService.clearPendingDevice();
+          this.bleService.clearWifiConnected();
+          this.showPendingCard = false;
+        }
+      });
+    } else {
+      await this.showToast('Configuración cancelada', 'warning');
       
       // Limpiar dispositivo pendiente
       this.bleService.clearPendingDevice();
       this.bleService.clearWifiConnected();
       this.showPendingCard = false;
-      
-      await this.showToast('¡Dispositivo configurado exitosamente!', 'success');
-      
-      // Recargar dispositivos
-      this.cargarDispositivosGuardados();
-    } else {
-      await this.showToast('Configuración cancelada', 'warning');
     }
   }
 

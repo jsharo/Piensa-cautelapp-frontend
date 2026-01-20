@@ -714,6 +714,49 @@ lucide-angular.spin {
       letter-spacing: 0.5px;
     }
 
+    .password-field-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+
+      .wifi-input {
+        padding-right: 44px;
+      }
+
+      .password-toggle-btn {
+        position: absolute;
+        right: 12px;
+        background: none;
+        border: none;
+        padding: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $teal;
+        transition: all 0.2s ease;
+        border-radius: 4px;
+
+        &:hover:not(:disabled) {
+          background: rgba(21, 154, 156, 0.1);
+          color: $dark-blue;
+        }
+
+        &:active:not(:disabled) {
+          background: rgba(21, 154, 156, 0.2);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        lucide-angular {
+          flex-shrink: 0;
+        }
+      }
+    }
+
     .wifi-input {
       padding: 12px 14px;
       border: 2px solid $border;

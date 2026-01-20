@@ -1,75 +1,105 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-title>{{ title }}</ion-title>
-    <ion-button slot="end" fill="clear" (click)="dismiss()">
-      <lucide-angular [img]="XIcon" [size]="24" [strokeWidth]="2" class="close-icon"></lucide-angular>
-    </ion-button>
+  <ion-toolbar class="modal-header">
+    <ion-title class="modal-title">{{ title }}</ion-title>
+    <button slot="end" class="close-button" (click)="dismiss()">
+      <lucide-angular [img]="XIcon" [size]="24" [strokeWidth]="2"></lucide-angular>
+    </button>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <div class="modal-content">
-    <div class="modal-header-info">
+<ion-content class="modal-body">
+  <!-- Contenedor principal responsivo -->
+  <div class="form-wrapper">
+    <!-- Encabezado con icono -->
+    <div class="modal-header-section">
       <div class="icon-circle">
-        <lucide-angular [img]="UserIcon" [size]="32" [strokeWidth]="2"></lucide-angular>
+        <lucide-angular [img]="UserIcon" [size]="40"></lucide-angular>
       </div>
+      <h2 class="modal-subtitle">{{ isEditMode ? 'Actualizar información' : 'Configurar dispositivo' }}</h2>
       <p class="modal-description">
         {{ isEditMode ? 'Actualiza los datos de la persona' : 'Ingresa los datos de la persona que usará este dispositivo' }}
       </p>
     </div>
 
-    <div class="form-fields">
-      <ion-item lines="none">
-        <div class="input-wrapper">
-          <div class="label-with-icon">
-            <lucide-angular [img]="UserIcon" [size]="18" [strokeWidth]="2" class="field-icon"></lucide-angular>
-            <ion-label>Nombre completo *</ion-label>
-          </div>
-          <ion-input
-            [(ngModel)]="nombre"
-            placeholder="Ej: María García López"
+    <!-- Formulario -->
+    <form class="form-section">
+      <!-- Nombre -->
+      <div class="form-group">
+        <label class="form-label">
+          <lucide-angular [img]="UserIcon" [size]="16" class="label-icon"></lucide-angular>
+          Nombre completo <span class="required">*</span>
+        </label>
+        <input 
+          type="text" 
+          class="form-input"
+          [(ngModel)]="nombre"
+          name="nombre"
+          placeholder="Ej: María García López"
+          required
+        />
+        <small class="help-text" *ngIf="!nombre.trim()">Este campo es obligatorio</small>
+      </div>
+
+      <!-- Fecha de nacimiento -->
+      <div class="form-group">
+        <label class="form-label">
+          <lucide-angular [img]="CalendarIcon" [size]="16" class="label-icon"></lucide-angular>
+          Fecha de nacimiento <span class="required">*</span>
+        </label>
+        <div class="fecha-input-wrapper" (click)="abrirFechaPicker()">
+          <input 
             type="text"
-          ></ion-input>
+            class="form-input fecha-display"
+            [value]="fecha_nacimiento ? formatearFecha(fecha_nacimiento) : 'Seleccionar fecha'"
+            placeholder="Seleccionar fecha"
+            readonly
+          />
+          <lucide-angular [img]="CalendarIcon" [size]="18" class="fecha-icon"></lucide-angular>
         </div>
-      </ion-item>
+        <ion-datetime 
+          #fechaPicker
+          [(ngModel)]="fecha_nacimiento"
+          name="fecha_nacimiento"
+          presentation="date"
+          [preferWheel]="true"
+          locale="es-ES"
+          [max]="getMaxDate()"
+          [min]="'1900-01-01'"
+          [hourCycle]="'h23'"
+          class="fecha-input"
+          style="display: none;"
+        ></ion-datetime>
+        <small class="help-text" *ngIf="!fecha_nacimiento">Este campo es obligatorio</small>
+      </div>
 
-      <ion-item lines="none">
-        <div class="input-wrapper">
-          <div class="label-with-icon">
-            <lucide-angular [img]="CalendarIcon" [size]="18" [strokeWidth]="2" class="field-icon"></lucide-angular>
-            <ion-label>Fecha de nacimiento</ion-label>
-          </div>
-          <ion-input
-            [(ngModel)]="fecha_nacimiento"
-            type="date"
-          ></ion-input>
-        </div>
-      </ion-item>
+      <!-- Dirección -->
+      <div class="form-group">
+        <label class="form-label">
+          <lucide-angular [img]="MapPinIcon" [size]="16" class="label-icon"></lucide-angular>
+          Ubicación o dirección
+        </label>
+        <input 
+          type="text" 
+          class="form-input"
+          [(ngModel)]="direccion"
+          name="direccion"
+          placeholder="Ej: Casa principal - Habitación 1"
+        />
+        <small class="help-text">Opcional</small>
+      </div>
+    </form>
 
-      <ion-item lines="none">
-        <div class="input-wrapper">
-          <div class="label-with-icon">
-            <lucide-angular [img]="MapPinIcon" [size]="18" [strokeWidth]="2" class="field-icon"></lucide-angular>
-            <ion-label>Dirección o ubicación</ion-label>
-          </div>
-          <ion-input
-            [(ngModel)]="direccion"
-            placeholder="Ej: Casa principal - Habitación 1"
-            type="text"
-          ></ion-input>
-        </div>
-      </ion-item>
-    </div>
-
-    <div class="button-group">
-      <ion-button expand="block" (click)="dismiss()" fill="outline" class="cancel-btn">
-        <lucide-angular slot="start" [img]="XIcon" [size]="20" [strokeWidth]="2"></lucide-angular>
-        Cancelar
-      </ion-button>
-      <ion-button expand="block" (click)="save()" [disabled]="!nombre.trim()" class="save-btn">
-        <lucide-angular slot="start" [img]="CheckIcon" [size]="20" [strokeWidth]="2"></lucide-angular>
+    <!-- Botón de acción único -->
+    <div class="button-section">
+      <button 
+        type="button" 
+        class="btn btn-save" 
+        (click)="save()" 
+        [disabled]="!nombre.trim() || !fecha_nacimiento"
+      >
+        <lucide-angular [img]="CheckIcon" [size]="18"></lucide-angular>
         Guardar
-      </ion-button>
+      </button>
     </div>
   </div>
 </ion-content>

@@ -13,6 +13,11 @@
 </header>
 
 <ion-content [fullscreen]="true" class="dispositivos-content">
+  <!-- PULL-TO-REFRESH -->
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
   <!-- TARJETA DE DISPOSITIVO PENDIENTE DE CONFIGURACIÓN -->
   <div *ngIf="showPendingCard && pendingDevice" class="pending-device-card">
     <div class="pending-header">

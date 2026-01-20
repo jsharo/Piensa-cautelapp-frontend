@@ -6,7 +6,7 @@ import { AuthService, User } from '../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { BleClient, ScanResult } from '@capacitor-community/bluetooth-le';
-import { LucideAngularModule, ChevronLeft, Bluetooth, Mail, Info, CheckCircle2, AlertCircle, Edit, PlusCircle, Trash2, XCircle, ArrowRight, RefreshCw, Wifi, ChevronRight, WifiOff } from 'lucide-angular';
+import { LucideAngularModule, ChevronLeft, Bluetooth, Mail, Info, CheckCircle2, AlertCircle, Edit, PlusCircle, Trash2, XCircle, ArrowRight, RefreshCw, Wifi, ChevronRight, WifiOff, Eye, EyeOff } from 'lucide-angular';
 import { BleService, ConnectedDevice } from '../../services/ble.service';
 import { AdultInfoModalComponent } from './adult-info-modal/adult-info-modal.component';
 import { Router } from '@angular/router';
@@ -64,6 +64,8 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
   readonly Wifi = Wifi;
   readonly ChevronRight = ChevronRight;
   readonly WifiOff = WifiOff;
+  readonly Eye = Eye;
+  readonly EyeOff = EyeOff;
   
   // Estado del escaneo Bluetooth
   isScanning = false;
@@ -75,6 +77,7 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
   selectedWiFi: WiFiNetwork | null = null;
   manualSSID = '';
   wifiPassword = '';
+  wifiPasswordVisible = false;
   isConnectingWiFi = false;
   wifiConnected = false;
   wifiStatus: 'idle' | 'sending' | 'waiting' | 'connected' | 'failed' = 'idle';
@@ -694,6 +697,14 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
 
   // =====================
   // ADULT INFO MODAL
+  // =====================
+  // WIFI PASSWORD VISIBILITY TOGGLE
+  // =====================
+
+  togglePasswordVisibility() {
+    this.wifiPasswordVisible = !this.wifiPasswordVisible;
+  }
+
   // =====================
 
   async openAdultInfoModal() {

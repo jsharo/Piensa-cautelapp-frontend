@@ -1,193 +1,396 @@
-// Paleta Cautelapp
+// 🎨 Paleta de colores CautelApp
 $dark-blue: #002333;
 $teal: #159A9C;
+$teal-dark: #0D7278;
 $light-gray: #B4BEC9;
 $light-mint: #DEEFE7;
 $white: #FFFFFF;
 $text: #1A202C;
 $text-light: #4A5568;
+$border: #E2E8F0;
+$success: #34c759;
+$error: #DC2626;
 
+// ============ HEADER ============
 ion-header {
-  ion-toolbar {
+  .modal-header {
     --background: #{$dark-blue};
     --color: #{$white};
-    
-    ion-title {
-      font-weight: 600;
-      font-size: 18px;
-    }
-
-    ion-button {
-      --color: #{$white};
-
-      .close-icon {
-        color: $white;
-      }
-    }
+    --border-width: 0;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
-}
 
-ion-content {
-  --background: #{$light-mint};
-}
+  .modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: $white;
+    flex: 1;
+    text-align: center;
+  }
 
-.modal-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1rem 0;
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-.modal-header-info {
-  text-align: center;
-  margin-bottom: 1rem;
-
-  .icon-circle {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, $teal 0%, #0D7278 100%);
+  .close-button {
+    background: none;
+    border: none;
+    color: $white;
+    cursor: pointer;
+    padding: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1rem;
-    box-shadow: 0 4px 12px rgba(21, 154, 156, 0.3);
+    min-width: 44px;
+    min-height: 44px;
+    transition: background 0.3s ease;
 
-    lucide-angular {
-      color: $white;
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    &:active {
+      background: rgba(255, 255, 255, 0.2);
     }
   }
+}
+
+// ============ CONTENT ============
+ion-content {
+  --background: #{$light-mint};
+  --padding: 0;
+}
+
+.modal-body {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 100%;
+}
+
+.form-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 24px;
+}
+
+// ============ HEADER SECTION ============
+.modal-header-section {
+  text-align: center;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(21, 154, 156, 0.15);
+}
+
+.icon-circle {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #{$teal} 0%, #{$teal-dark} 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  box-shadow: 0 4px 12px rgba(21, 154, 156, 0.3);
+  flex-shrink: 0;
+
+  lucide-angular {
+    color: $white;
+  }
+}
+
+.modal-subtitle {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: $dark-blue;
 }
 
 .modal-description {
-  color: $text-light;
-  font-size: 0.95rem;
-  line-height: 1.6;
   margin: 0;
-  padding: 0 1rem;
+  color: $text-light;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-.form-fields {
+// ============ FORM SECTION ============
+.form-section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 16px;
 }
 
-ion-item {
-  --background: #{$white};
-  --border-radius: 16px;
-  --padding-start: 0;
-  --padding-end: 0;
-  --inner-padding-end: 0;
-  --min-height: 70px;
-  margin-bottom: 0;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  padding: 16px;
-
-  &:hover, &:focus-within {
-    box-shadow: 0 4px 12px rgba(21, 154, 156, 0.15);
-    transform: translateY(-2px);
-  }
-
-  .input-wrapper {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .label-with-icon {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
-
-    .field-icon {
-      color: $teal;
-      flex-shrink: 0;
-    }
-
-    ion-label {
-      font-weight: 600;
-      color: $dark-blue;
-      font-size: 0.9rem;
-      margin: 0;
-    }
-  }
-
-  ion-input {
-    --color: #{$text};
-    --placeholder-color: #{$light-gray};
-    --padding-start: 0;
-    --padding-end: 0;
-    font-size: 15px;
-    min-height: 32px;
-  }
-}
-
-.button-group {
+.form-group {
   display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-  padding: 0 0.5rem;
+  flex-direction: column;
+  gap: 8px;
+}
 
-  ion-button {
-    flex: 1;
-    --border-radius: 16px;
-    height: 52px;
-    font-weight: 600;
-    text-transform: none;
-    font-size: 15px;
-    letter-spacing: 0.3px;
-    transition: all 0.3s ease;
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: $dark-blue;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-bottom: 4px;
+
+  .label-icon {
+    color: $teal;
+    flex-shrink: 0;
+  }
+
+  .required {
+    color: $error;
+  }
+}
+
+.form-input {
+  padding: 11px 12px;
+  border: 1.5px solid $border;
+  border-radius: 10px;
+  font-size: 14px;
+  color: $text;
+  background: $white;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+
+  &::placeholder {
+    color: $light-gray;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $teal;
+    box-shadow: 0 0 0 3px rgba(21, 154, 156, 0.1);
+  }
+
+  &:disabled {
+    background: #f5f5f5;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.help-text {
+  font-size: 12px;
+  color: $text-light;
+  margin-top: -4px;
+}
+
+// ============ ION-DATETIME ============
+.fecha-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.fecha-display {
+  width: 100%;
+  padding-right: 40px;
+  cursor: pointer;
+  background: $white;
+  color: $text;
+
+  &::placeholder {
+    color: $light-gray;
+  }
+
+  &:readonly {
+    color: $text;
+    -webkit-text-fill-color: $text;
+    opacity: 1;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $teal;
+    box-shadow: 0 0 0 3px rgba(21, 154, 156, 0.1);
+  }
+}
+
+.fecha-input {
+  display: none;
+}
+
+.fecha-icon {
+  position: absolute;
+  right: 12px;
+  color: $teal;
+  cursor: pointer;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+// Estilos del popover abierto
+::ng-deep {
+  // Popover del datetime
+  .datetime-popover {
+    --background: #{$white};
+    --box-shadow: none;
+    --border-radius: 12px;
+  }
+
+  // Contenedor de la rueda
+  .datetime-presenter {
+    background: #{$white};
+    box-shadow: none;
+  }
+
+  // Ruedas (picker)
+  .picker-col {
+    color: #{$text};
+  }
+
+  // Texto en las ruedas
+  .picker-item {
+    color: #{$text};
+  }
+
+  // Botones de confirmar/cancelar
+  .datetime-button {
+    color: #{$teal};
+  }
+
+  // Líneas divisoras de las ruedas
+  .picker-above,
+  .picker-below {
+    background: rgba(21, 154, 156, 0.1);
+  }
+
+  // Overlay del popover (fondo oscuro)
+  .ion-overlay {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  // Modal o popover container
+  ion-popover {
+    --background: #{$white};
+    --box-shadow: none;
+  }
+
+  // Eliminar cualquier sombra del contenedor
+  .ion-page {
+    .datetime-presenter {
+      box-shadow: none !important;
+    }
+  }
+}
+
+// ============ BUTTON SECTION ============
+.button-section {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 2px solid rgba(21, 154, 156, 0.15);
+  justify-content: center;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 32px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+
+  lucide-angular {
+    flex-shrink: 0;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.btn-save {
+  background: #{$teal};
+  color: $white;
+  box-shadow: 0 4px 12px rgba(21, 154, 156, 0.3);
+  min-width: 160px;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(21, 154, 156, 0.4);
+  }
+
+  &:disabled {
+    background: $light-gray;
+    color: rgba($text, 0.5);
+    cursor: not-allowed;
+    box-shadow: none;
 
     lucide-angular {
-      margin-right: 8px;
+      opacity: 0.5;
     }
+  }
+}
 
-    &.cancel-btn {
-      --border-color: #{$light-gray};
-      --border-width: 2px;
-      --color: #{$text};
+// ============ RESPONSIVE ============
+@media (max-width: 600px) {
+  .form-wrapper {
+    gap: 20px;
+    padding: 16px 16px;
+  }
 
-      &:hover {
-        --background: rgba(0, 0, 0, 0.05);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      }
+  .modal-header-section {
+    padding-bottom: 10px;
+  }
 
-      lucide-angular {
-        color: $text-light;
-      }
-    }
+  .icon-circle {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 10px;
+  }
 
-    &.save-btn {
-      --background: linear-gradient(135deg, #{$teal} 0%, #0D7278 100%);
-      --color: #{$white};
-      box-shadow: 0 4px 12px rgba(21, 154, 156, 0.3);
+  .modal-subtitle {
+    font-size: 16px;
+    margin: 0 0 6px;
+  }
 
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(21, 154, 156, 0.4);
-      }
+  .modal-description {
+    font-size: 12px;
+  }
 
-      &[disabled] {
-        --background: #{$light-gray};
-        opacity: 0.6;
-        box-shadow: none;
-        
-        &:hover {
-          transform: none;
-        }
-      }
+  .form-group {
+    gap: 6px;
+  }
 
-      lucide-angular {
-        color: $white;
-      }
-    }
+  .form-label {
+    font-size: 12px;
+  }
+
+  .form-input {
+    font-size: 13px;
+    padding: 10px 11px;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    font-size: 13px;
+    gap: 6px;
+    min-width: 140px;
+  }
+
+  .button-section {
+    margin-top: 10px;
+    padding-top: 12px;
   }
 }
