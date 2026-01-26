@@ -570,31 +570,71 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
       return;
     }
 
-    // Agregar dispositivo al servicio BLE con información del adulto mayor
-    const deviceToAdd: ConnectedDevice = {
-      id: this.connectedDevice!.id,
-      name: this.connectedDevice!.name,
-      rssi: this.connectedDevice!.rssi,
-      mac_address: this.connectedDevice!.id,
+    console.log('✅ [CONFIG] Datos del adulto recibidos del modal:', adultInfo);
+
+    // 🔴 CRÍTICO: Guardar en BD usando vincularDispositivo
+    const vincularDto = {
+      mac_address: 'CautelApp-D1', // ✅ Usar el mismo ID que envía el ESP32
       bateria: 100,
-      connected: true,
-      ultimaActividad: 'Ahora',
-      adulto: {
-        id_adulto: 0,
-        nombre: adultInfo.nombre,
-        fecha_nacimiento: adultInfo.fecha_nacimiento || '1950-01-01',
-        direccion: adultInfo.direccion || 'No especificada'
-      }
+      nombre_adulto: adultInfo.nombre,
+      fecha_nacimiento: adultInfo.fecha_nacimiento || '1950-01-01',
+      direccion: adultInfo.direccion || 'No especificada'
     };
-    
-    console.log('📱 Dispositivo a agregar:', JSON.stringify(deviceToAdd, null, 2));
-    this.bleService.addConnectedDevice(deviceToAdd);
-    
-    this.showToast('¡Dispositivo configurado exitosamente!', 'success');
-    
-    // Navegar a la lista de dispositivos
-    await this.delay(500);
-    this.router.navigate(['/tabs/tab2']);
+
+    console.log('📡 [CONFIG] Llamando vincularDispositivo con:', vincularDto);
+
+    try {
+      const response: any = await this.http.post(
+        `${environment.apiUrl}/device/vincular`,
+        vincularDto,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.authService.getToken()}`
+          }
+        }
+      ).toPromise();
+
+      console.log('✅ [CONFIG] Respuesta del servidor vincularDispositivo:', response);
+
+      // Agregar dispositivo al servicio BLE con información del adulto mayor
+      const deviceToAdd: ConnectedDevice = {
+        id: this.connectedDevice!.id,
+        name: this.connectedDevice!.name,
+        rssi: this.connectedDevice!.rssi,
+        mac_address: 'CautelApp-D1',
+        bateria: 100,
+        connected: true,
+        ultimaActividad: 'Ahora',
+        adulto: {
+          id_adulto: response?.adultoMayor?.id_adulto || 0,
+          nombre: adultInfo.nombre,
+          fecha_nacimiento: adultInfo.fecha_nacimiento || '1950-01-01',
+          direccion: adultInfo.direccion || 'No especificada'
+        }
+      };
+      
+      console.log('📱 [CONFIG] Dispositivo a agregar:', JSON.stringify(deviceToAdd, null, 2));
+      this.bleService.addConnectedDevice(deviceToAdd);
+      
+      this.showToast('¡Dispositivo configurado exitosamente en la BD!', 'success');
+      
+      // Navegar a la lista de dispositivos
+      await this.delay(500);
+      this.router.navigate(['/tabs/tab2']);
+    } catch (error: any) {
+      console.error('❌ [CONFIG] Error guardando dispositivo en BD:', error);
+      let errorMsg = 'Error al guardar el dispositivo en la base de datos';
+      
+      if (error && error.error) {
+        if (typeof error.error === 'string') {
+          errorMsg += ': ' + error.error;
+        } else if (error.error.message) {
+          errorMsg += ': ' + error.error.message;
+        }
+      }
+      
+      this.showToast(errorMsg, 'danger');
+    }
   }
 
   // =====================
