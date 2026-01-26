@@ -559,8 +559,17 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
     
     this.showToast('✅ Dispositivo conectado a WiFi exitosamente!', 'success');
     
-    // Esperar un momento y luego abrir el modal de datos del adulto
-    await this.delay(1000);
+    // 🔴 CRÍTICO: Esperar a que el ESP32 registre el dispositivo en la BD
+    console.log('⏳ [CONFIG] Esperando a que el ESP32 registre el dispositivo en BD...');
+    const deviceRegistered = await this.waitForDeviceRegistration('CautelApp-D1', 30000); // 30 segundos timeout
+    
+    if (!deviceRegistered) {
+      console.error('❌ [CONFIG] Timeout esperando registro del dispositivo');
+      this.showToast('Error: El dispositivo no se registró en el servidor. Intenta nuevamente.', 'danger');
+      return;
+    }
+    
+    console.log('✅ [CONFIG] Dispositivo registrado en BD, abriendo modal...');
     
     // Abrir modal para capturar datos del adulto mayor
     const adultInfo = await this.openAdultInfoModal();
@@ -765,5 +774,48 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
     await modal.present();
     const { data } = await modal.onWillDismiss();
     return data;
+  }
+
+  /**
+   * Hace polling al backend para verificar que el dispositivo esté registrado en BD
+   * @param deviceId ID del dispositivo (ej: 'CautelApp-D1')
+   * @param timeoutMs Tiempo máximo de espera en milisegundos
+   * @returns true si el dispositivo se registró, false si hubo timeout
+   */
+  async waitForDeviceRegistration(deviceId: string, timeoutMs: number = 30000): Promise<boolean> {
+    const startTime = Date.now();
+    const pollInterval = 2000; // Verificar cada 2 segundos
+    
+    while (Date.now() - startTime < timeoutMs) {
+      try {
+        console.log(`🔍 [CONFIG] Verificando si ${deviceId} está en BD...`);
+        
+        const response: any = await this.http.get(
+          `${environment.apiUrl}/device/esp32/status?device=${deviceId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${this.authService.getToken()}`
+            }
+          }
+        ).toPromise();
+        
+        console.log(`📡 [CONFIG] Respuesta del servidor:`, response);
+        
+        if (response && response.connected) {
+          console.log(`✅ [CONFIG] Dispositivo ${deviceId} registrado en BD`);
+          return true;
+        }
+        
+        console.log(`⏳ [CONFIG] Dispositivo aún no registrado, esperando...`);
+      } catch (error) {
+        console.log(`⚠️ [CONFIG] Error consultando status (normal si aún no existe):`, error);
+      }
+      
+      // Esperar antes de la próxima verificación
+      await this.delay(pollInterval);
+    }
+    
+    console.error(`❌ [CONFIG] Timeout: Dispositivo ${deviceId} no se registró en ${timeoutMs}ms`);
+    return false;
   }
 }
