@@ -375,8 +375,17 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
           
           // Manejar diferentes estados
           if (status === 'CONNECTING' || status.includes('CONNECTING')) {
+            console.log('🔄 ESP32 está conectando a WiFi...');
             this.wifiStatus = 'waiting';
-            // No mostrar toast aquí si ya estamos en tab2
+            this.showToast('Conectando a WiFi...', 'primary', 2000);
+          } else if (status === 'DISABLING_BLE') {
+            console.log('🔄 ESP32 está deshabilitando BLE...');
+            this.wifiStatus = 'waiting';
+            this.showToast('Deshabilitando BLE...', 'primary', 2000);
+          } else if (status === 'CRED_RECEIVED') {
+            console.log('✅ ESP32 recibió las credenciales');
+            this.wifiStatus = 'waiting';
+            this.showToast('Credenciales recibidas', 'success', 2000);
           } else if (status === 'CONNECTED' || status.includes('CONNECTED')) {
             this.wifiConnected = true;
             this.isConnectingWiFi = false;
@@ -388,7 +397,7 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
                 id: this.connectedDevice.id,
                 name: this.connectedDevice.name,
                 rssi: this.connectedDevice.rssi,
-                mac_address: this.connectedDevice.id,
+                mac_address: 'CautelApp-D1', // ✅ Usar el mismo ID que envía el ESP32
                 bateria: 100,
                 connected: true,
                 ultimaActividad: 'Ahora'
@@ -487,10 +496,10 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
       
       this.showToast('Credenciales enviadas. Esperando confirmación del dispositivo...', 'success');
       
-      // Configurar timeout de 10 segundos
+      // Configurar timeout de 30 segundos (aumentado para dar tiempo al proceso completo)
       this.wifiTimeoutId = setTimeout(async () => {
         if (this.wifiStatus === 'waiting' || this.wifiStatus === 'sending') {
-          console.log('⏰ Timeout: No se recibió respuesta del ESP32 en 10 segundos');
+          console.log('⏰ Timeout: No se recibió respuesta del ESP32 en 30 segundos');
           this.wifiStatus = 'failed';
           this.isConnectingWiFi = false;
           this.waitingForWiFiConfirmation = false;
@@ -510,7 +519,7 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
             this.connectedDevice = null;
           }
         }
-      }, 10000);
+      }, 30000);
       
     } catch (error) {
       console.error('❌ Error enviando credenciales:', error);
@@ -611,10 +620,10 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
   }
 
   // Función auxiliar para mostrar mensajes toast
-  async showToast(message: string, color: 'success' | 'danger' | 'warning' | 'medium') {
+  async showToast(message: string, color: 'success' | 'danger' | 'warning' | 'medium' | 'primary', duration: number = 3000) {
     const toast = await this.toastCtrl.create({
       message: message,
-      duration: 3000,
+      duration: duration,
       position: 'top',
       color: color
     });

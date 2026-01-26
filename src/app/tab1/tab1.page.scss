@@ -101,6 +101,86 @@ ion-content {
   }
 }
 
+/* Apartado de Pulso en Tiempo Real */
+.pulso-monitor {
+  padding: 16px 20px;
+  background: $light-mint;
+  
+  .pulso-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fcff 100%);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 12px rgba(0, 35, 51, 0.1);
+    border: 2px solid rgba(21, 154, 156, 0.2);
+    
+    .pulso-icon {
+      flex-shrink: 0;
+      
+      ion-icon {
+        font-size: 48px;
+        color: $red-emergency;
+        
+        &.pulsing {
+          animation: pulse 1s ease-in-out infinite;
+        }
+      }
+    }
+    
+    .pulso-info {
+      flex: 1;
+      
+      .pulso-label {
+        font-size: 12px;
+        color: $light-gray;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+      }
+      
+      .pulso-valor {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin-bottom: 4px;
+        
+        .bpm-number {
+          font-size: 36px;
+          font-weight: 700;
+          color: $dark-blue;
+          line-height: 1;
+        }
+        
+        .bpm-unit {
+          font-size: 16px;
+          font-weight: 600;
+          color: $teal;
+        }
+      }
+      
+      .pulso-adulto {
+        font-size: 14px;
+        color: $dark-blue;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
 .titulo {
   color: $white;
   font-size: 18px;

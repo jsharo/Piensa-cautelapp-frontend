@@ -46,7 +46,7 @@
           <lucide-angular [img]="CalendarIcon" [size]="16" class="label-icon"></lucide-angular>
           Fecha de nacimiento <span class="required">*</span>
         </label>
-        <div class="fecha-input-wrapper" (click)="abrirFechaPicker()">
+        <div class="fecha-input-wrapper" (click)="abrirFechaPicker($event)">
           <input 
             type="text"
             class="form-input fecha-display"
@@ -56,19 +56,26 @@
           />
           <lucide-angular [img]="CalendarIcon" [size]="18" class="fecha-icon"></lucide-angular>
         </div>
-        <ion-datetime 
-          #fechaPicker
-          [(ngModel)]="fecha_nacimiento"
-          name="fecha_nacimiento"
-          presentation="date"
-          [preferWheel]="true"
-          locale="es-ES"
-          [max]="getMaxDate()"
-          [min]="'1900-01-01'"
-          [hourCycle]="'h23'"
-          class="fecha-input"
-          style="display: none;"
-        ></ion-datetime>
+        
+        <!-- Popover con el datetime -->
+        <ion-popover #fechaPopover [dismissOnSelect]="false" [showBackdrop]="true">
+          <ng-template>
+            <ion-datetime 
+              [(ngModel)]="fecha_nacimiento"
+              name="fecha_nacimiento"
+              presentation="date"
+              [preferWheel]="true"
+              locale="es-ES"
+              [max]="getMaxDate()"
+              [min]="'1900-01-01'"
+              [hourCycle]="'h23'"
+              [showDefaultButtons]="true"
+              doneText="Confirmar"
+              cancelText="Cancelar"
+            ></ion-datetime>
+          </ng-template>
+        </ion-popover>
+        
         <small class="help-text" *ngIf="!fecha_nacimiento">Este campo es obligatorio</small>
       </div>
 

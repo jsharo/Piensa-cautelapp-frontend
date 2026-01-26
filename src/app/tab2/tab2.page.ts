@@ -525,11 +525,12 @@ export class Tab2Page implements OnInit {
       // 🔴 CRÍTICO: Guardar en BD ANTES de agregar a la lista local
       // Esto asegura que el dispositivo está guardado en la base de datos
       const vincularDto = {
-        mac_address: device.mac_address || '',
-        bateria: device.bateria || 0,
+        mac_address: 'CautelApp-D1', // ✅ SIEMPRE usar el ID fijo del ESP32
+        bateria: device.bateria || 100,
         nombre_adulto: data.nombre,
         fecha_nacimiento: data.fecha_nacimiento || '1950-01-01',
-        direccion: data.direccion || 'No especificada'
+        direccion: data.direccion || 'No especificada',
+        ble_device_id: device.id // 📝 Guardar la MAC BLE real para referencia
       };
       
       console.log('📡 [MODAL] Llamando vincularDispositivo con:', vincularDto);

@@ -218,10 +218,6 @@ ion-content {
   }
 }
 
-.fecha-input {
-  display: none;
-}
-
 .fecha-icon {
   position: absolute;
   right: 12px;
@@ -231,22 +227,36 @@ ion-content {
   pointer-events: none;
 }
 
-// Estilos del popover abierto
+// Estilos del popover y datetime
 ::ng-deep {
   // Popover del datetime
-  .datetime-popover {
+  ion-popover {
     --background: #{$white};
-    --box-shadow: none;
-    --border-radius: 12px;
+    --box-shadow: 0 10px 40px rgba(0, 35, 51, 0.2);
+    --border-radius: 16px;
+    --width: auto;
+    --max-width: 400px;
+
+    ion-datetime {
+      --background: #{$white};
+      box-shadow: none;
+      border-radius: 12px;
+      
+      // Botones de confirmar/cancelar
+      .datetime-buttons {
+        button {
+          color: #{$teal};
+          font-weight: 600;
+          
+          &:hover {
+            background: rgba(21, 154, 156, 0.1);
+          }
+        }
+      }
+    }
   }
 
-  // Contenedor de la rueda
-  .datetime-presenter {
-    background: #{$white};
-    box-shadow: none;
-  }
-
-  // Ruedas (picker)
+  // Ruedas (picker wheel)
   .picker-col {
     color: #{$text};
   }
@@ -256,33 +266,22 @@ ion-content {
     color: #{$text};
   }
 
-  // Botones de confirmar/cancelar
-  .datetime-button {
+  // Ítem activo en la rueda
+  .picker-item-active {
     color: #{$teal};
+    font-weight: 600;
   }
 
   // Líneas divisoras de las ruedas
   .picker-above,
   .picker-below {
-    background: rgba(21, 154, 156, 0.1);
+    background: rgba(21, 154, 156, 0.05);
+    border-color: rgba(21, 154, 156, 0.15);
   }
 
-  // Overlay del popover (fondo oscuro)
-  .ion-overlay {
-    background: rgba(0, 0, 0, 0.2);
-  }
-
-  // Modal o popover container
-  ion-popover {
-    --background: #{$white};
-    --box-shadow: none;
-  }
-
-  // Eliminar cualquier sombra del contenedor
-  .ion-page {
-    .datetime-presenter {
-      box-shadow: none !important;
-    }
+  // Backdrop del popover
+  ion-backdrop {
+    background: rgba(0, 0, 0, 0.3);
   }
 }
 

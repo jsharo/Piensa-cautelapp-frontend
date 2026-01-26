@@ -7,6 +7,7 @@ import { AuthService } from '../services/auth.service';
 import { ProfileMenuComponent } from './profile-menu/profile-menu.component';
 import { NotificationService, Notification } from '../services/notification.service';
 import { LocalNotificationService } from '../services/local-notification.service';
+import { environment } from '../../environments/environment';
 
 interface NotificacionUI {
   id: number;
@@ -36,9 +37,14 @@ export class Tab1Page implements OnInit, OnDestroy {
   notificaciones: NotificacionUI[] = [];
   isLoading = false;
   
+  // Variables para mostrar BPM en tiempo real
+  currentBpm: number | null = null;
+  currentAdultoName: string | null = null;
+  
   // Para detectar nuevas notificaciones
   private previousNotificationIds: Set<number> = new Set();
   private pollingInterval: any = null;
+  private sseConnection: EventSource | null = null;
 
   constructor(
     private navCtrl: NavController, 
@@ -58,6 +64,9 @@ export class Tab1Page implements OnInit, OnDestroy {
     // Cargar notificaciones iniciales
     await this.loadNotifications();
     
+    // Conectar a SSE para recibir notificaciones y BPM en tiempo real
+    this.connectToSSE();
+    
     // Iniciar polling cada 10 segundos para verificar nuevas notificaciones
     this.startPolling();
   }
@@ -66,6 +75,86 @@ export class Tab1Page implements OnInit, OnDestroy {
     // Limpiar el polling cuando se destruya el componente
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
+    }
+    
+    // Cerrar conexión SSE
+    if (this.sseConnection) {
+      this.sseConnection.close();
+      console.log('[Tab1] Conexión SSE cerrada');
+    }
+  }
+  
+  /**
+   * Conecta al endpoint SSE para recibir notificaciones y BPM en tiempo real
+   */
+  private connectToSSE() {
+    const user = this.auth.getCurrentUser();
+    const token = this.auth.getToken();
+    
+    if (!user || !token) {
+      console.warn('[Tab1] No se puede conectar a SSE: usuario no autenticado');
+      return;
+    }
+    
+    // Conectar al endpoint SSE de notificaciones
+    const sseUrl = `${environment.apiUrl}/device/events/notifications?token=${token}`;
+    console.log('[Tab1] Conectando a SSE:', sseUrl);
+    
+    this.sseConnection = new EventSource(sseUrl);
+    
+    this.sseConnection.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('[Tab1] Evento SSE recibido:', data);
+        
+        // Verificar si es una actualización de BPM
+        if (data.tipo === 'BPM_UPDATE' && data.pulso !== undefined) {
+          this.currentBpm = data.pulso;
+          this.currentAdultoName = data.usuario;
+          console.log(`[Tab1] 💓 BPM actualizado: ${data.pulso} (${data.usuario})`);
+        }
+        // Si es una notificación de emergencia
+        else if (data.tipo === 'EMERGENCIA') {
+          console.log('[Tab1] 🚨 Notificación de emergencia recibida');
+          
+          // Enviar notificación local al teléfono
+          this.sendLocalEmergencyNotification(data.usuario, data.mensaje);
+          
+          // Recargar notificaciones
+          this.loadNotifications();
+        }
+      } catch (error) {
+        console.error('[Tab1] Error procesando evento SSE:', error);
+      }
+    };
+    
+    this.sseConnection.onerror = (error) => {
+      console.error('[Tab1] Error en conexión SSE:', error);
+      // Intentar reconectar después de 5 segundos
+      setTimeout(() => {
+        console.log('[Tab1] Intentando reconectar SSE...');
+        this.connectToSSE();
+      }, 5000);
+    };
+    
+    this.sseConnection.onopen = () => {
+      console.log('[Tab1] ✅ Conexión SSE establecida');
+    };
+  }
+  
+  /**
+   * Envía notificación local de emergencia al teléfono
+   */
+  private async sendLocalEmergencyNotification(nombreAdulto: string, mensaje: string) {
+    try {
+      await this.localNotificationService.sendEmergencyNotification(
+        '🚨 EMERGENCIA',
+        mensaje || `${nombreAdulto} necesita tu ayuda rápido`,
+        { tipo: 'emergencia', adulto: nombreAdulto }
+      );
+      console.log('[Tab1] 📱 Notificación local enviada');
+    } catch (error) {
+      console.error('[Tab1] Error enviando notificación local:', error);
     }
   }
   

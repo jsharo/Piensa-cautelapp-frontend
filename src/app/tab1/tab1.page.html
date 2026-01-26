@@ -14,6 +14,23 @@
 <div id="tab1-content">
   <ion-content class="fondo" [fullscreen]="true">
 
+  <!-- APARTADO DE PULSO EN TIEMPO REAL -->
+  <div class="pulso-monitor" *ngIf="currentBpm !== null">
+    <div class="pulso-card">
+      <div class="pulso-icon">
+        <ion-icon name="heart" [class.pulsing]="currentBpm > 0"></ion-icon>
+      </div>
+      <div class="pulso-info">
+        <div class="pulso-label">Pulso en tiempo real</div>
+        <div class="pulso-valor">
+          <span class="bpm-number">{{ currentBpm }}</span>
+          <span class="bpm-unit">BPM</span>
+        </div>
+        <div class="pulso-adulto" *ngIf="currentAdultoName">{{ currentAdultoName }}</div>
+      </div>
+    </div>
+  </div>
+
   <!-- FILTROS -->
   <ion-segment class="filtros" [value]="filtroActivo" (ionChange)="setFiltro($event.detail.value)">
     <ion-segment-button value="todas">

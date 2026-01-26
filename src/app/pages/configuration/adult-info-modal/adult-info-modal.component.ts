@@ -1,7 +1,7 @@
 import { Component, Input, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonDatetime, ModalController } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonTitle, IonContent, IonDatetime, IonPopover, ModalController } from '@ionic/angular/standalone';
 import { LucideAngularModule, User, Calendar, MapPin, X, Check } from 'lucide-angular';
 
 export interface AdultInfo {
@@ -23,6 +23,7 @@ export interface AdultInfo {
     IonTitle,
     IonContent,
     IonDatetime,
+    IonPopover,
     LucideAngularModule
   ]
 })
@@ -33,7 +34,7 @@ export class AdultInfoModalComponent {
   @Input() isEditMode: boolean = false;
   @Input() title: string = 'Información del Adulto Mayor';
 
-  @ViewChild('fechaPicker') fechaPicker!: IonDatetime;
+  @ViewChild('fechaPopover') fechaPopover!: IonPopover;
 
   // Iconos de Lucide
   readonly UserIcon = User;
@@ -78,11 +79,21 @@ export class AdultInfoModalComponent {
   }
 
   /**
-   * Abre el picker de fecha
+   * Abre el popover de fecha
    */
-  abrirFechaPicker() {
-    if (this.fechaPicker) {
-      (this.fechaPicker as any).open();
+  async abrirFechaPicker(event: Event) {
+    if (this.fechaPopover) {
+      this.fechaPopover.event = event;
+      await this.fechaPopover.present();
+    }
+  }
+
+  /**
+   * Confirma la selección de fecha
+   */
+  confirmarFecha() {
+    if (this.fechaPopover) {
+      this.fechaPopover.dismiss();
     }
   }
 
