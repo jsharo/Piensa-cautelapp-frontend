@@ -98,4 +98,9 @@ export class DeviceApiService {
   getDeviceStatus(deviceId: string): Observable<any> {
     return this.http.get(`${this.baseUrl}/devices/${deviceId}/status`);
   }
+
+  // Verificar si un dispositivo existe en BD y está vinculado al usuario
+  checkDeviceExists(macAddress: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/check-exists/${macAddress}`);
+  }
 }

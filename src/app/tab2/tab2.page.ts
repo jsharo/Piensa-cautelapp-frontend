@@ -1,6 +1,7 @@
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { IonContent, IonIcon, PopoverController, ModalController, ToastController, IonRefresher } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { ProfileMenuComponent } from '../tab1/profile-menu/profile-menu.component';
 import { BleService, ConnectedDevice } from '../services/ble.service';
@@ -128,9 +129,34 @@ export class Tab2Page implements OnInit {
     });
     
     // Suscribirse a eventos de WiFi conectado para mostrar modal de datos del adulto
+    // SOLO si viene de configuration.page Y el dispositivo NO existe en BD
     this.bleService.wifiConnected$.subscribe(async (device) => {
       if (device && this.pendingDevice) {
-        console.log('📶 WiFi conectado! Mostrando modal de datos del adulto...');
+        // Verificar si viene de configuration.page (envío manual de credenciales)
+        const isFromConfigPage = await firstValueFrom(this.bleService.isFirstWifiConfig$);
+        console.log('🔍 ¿Viene de configuration.page?:', isFromConfigPage);
+        
+        if (!isFromConfigPage) {
+          console.log('🚫 No viene de configuration.page (reconexión automática). Modal no se mostrará.');
+          return;
+        }
+        
+        // ⭐ CRÍTICO: Verificar si el dispositivo ya existe en BD
+        console.log('🔍 Verificando si el dispositivo ya existe en BD...');
+        const dispositivoExistente = await this.verificarDispositivoExiste('CautelApp-D1');
+        
+        if (dispositivoExistente) {
+          console.log('✅ Dispositivo ya existe en BD. Modal NO se mostrará.');
+          await this.showToast('Dispositivo ya vinculado. WiFi actualizado correctamente.', 'success');
+          this.bleService.clearPendingDevice();
+          this.bleService.clearWifiConnected();
+          this.showPendingCard = false;
+          // Recargar dispositivos guardados
+          this.cargarDispositivosGuardados();
+          return;
+        }
+        
+        console.log('📶 Dispositivo NO existe en BD. Mostrando modal para vincular...');
         await this.showAdultInfoModal(device);
       }
     });
@@ -501,6 +527,40 @@ export class Tab2Page implements OnInit {
       cssClass: 'profile-popover'
     });
     return await popover.present();
+  }
+
+  /**
+   * Verifica si un dispositivo ya existe en la BD para el usuario actual
+   * Consulta directamente al backend para evitar problemas de caché
+   * Retorna true si existe y está vinculado, false si no
+   */
+  private async verificarDispositivoExiste(macAddress: string): Promise<boolean> {
+    try {
+      console.log('🔍 [verificarDispositivoExiste] Consultando al backend...');
+      const respuesta = await firstValueFrom(this.deviceApiService.checkDeviceExists(macAddress));
+      
+      console.log('🔍 [verificarDispositivoExiste] Respuesta del backend:', respuesta);
+      
+      if (respuesta.error) {
+        console.error('❌ [verificarDispositivoExiste] Error del backend:', respuesta.error);
+        return false;
+      }
+      
+      // Verificar si existe Y está vinculado al usuario
+      const existeYVinculado = respuesta.exists && respuesta.vinculado;
+      
+      console.log(`🔍 [verificarDispositivoExiste] Resultado:`, {
+        existe: respuesta.exists,
+        vinculado: respuesta.vinculado,
+        resultado: existeYVinculado ? 'EXISTE Y VINCULADO' : 'NO EXISTE O NO VINCULADO'
+      });
+      
+      return existeYVinculado;
+    } catch (error) {
+      console.error('❌ [verificarDispositivoExiste] Error en la petición:', error);
+      // En caso de error, asumir que NO existe para mostrar el modal
+      return false;
+    }
   }
 
   // Mostrar modal para configurar datos del adulto mayor después de conectar WiFi

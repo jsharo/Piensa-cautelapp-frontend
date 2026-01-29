@@ -204,8 +204,8 @@ export class LocalNotificationService {
   /**
    * Envía una notificación local genérica
    */
-  async sendNotification(title: string, body: string, tipo?: 'EMERGENCIA' | 'AYUDA', data?: any): Promise<void> {
-    if (tipo === 'EMERGENCIA') {
+  async sendNotification(title: string, body: string, tipo?: 'EMERGENCIA' | 'AYUDA' | 'PANICO', data?: any): Promise<void> {
+    if (tipo === 'EMERGENCIA' || tipo === 'PANICO') {
       await this.sendEmergencyNotification(title, body, data);
     } else if (tipo === 'AYUDA') {
       await this.sendHelpNotification(title, body, data);

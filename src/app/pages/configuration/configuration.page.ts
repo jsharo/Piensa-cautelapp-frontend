@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { IonContent, IonSpinner, NavController, ToastController, ModalController, ViewWillEnter } from '@ionic/angular/standalone';
+import { IonContent, IonSpinner, NavController, ToastController, ModalController, LoadingController, ViewWillEnter } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../services/auth.service';
@@ -103,6 +103,7 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
     private toastCtrl: ToastController,
     private bleService: BleService,
     private modalController: ModalController,
+    private loadingController: LoadingController,
     private router: Router,
     private deviceConnectionEventsService: DeviceConnectionEventsService
   ) {}
@@ -391,19 +392,8 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
             this.isConnectingWiFi = false;
             this.wifiStatus = 'connected';
             
-            // Notificar al BleService que WiFi se conectó
-            if (this.connectedDevice) {
-              const deviceToNotify: ConnectedDevice = {
-                id: this.connectedDevice.id,
-                name: this.connectedDevice.name,
-                rssi: this.connectedDevice.rssi,
-                mac_address: 'CautelApp-D1', // ✅ Usar el mismo ID que envía el ESP32
-                bateria: 100,
-                connected: true,
-                ultimaActividad: 'Ahora'
-              };
-              this.bleService.notifyWifiConnected(deviceToNotify);
-            }
+            // La notificación y verificación se hace en finishWiFiConfiguration()
+            // No notificar aquí para evitar duplicados
           } else if (status === 'FAILED' || status.includes('FAILED') || status.includes('ERROR')) {
             this.wifiConnected = false;
             this.isConnectingWiFi = false;
@@ -559,19 +549,64 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
     
     this.showToast('✅ Dispositivo conectado a WiFi exitosamente!', 'success');
     
-    // 🔴 CRÍTICO: Esperar a que el ESP32 registre el dispositivo en la BD
-    console.log('⏳ [CONFIG] Esperando a que el ESP32 registre el dispositivo en BD...');
-    const deviceRegistered = await this.waitForDeviceRegistration('CautelApp-D1', 30000); // 30 segundos timeout
+    // 🔄 IMPORTANTE: Primero verificar si el dispositivo ya existe en BD
+    const deviceId = this.connectedDevice?.name || 'CautelApp-D1';
+    console.log(`🔍 [CONFIG] Verificando si dispositivo ${deviceId} ya existe en BD...`);
     
-    if (!deviceRegistered) {
-      console.error('❌ [CONFIG] Timeout esperando registro del dispositivo');
-      this.showToast('Error: El dispositivo no se registró en el servidor. Intenta nuevamente.', 'danger');
-      return;
+    // Mostrar loading mientras verifica
+    const loading = await this.loadingController.create({
+      message: 'Verificando dispositivo...',
+      spinner: 'circles'
+    });
+    await loading.present();
+    
+    try {
+      // Verificar si el dispositivo ya existe y está vinculado
+      const checkResponse: any = await this.http.get(
+        `${environment.apiUrl}/device/check-exists/${deviceId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.authService.getToken()}`
+          }
+        }
+      ).toPromise();
+      
+      await loading.dismiss();
+      
+      console.log('🔍 [CONFIG] Respuesta de verificación:', checkResponse);
+      
+      // Si el dispositivo ya existe y está vinculado, NO mostrar modal
+      if (checkResponse.exists && checkResponse.vinculado) {
+        console.log('✅ [CONFIG] Dispositivo ya existe y está vinculado. NO se mostrará modal.');
+        this.showToast('Dispositivo ya vinculado. WiFi actualizado correctamente.', 'success');
+        
+        // Notificar para que tab2 recargue la lista
+        this.bleService.notifyWifiConnected({
+          id: this.connectedDevice!.id,
+          name: this.connectedDevice!.name,
+          rssi: this.connectedDevice!.rssi,
+          mac_address: deviceId,
+          bateria: 100,
+          connected: true,
+          ultimaActividad: 'Ahora'
+        }, false); // false porque ya existe
+        
+        // Navegar a la lista de dispositivos
+        await this.delay(1000);
+        this.router.navigate(['/tabs/tab2']);
+        return;
+      }
+      
+      console.log('📝 [CONFIG] Dispositivo NO existe o NO está vinculado. Mostrando modal para vincular...');
+      
+    } catch (error) {
+      await loading.dismiss();
+      console.error('❌ [CONFIG] Error verificando dispositivo:', error);
+      this.showToast('Error al verificar dispositivo. Continuando...', 'warning');
+      // Continuar con el flujo normal si hay error
     }
     
-    console.log('✅ [CONFIG] Dispositivo registrado en BD, abriendo modal...');
-    
-    // Abrir modal para capturar datos del adulto mayor
+    // Abrir modal para capturar datos del adulto mayor (solo si NO existe)
     const adultInfo = await this.openAdultInfoModal();
     
     if (!adultInfo) {
@@ -583,7 +618,7 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
 
     // 🔴 CRÍTICO: Guardar en BD usando vincularDispositivo
     const vincularDto = {
-      mac_address: 'CautelApp-D1', // ✅ Usar el mismo ID que envía el ESP32
+      mac_address: deviceId, // ✅ Usar el deviceId real que envió el ESP32
       bateria: 100,
       nombre_adulto: adultInfo.nombre,
       fecha_nacimiento: adultInfo.fecha_nacimiento || '1950-01-01',
@@ -610,7 +645,7 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
         id: this.connectedDevice!.id,
         name: this.connectedDevice!.name,
         rssi: this.connectedDevice!.rssi,
-        mac_address: 'CautelApp-D1',
+        mac_address: deviceId,
         bateria: 100,
         connected: true,
         ultimaActividad: 'Ahora',
@@ -754,8 +789,6 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
   }
 
   // =====================
-  // ADULT INFO MODAL
-  // =====================
   // WIFI PASSWORD VISIBILITY TOGGLE
   // =====================
 
@@ -764,6 +797,49 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
   }
 
   // =====================
+  // ADULT INFO MODAL
+  // =====================
+  
+  /**
+   * Espera a que el ESP32 registre el dispositivo en la BD
+   * Hace polling al endpoint /device/esp32/status
+   * @param deviceId ID del dispositivo (ej: "CautelApp-D1")
+   * @param timeout Tiempo máximo de espera en milisegundos
+   * @returns true si el dispositivo fue registrado, false si se agotó el timeout
+   */
+  async waitForDeviceRegistration(deviceId: string, timeout: number = 10000): Promise<boolean> {
+    const startTime = Date.now();
+    const pollInterval = 1500; // Consultar cada 1.5 segundos
+    let attempts = 0;
+    
+    while (Date.now() - startTime < timeout) {
+      attempts++;
+      try {
+        console.log(`🔄 [CONFIG] Polling intento ${attempts}: Verificando ${deviceId}...`);
+        
+        const response: any = await this.http.get(
+          `${environment.apiUrl}/device/esp32/status?device=${deviceId}`
+        ).toPromise();
+        
+        console.log(`📡 [CONFIG] Respuesta del servidor:`, response);
+        
+        if (response && response.connected) {
+          console.log(`✅ [CONFIG] ¡Dispositivo ${deviceId} encontrado! Fuente: ${response.source || 'unknown'}`);
+          return true;
+        }
+        
+        console.log(`⏳ [CONFIG] Intento ${attempts}: Dispositivo no encontrado, esperando ${pollInterval}ms...`);
+      } catch (error: any) {
+        console.log(`⚠️ [CONFIG] Error en polling (intento ${attempts}):`, error?.message || error);
+      }
+      
+      // Esperar antes del siguiente intento
+      await this.delay(pollInterval);
+    }
+    
+    console.error(`❌ [CONFIG] Timeout después de ${attempts} intentos (${timeout}ms total)`);
+    return false;
+  }
 
   async openAdultInfoModal() {
     const modal = await this.modalController.create({
@@ -774,48 +850,5 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
     await modal.present();
     const { data } = await modal.onWillDismiss();
     return data;
-  }
-
-  /**
-   * Hace polling al backend para verificar que el dispositivo esté registrado en BD
-   * @param deviceId ID del dispositivo (ej: 'CautelApp-D1')
-   * @param timeoutMs Tiempo máximo de espera en milisegundos
-   * @returns true si el dispositivo se registró, false si hubo timeout
-   */
-  async waitForDeviceRegistration(deviceId: string, timeoutMs: number = 30000): Promise<boolean> {
-    const startTime = Date.now();
-    const pollInterval = 2000; // Verificar cada 2 segundos
-    
-    while (Date.now() - startTime < timeoutMs) {
-      try {
-        console.log(`🔍 [CONFIG] Verificando si ${deviceId} está en BD...`);
-        
-        const response: any = await this.http.get(
-          `${environment.apiUrl}/device/esp32/status?device=${deviceId}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${this.authService.getToken()}`
-            }
-          }
-        ).toPromise();
-        
-        console.log(`📡 [CONFIG] Respuesta del servidor:`, response);
-        
-        if (response && response.connected) {
-          console.log(`✅ [CONFIG] Dispositivo ${deviceId} registrado en BD`);
-          return true;
-        }
-        
-        console.log(`⏳ [CONFIG] Dispositivo aún no registrado, esperando...`);
-      } catch (error) {
-        console.log(`⚠️ [CONFIG] Error consultando status (normal si aún no existe):`, error);
-      }
-      
-      // Esperar antes de la próxima verificación
-      await this.delay(pollInterval);
-    }
-    
-    console.error(`❌ [CONFIG] Timeout: Dispositivo ${deviceId} no se registró en ${timeoutMs}ms`);
-    return false;
   }
 }

@@ -44,6 +44,11 @@ export class BleService {
   // Evento cuando WiFi se conecta exitosamente
   private wifiConnectedSubject = new BehaviorSubject<ConnectedDevice | null>(null);
   public wifiConnected$: Observable<ConnectedDevice | null> = this.wifiConnectedSubject.asObservable();
+  
+  // Indica si es la primera configuración WiFi (desde configuration.page)
+  // Para distinguir de reconexiones automáticas del ESP32
+  private isFirstWifiConfigSubject = new BehaviorSubject<boolean>(false);
+  public isFirstWifiConfig$: Observable<boolean> = this.isFirstWifiConfigSubject.asObservable();
 
   private initialized = false;
 
@@ -132,33 +137,16 @@ export class BleService {
       // Agregar nuevo dispositivo
       devices.push(device);
       
-      // Vincular dispositivo en el backend
-      this.vincularEnBackend(device);
+      // NO vincular automáticamente - se vinculará cuando se envíen datos del adulto mayor
+      // La vinculación se hace en tab2.page.ts después de que el usuario complete el modal
     }
     
     this.connectedDevicesSubject.next([...devices]);
   }
 
-  private vincularEnBackend(device: ConnectedDevice) {
-    this.deviceApiService.vincularDispositivo({
-      mac_address: device.mac_address,
-      bateria: device.bateria || 100,
-      nombre_adulto: device.adulto?.nombre || undefined,
-      fecha_nacimiento: device.adulto?.fecha_nacimiento || undefined,
-      direccion: device.adulto?.direccion || undefined,
-      ble_device_id: device.id
-    }).subscribe({
-      next: (response) => {
-        console.log('✅ Dispositivo vinculado en el backend:', response);
-        // Emitir evento para que otros componentes puedan actualizar sus datos
-        this.deviceLinkedSubject.next(response);
-      },
-      error: (error) => {
-        console.error('❌ Error vinculando dispositivo en el backend:', error);
-        console.error('Detalles del error:', error.error);
-      }
-    });
-  }
+  // MÉTODO REMOVIDO: La vinculación ahora se hace SOLO cuando el usuario
+  // envía los datos del adulto mayor desde el modal (tab2.page.ts o configuration.page.ts)
+  // private vincularEnBackend(device: ConnectedDevice) { ... }
 
   removeConnectedDevice(deviceId: string) {
     const devices = this.connectedDevicesSubject.value.filter(d => d.id !== deviceId);
@@ -215,13 +203,15 @@ export class BleService {
   }
 
   // Notificar que WiFi se conectó exitosamente
-  notifyWifiConnected(device: ConnectedDevice) {
-    console.log('📶 WiFi conectado para dispositivo:', device.name);
+  notifyWifiConnected(device: ConnectedDevice, isFirstConfig: boolean = false) {
+    console.log('📶 WiFi conectado para dispositivo:', device.name, 'Primera config:', isFirstConfig);
     this.wifiConnectedSubject.next(device);
+    this.isFirstWifiConfigSubject.next(isFirstConfig);
   }
 
   // Limpiar notificación de WiFi conectado
   clearWifiConnected() {
     this.wifiConnectedSubject.next(null);
+    this.isFirstWifiConfigSubject.next(false);
   }
 }

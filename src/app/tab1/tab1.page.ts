@@ -11,7 +11,7 @@ import { environment } from '../../environments/environment';
 
 interface NotificacionUI {
   id: number;
-  tipo: 'emergencia' | 'ayuda';
+  tipo: 'emergencia' | 'ayuda' | 'panico';
   usuario: string;
   descripcion: string;
   tiempo: string;
@@ -22,7 +22,7 @@ interface NotificacionUI {
   isShared?: boolean; // Indica si viene de un dispositivo compartido
 }
 
-type Filtro = 'todas' | 'emergencia' | 'ayuda';
+type Filtro = 'todas' | 'emergencia' | 'ayuda' | 'panico';
 
 @Component({
   selector: 'app-tab1',
@@ -114,11 +114,11 @@ export class Tab1Page implements OnInit, OnDestroy {
           console.log(`[Tab1] 💓 BPM actualizado: ${data.pulso} (${data.usuario})`);
         }
         // Si es una notificación de emergencia
-        else if (data.tipo === 'EMERGENCIA') {
-          console.log('[Tab1] 🚨 Notificación de emergencia recibida');
+        else if (data.tipo === 'EMERGENCIA' || data.tipo === 'PANICO') {
+          console.log(`[Tab1] 🚨 Notificación de ${data.tipo} recibida`);
           
           // Enviar notificación local al teléfono
-          this.sendLocalEmergencyNotification(data.usuario, data.mensaje);
+          this.sendLocalEmergencyNotification(data.usuario, data.mensaje, data.tipo);
           
           // Recargar notificaciones
           this.loadNotifications();
@@ -145,12 +145,17 @@ export class Tab1Page implements OnInit, OnDestroy {
   /**
    * Envía notificación local de emergencia al teléfono
    */
-  private async sendLocalEmergencyNotification(nombreAdulto: string, mensaje: string) {
+  private async sendLocalEmergencyNotification(nombreAdulto: string, mensaje: string, tipo: string = 'EMERGENCIA') {
     try {
+      const title = tipo === 'PANICO' ? '⚠️ BOTÓN DE PÁNICO' : '🚨 EMERGENCIA';
+      const body = mensaje || (tipo === 'PANICO' 
+        ? `${nombreAdulto} presionó el botón de emergencia` 
+        : `${nombreAdulto} necesita tu ayuda rápido`);
+      
       await this.localNotificationService.sendEmergencyNotification(
-        '🚨 EMERGENCIA',
-        mensaje || `${nombreAdulto} necesita tu ayuda rápido`,
-        { tipo: 'emergencia', adulto: nombreAdulto }
+        title,
+        body,
+        { tipo: tipo.toLowerCase(), adulto: nombreAdulto }
       );
       console.log('[Tab1] 📱 Notificación local enviada');
     } catch (error) {
@@ -200,7 +205,7 @@ export class Tab1Page implements OnInit, OnDestroy {
    */
   private async sendLocalNotificationForAlert(notification: Notification) {
     const usuario = notification.adulto?.nombre || 'Usuario';
-    const tipo = notification.tipo.toUpperCase() as 'EMERGENCIA' | 'AYUDA';
+    const tipo = notification.tipo.toUpperCase() as 'EMERGENCIA' | 'AYUDA' | 'PANICO';
     const mensaje = notification.mensaje || 'Sin mensaje';
     
     let title = '';
@@ -209,6 +214,9 @@ export class Tab1Page implements OnInit, OnDestroy {
     if (tipo === 'EMERGENCIA') {
       title = '🚨 EMERGENCIA';
       body = `${usuario} necesita asistencia de inmediato: ${mensaje}`;
+    } else if (tipo === 'PANICO') {
+      title = '⚠️ BOTÓN DE PÁNICO';
+      body = `${usuario} presionó el botón de emergencia: ${mensaje}`;
     } else if (tipo === 'AYUDA') {
       title = '⚠️ SOLICITUD DE AYUDA';
       body = `${usuario} necesita ayuda: ${mensaje}`;
@@ -257,11 +265,27 @@ export class Tab1Page implements OnInit, OnDestroy {
   }
 
   transformNotification(n: Notification): NotificacionUI {
-    const tipo = n.tipo.toLowerCase() === 'emergencia' ? 'emergencia' : 'ayuda';
+    const tipoLower = n.tipo.toLowerCase();
+    let tipo: 'emergencia' | 'ayuda' | 'panico';
+    
+    if (tipoLower === 'emergencia') {
+      tipo = 'emergencia';
+    } else if (tipoLower === 'panico') {
+      tipo = 'panico';
+    } else {
+      tipo = 'ayuda';
+    }
+    
     const usuario = n.adulto?.nombre || 'Usuario desconocido';
-    const descripcion = n.mensaje || (tipo === 'emergencia' 
-      ? `${usuario} necesita asistencia de inmediato.`
-      : `${usuario} necesita ayuda.`);
+    
+    let descripcion: string;
+    if (tipo === 'emergencia') {
+      descripcion = n.mensaje || `${usuario} necesita asistencia de inmediato.`;
+    } else if (tipo === 'panico') {
+      descripcion = n.mensaje || `${usuario} presionó el botón de emergencia.`;
+    } else {
+      descripcion = n.mensaje || `${usuario} necesita ayuda.`;
+    }
     
     const isShared = n.adulto?.sharedInGroups && n.adulto.sharedInGroups.length > 0;
     
@@ -302,7 +326,7 @@ export class Tab1Page implements OnInit, OnDestroy {
 
   setFiltro(filtro: string | number | null | undefined) {
     const val = filtro == null ? 'todas' : String(filtro);
-    if (val === 'todas' || val === 'emergencia' || val === 'ayuda') {
+    if (val === 'todas' || val === 'emergencia' || val === 'ayuda' || val === 'panico') {
       this.filtroActivo = val as Filtro;
     } else {
       this.filtroActivo = 'todas';

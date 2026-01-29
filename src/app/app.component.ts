@@ -54,31 +54,11 @@ export class AppComponent {
    */
   private setupDeviceConnectionListener() {
     this.deviceConnectionEvents.connectionEvents$.subscribe(async (event) => {
-      console.log('[AppComponent] Evento de conexión recibido:', event);
+      console.log('[AppComponent] Evento de conexión WiFi recibido:', event);
+      console.log('[AppComponent] El dispositivo se creará en BD cuando se envíen los datos del adulto mayor');
 
-      // Verificar si el dispositivo ya está vinculado al usuario
-      // Si no, vincularlo automáticamente
-      try {
-        // Intentar vincular el dispositivo (si ya existe, el backend lo manejará)
-        const response = await fetch(`${environment.apiUrl}/device/vincular`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.authService.getToken()}`
-          },
-          body: JSON.stringify({
-            mac_address: event.deviceId,
-            bateria: 100,
-            nombre_adulto: `Dispositivo ${event.deviceId.slice(-8)}`,
-            direccion: 'Ubicación no especificada'
-          })
-        });
-
-        const result = await response.json();
-        console.log('[AppComponent] Resultado de vinculación:', result);
-      } catch (error) {
-        console.log('[AppComponent] El dispositivo ya está vinculado o error:', error);
-      }
+      // NO vincular automáticamente - esperar a que el usuario ingrese datos del adulto mayor
+      // El modal se mostrará en tab2.page.ts después de recibir este evento
 
       // Mostrar toast al usuario
       const toast = await this.toastController.create({

@@ -520,6 +520,11 @@ ion-segment-button ion-label::first-letter {
     color: $red-emergency;
   }
 
+  &.panico-badge {
+    background: rgba(#ff9500, 0.15); // Color naranja para botón de pánico
+    color: #ff9500;
+  }
+
   &.ayuda-badge {
     background: rgba($teal, 0.15);
     color: $teal;
