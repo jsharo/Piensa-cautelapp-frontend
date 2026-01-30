@@ -13,8 +13,7 @@ export interface ConnectedDevice {
   id: string;
   name: string;
   rssi?: number;
-  mac_address: string;
-  bateria?: number;
+  id_dispositivo: string;  // ID del dispositivo ESP32
   connected: boolean;
   ultimaActividad?: string;
   // Información del adulto mayor asociado (si existe)
@@ -151,17 +150,6 @@ export class BleService {
   removeConnectedDevice(deviceId: string) {
     const devices = this.connectedDevicesSubject.value.filter(d => d.id !== deviceId);
     this.connectedDevicesSubject.next(devices);
-  }
-
-  updateDeviceBattery(deviceId: string, bateria: number) {
-    const devices = this.connectedDevicesSubject.value;
-    const device = devices.find(d => d.id === deviceId);
-    
-    if (device) {
-      device.bateria = bateria;
-      device.ultimaActividad = 'Ahora';
-      this.connectedDevicesSubject.next([...devices]);
-    }
   }
 
   async disconnectDevice(deviceId: string) {

@@ -203,16 +203,24 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
       this.bluetoothDevices = [];
       
       console.log('🔍 Escaneando dispositivos BLE...');
-      console.log('📋 Búsqueda: Todos los dispositivos (sin filtro)');
+      console.log('� Filtro activo: Solo dispositivos con prefijo "CA-" (ej: CA-001, CA-002)');
       
-      // Escanear SIN filtro de nombre primero para diagnóstico
+      // Escanear dispositivos BLE con filtro para pulseras CautelApp (CA-*)
       await BleClient.requestLEScan(
         {},
         (result: ScanResult) => {
+          const deviceName = result.device.name || '';
+          
+          // 🔍 FILTRO: Solo mostrar dispositivos cuyo nombre empiece con "CA-"
+          if (!deviceName.startsWith('CA-')) {
+            // Log para diagnóstico (opcional, se puede comentar en producción)
+            console.log('🚫 Dispositivo filtrado (no empieza con CA-):', deviceName);
+            return; // Salir del callback sin agregar el dispositivo
+          }
+          
           // Verificar si el dispositivo ya está en la lista
           const existingIndex = this.bluetoothDevices.findIndex(d => d.id === result.device.deviceId);
           
-          const deviceName = result.device.name || 'Dispositivo Sin Nombre';
           const device: BluetoothDevice = {
             id: result.device.deviceId,
             name: deviceName,
@@ -224,36 +232,27 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
             // Actualizar RSSI del dispositivo existente
             this.bluetoothDevices[existingIndex] = device;
           } else {
-            // Agregar nuevo dispositivo
+            // Agregar nuevo dispositivo (pulsera CautelApp)
             this.bluetoothDevices.push(device);
             
             // Log detallado para diagnóstico
-            console.log('📡 Dispositivo encontrado:', {
+            console.log('✅ Pulsera CautelApp detectada:', {
               nombre: deviceName,
               id: result.device.deviceId,
               rssi: result.rssi,
-              esCautelApp: deviceName.includes('CautelApp'),
               servicios: result.uuids || []
             });
-          }
-          
-          // También log cada actualización si es un dispositivo CautelApp
-          if (deviceName.includes('CautelApp')) {
-            console.log('✅ ¡Dispositivo CautelApp detectado!', deviceName, `(${result.rssi} dBm)`);
           }
         }
       );
       
-      // Detener escaneo automáticamente después de 15 segundos (más tiempo para diagnóstico)
+      // Detener escaneo automáticamente después de 15 segundos
       setTimeout(() => {
         this.stopScan();
         if (this.bluetoothDevices.length === 0) {
-          this.showToast('No se encontraron dispositivos. Verifica que el ESP32 esté encendido y cerca.', 'warning');
+          this.showToast('No se encontraron pulseras CautelApp (CA-*). Verifica que el dispositivo esté encendido y cerca.', 'warning');
         } else {
-          const cautelappDevices = this.bluetoothDevices.filter(d => d.name.includes('CautelApp'));
-          if (cautelappDevices.length === 0) {
-            this.showToast(`Se encontraron ${this.bluetoothDevices.length} dispositivo(s), pero ninguno es CautelApp`, 'warning');
-          }
+          this.showToast(`${this.bluetoothDevices.length} pulsera(s) CautelApp encontrada(s)`, 'success', 2000);
         }
       }, 15000);
       
@@ -585,8 +584,7 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
           id: this.connectedDevice!.id,
           name: this.connectedDevice!.name,
           rssi: this.connectedDevice!.rssi,
-          mac_address: deviceId,
-          bateria: 100,
+          id_dispositivo: deviceId,
           connected: true,
           ultimaActividad: 'Ahora'
         }, false); // false porque ya existe
@@ -618,8 +616,7 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
 
     // 🔴 CRÍTICO: Guardar en BD usando vincularDispositivo
     const vincularDto = {
-      mac_address: deviceId, // ✅ Usar el deviceId real que envió el ESP32
-      bateria: 100,
+      id_dispositivo: deviceId, // ✅ Usar el deviceId real que envió el ESP32
       nombre_adulto: adultInfo.nombre,
       fecha_nacimiento: adultInfo.fecha_nacimiento || '1950-01-01',
       direccion: adultInfo.direccion || 'No especificada'
@@ -645,8 +642,7 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
         id: this.connectedDevice!.id,
         name: this.connectedDevice!.name,
         rssi: this.connectedDevice!.rssi,
-        mac_address: deviceId,
-        bateria: 100,
+        id_dispositivo: deviceId,
         connected: true,
         ultimaActividad: 'Ahora',
         adulto: {

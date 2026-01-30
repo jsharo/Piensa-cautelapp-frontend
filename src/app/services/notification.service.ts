@@ -16,9 +16,7 @@ export interface Notification {
     fecha_nacimiento: string;
     direccion: string;
     dispositivo?: {
-      id_dispositivo: number;
-      bateria: number;
-      mac_address: string;
+      id_dispositivo: string;  // ID del dispositivo ESP32
     };
     usuariosAdultoMayor?: any[];
     sharedInGroups?: any[];

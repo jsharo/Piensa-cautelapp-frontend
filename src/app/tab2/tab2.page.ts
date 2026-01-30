@@ -1,4 +1,4 @@
-import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { IonContent, IonIcon, PopoverController, ModalController, ToastController, IonRefresher } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
@@ -10,6 +10,7 @@ import { AdultInfoModalComponent } from '../pages/configuration/adult-info-modal
 import { SharedGroupDetailPage } from '../pages/shared-group-detail/shared-group-detail.page';
 import { FormsModule } from '@angular/forms';
 import { SharedGroupService, SharedGroupDevice } from '../services/shared-group.service';
+import { environment } from '../../environments/environment';
 import { addIcons } from 'ionicons';
 import { 
   personCircle, wifi, bluetooth, person, people, 
@@ -19,9 +20,7 @@ import {
 } from 'ionicons/icons';
 
 interface Dispositivo {
-  id_dispositivo: number;
-  bateria: number;
-  mac_address: string;
+  id_dispositivo: string;  // ID del dispositivo ESP32 (ej: "CA-001")
 }
 
 interface AdultoMayor {
@@ -46,7 +45,7 @@ interface AdultoMayor {
   imports: [IonContent, IonIcon, CommonModule, FormsModule, IonRefresher],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class Tab2Page implements OnInit {
+export class Tab2Page implements OnInit, OnDestroy {
   userProfileImage: string | null = null;
   adultosMonitoreados: AdultoMayor[] = [];
   dispositivosBackend: AdultoMayor[] = [];
@@ -55,6 +54,9 @@ export class Tab2Page implements OnInit {
   // Estado del dispositivo pendiente de configuración
   pendingDevice: {device: ConnectedDevice, ssid: string} | null = null;
   showPendingCard = false;
+
+  // ⭐ NUEVO: Conexión SSE para eventos de dispositivos
+  private sseConnection: EventSource | null = null;
 
   constructor(
     private auth: AuthService,
@@ -113,6 +115,9 @@ export class Tab2Page implements OnInit {
       this.combinarDispositivos();
     });
     
+    // ⭐ NUEVO: Conectar a SSE para recibir eventos de conexión/desconexión
+    this.connectToSSE();
+    
     // Suscribirse a eventos de dispositivos vinculados para recargar datos
     this.bleService.deviceLinked$.subscribe((linked) => {
       if (linked) {
@@ -160,6 +165,95 @@ export class Tab2Page implements OnInit {
         await this.showAdultInfoModal(device);
       }
     });
+  }
+
+  ngOnDestroy() {
+    // ⭐ NUEVO: Cerrar conexión SSE al destruir el componente
+    if (this.sseConnection) {
+      this.sseConnection.close();
+      console.log('[Tab2] Conexión SSE cerrada');
+    }
+  }
+
+  /**
+   * ⭐ NUEVO: Conecta al endpoint SSE para recibir eventos de conexión/desconexión
+   */
+  private connectToSSE() {
+    const user = this.auth.getCurrentUser();
+    const token = this.auth.getToken();
+    
+    if (!user || !token) {
+      console.warn('[Tab2] No se puede conectar a SSE: usuario no autenticado');
+      return;
+    }
+    
+    // Conectar al endpoint SSE de conexión de dispositivos
+    const sseUrl = `${environment.apiUrl}/device/events/connection?token=${token}`;
+    console.log('[Tab2] Conectando a SSE de dispositivos:', sseUrl);
+    
+    this.sseConnection = new EventSource(sseUrl);
+    
+    this.sseConnection.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('[Tab2] Evento SSE de dispositivo recibido:', data);
+        
+        this.handleDeviceConnectionEvent(data);
+      } catch (error) {
+        console.error('[Tab2] Error procesando evento SSE:', error);
+      }
+    };
+    
+    this.sseConnection.onerror = (error) => {
+      console.error('[Tab2] Error en conexión SSE:', error);
+      // Intentar reconectar después de 5 segundos
+      setTimeout(() => {
+        console.log('[Tab2] Intentando reconectar SSE...');
+        this.connectToSSE();
+      }, 5000);
+    };
+    
+    this.sseConnection.onopen = () => {
+      console.log('[Tab2] ✅ Conexión SSE de dispositivos establecida');
+    };
+  }
+
+  /**
+   * ⭐ NUEVO: Maneja los eventos de conexión/desconexión de dispositivos
+   */
+  private handleDeviceConnectionEvent(data: any) {
+    const { deviceId, status } = data;
+    
+    if (status === 'connected') {
+      console.log(`[Tab2] 🟢 Dispositivo ${deviceId} CONECTADO`);
+      
+      // Actualizar estado de todos los adultos con este dispositivo
+      this.adultosMonitoreados = this.adultosMonitoreados.map(adulto => {
+        if (adulto.dispositivo?.id_dispositivo === deviceId) {
+          return {
+            ...adulto,
+            conectado: true,
+            ultimaActividad: 'Conectado vía WiFi'
+          };
+        }
+        return adulto;
+      });
+      
+    } else if (status === 'disconnected') {
+      console.log(`[Tab2] 🔴 Dispositivo ${deviceId} DESCONECTADO`);
+      
+      // Actualizar estado de todos los adultos con este dispositivo
+      this.adultosMonitoreados = this.adultosMonitoreados.map(adulto => {
+        if (adulto.dispositivo?.id_dispositivo === deviceId) {
+          return {
+            ...adulto,
+            conectado: false,
+            ultimaActividad: 'Desconectado'
+          };
+        }
+        return adulto;
+      });
+    }
   }
 
   /**
@@ -238,7 +332,7 @@ export class Tab2Page implements OnInit {
             this.dispositivosBackend = [...misDispositivos, ...dispositivosCompartidos];
             console.log(`📦 [CARGAR] Total en backend: ${this.dispositivosBackend.length}`);
             this.dispositivosBackend.forEach((d: any) => {
-              console.log(`   - ${d.nombre} (id: ${d.id_adulto}, mac: ${d.dispositivo?.mac_address || 'sin MAC'})`);
+              console.log(`   - ${d.nombre} (id: ${d.id_adulto}, dispositivo: ${d.dispositivo?.id_dispositivo || 'sin dispositivo'})`);
             });
             
             // Actualizar estado WiFi desde el backend
@@ -276,15 +370,15 @@ export class Tab2Page implements OnInit {
     const anadidos = new Set<number>(); // Usar id_adulto para evitar duplicados
     
     // Filtrar dispositivos BLE válidos
-    const bleValidos = dispositivosBLE.filter((d: any) => d && d.dispositivo && d.dispositivo.mac_address);
-    const macsConectadas = new Set(bleValidos.map((d: any) => d.dispositivo.mac_address));
+    const bleValidos = dispositivosBLE.filter((d: any) => d && d.dispositivo && d.dispositivo.id_dispositivo);
+    const idsConectadas = new Set(bleValidos.map((d: any) => d.dispositivo.id_dispositivo));
     
-    console.log(`   - MACs conectadas: ${Array.from(macsConectadas).join(', ')}`);
+    console.log(`   - IDs conectadas: ${Array.from(idsConectadas).join(', ')}`);
     
     // Agregar dispositivos BLE que están conectados
     bleValidos.forEach((dispBLE: any) => {
       const dispBackend = this.dispositivosBackend.find(
-        (db: any) => db && db.dispositivo && db.dispositivo.mac_address === dispBLE.dispositivo.mac_address
+        (db: any) => db && db.dispositivo && db.dispositivo.id_dispositivo === dispBLE.dispositivo.id_dispositivo
       );
       if (dispBackend) {
         console.log(`   ✓ BLE Match: ${dispBackend.nombre} (${dispBackend.id_adulto})`);
@@ -296,15 +390,15 @@ export class Tab2Page implements OnInit {
         });
         anadidos.add(dispBackend.id_adulto);
       } else {
-        console.log(`   ⚠️ BLE Sin match en backend: ${dispBLE.dispositivo?.mac_address}`);
+        console.log(`   ⚠️ BLE Sin match en backend: ${dispBLE.dispositivo?.id_dispositivo}`);
         dispositivosCombinados.push(dispBLE);
       }
     });
     
     // Agregar dispositivos del backend que NO estén conectados
     this.dispositivosBackend.forEach((dispBackend: any) => {
-      if (dispBackend && dispBackend.dispositivo && dispBackend.dispositivo.mac_address) {
-        if (!macsConectadas.has(dispBackend.dispositivo.mac_address) && !anadidos.has(dispBackend.id_adulto)) {
+      if (dispBackend && dispBackend.dispositivo && dispBackend.dispositivo.id_dispositivo) {
+        if (!idsConectadas.has(dispBackend.dispositivo.id_dispositivo) && !anadidos.has(dispBackend.id_adulto)) {
           console.log(`   - Backend desconectado: ${dispBackend.nombre} (${dispBackend.id_adulto})`);
           dispositivosCombinados.push(dispBackend);
           anadidos.add(dispBackend.id_adulto);
@@ -314,7 +408,7 @@ export class Tab2Page implements OnInit {
     
     console.log(`✅ [COMBINAR] Total dispositivos finales: ${dispositivosCombinados.length}`);
     dispositivosCombinados.forEach((d: any) => {
-      console.log(`   - ${d.nombre} (id: ${d.id_adulto}, mac: ${d.dispositivo?.mac_address})`);
+      console.log(`   - ${d.nombre} (id: ${d.id_adulto}, dispositivo: ${d.dispositivo?.id_dispositivo})`);
     });
     
     this.adultosMonitoreados = dispositivosCombinados;
@@ -329,13 +423,14 @@ export class Tab2Page implements OnInit {
           
           // Actualizar el estado de cada dispositivo en dispositivosBackend
           this.dispositivosBackend = this.dispositivosBackend.map((disp: AdultoMayor) => {
-            if (disp.dispositivo && disp.dispositivo.mac_address) {
+            if (disp.dispositivo && disp.dispositivo.id_dispositivo) {
               // Buscar el estado WiFi correspondiente
               const wifiStatus = response.devices.find(
-                (d: any) => d.macAddress === disp.dispositivo.mac_address
+                (d: any) => d.id_dispositivo === disp.dispositivo.id_dispositivo
               );
               
               if (wifiStatus && wifiStatus.isOnline) {
+                console.log(`✅ Dispositivo ${disp.dispositivo.id_dispositivo} está ONLINE`);
                 return {
                   ...disp,
                   conectado: true,
@@ -346,6 +441,10 @@ export class Tab2Page implements OnInit {
             }
             return disp;
           });
+          
+          // ⭐ CRÍTICO: Volver a combinar dispositivos después de actualizar estado WiFi
+          console.log('🔄 Recombinando dispositivos con estado WiFi actualizado...');
+          this.combinarDispositivos();
         }
       },
       error: (error: any) => {
@@ -372,12 +471,6 @@ export class Tab2Page implements OnInit {
     }
   }
 
-  getBatteryClass(bateria: number): string {
-    if (bateria > 70) return 'high';
-    if (bateria > 30) return 'medium';
-    return 'low';
-  }
-
   openAddDevice() {
     // Navegar a configuración sin especificar método
     window.location.href = '/configuration';
@@ -389,8 +482,7 @@ export class Tab2Page implements OnInit {
     const infoTexto = `Información de ${adulto.nombre}\n\n` +
       `Edad: ${adulto.edad} años\n` +
       `Dirección: ${adulto.direccion}\n` +
-      `Dispositivo: ${adulto.dispositivo?.mac_address || 'No asignado'}\n` +
-      `Batería: ${adulto.dispositivo?.bateria || 0}%\n` +
+      `Dispositivo: ${adulto.dispositivo?.id_dispositivo || 'No asignado'}\n` +
       `Estado: ${adulto.conectado ? 'En línea' : 'Desconectado'}\n` +
       `Conexión: ${connectionType}\n` +
       `Última actividad: ${adulto.ultimaActividad}`;
@@ -577,16 +669,14 @@ export class Tab2Page implements OnInit {
     if (data) {
       console.log('✅ [MODAL] Datos del adulto recibidos:', data);
       console.log('✅ [MODAL] Dispositivo BLE:', {
-        mac: device.mac_address,
-        bateria: device.bateria,
+        id: device.id_dispositivo,
         nombre: device.name
       });
       
       // 🔴 CRÍTICO: Guardar en BD ANTES de agregar a la lista local
       // Esto asegura que el dispositivo está guardado en la base de datos
       const vincularDto = {
-        mac_address: 'CautelApp-D1', // ✅ SIEMPRE usar el ID fijo del ESP32
-        bateria: device.bateria || 100,
+        id_dispositivo: 'CA-1', // ✅ ID del ESP32 desde el firmware
         nombre_adulto: data.nombre,
         fecha_nacimiento: data.fecha_nacimiento || '1950-01-01',
         direccion: data.direccion || 'No especificada',

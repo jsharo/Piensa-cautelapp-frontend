@@ -5,12 +5,11 @@ import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface VincularDispositivoDto {
-  mac_address: string;
-  bateria: number;
+  id_dispositivo: string;  // ID del dispositivo ESP32 (ej: "CA-001")
   nombre_adulto?: string;
   fecha_nacimiento?: string;
   direccion?: string;
-  ble_device_id?: string;
+  ble_device_id?: string;  // ID del dispositivo BLE para referencia (opcional)
 }
 
 export interface UpdateAdultoMayorDto {
@@ -25,19 +24,14 @@ export interface DispositivoVinculado {
   fecha_nacimiento: string;
   direccion: string;
   dispositivo: {
-    id_dispositivo: number;
-    bateria: number;
-    mac_address: string;
+    id_dispositivo: string;  // ID del dispositivo ESP32 (ej: "CA-001")
   };
 }
 
 export interface DeviceStatus {
-  id: number;
-  deviceId: string;
-  macAddress: string;
+  id_dispositivo: string;  // ID del dispositivo ESP32 (ej: "CA-001")
   isOnline: boolean;
   lastSeen: Date | null;
-  battery: number;
   adultos: Array<{
     id_adulto: number;
     nombre: string;
@@ -58,7 +52,7 @@ export class DeviceApiService {
 
   constructor(private http: HttpClient) {}
 
-  deleteDispositivo(id_dispositivo: number) {
+  deleteDispositivo(id_dispositivo: string) {
     return this.http.delete(`${this.apiUrl}/${id_dispositivo}`);
   }
 
