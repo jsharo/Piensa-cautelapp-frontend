@@ -568,28 +568,29 @@ export class Tab3Page implements OnInit, OnDestroy {
   }
 
   snoozeAlarm(alarm: Alarm) {
-    // Crear una alarma temporal de 10 minutos
+    // Actualizar la hora de la alarma existente (10 minutos adelante)
     const now = new Date();
     now.setMinutes(now.getMinutes() + 10);
     const snoozeTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
-    const snoozeAlarm: Alarm = {
-      id: Date.now().toString(),
-      time: snoozeTime,
-      label: `${alarm.label} (pospuesto)`,
-      enabled: true,
-      category: alarm.category,
-      repeatDays: [],
-      notes: alarm.notes
-    };
+    // Cancelar la notificación anterior si existe
+    if (alarm.notificationId) {
+      this.alarmBackground.cancelAlarm(alarm.notificationId.toString()).catch((err: any) => {
+        console.warn('⚠️ Error al cancelar alarma anterior:', err);
+      });
+    }
 
-    this.alarms.push(snoozeAlarm);
+    // Actualizar la alarma existente
+    alarm.time = snoozeTime;
+    alarm.repeatDays = []; // Eliminar repeticiones al posponer
+    
+    // Reordenar alarmas por hora
     this.alarms.sort((a, b) => a.time.localeCompare(b.time));
     this.saveAlarms();
 
-    // Programar la alarma pospuesta
-    this.alarmBackground.scheduleAlarm(snoozeAlarm).then((notificationId: number) => {
-      snoozeAlarm.notificationId = notificationId;
+    // Reprogramar la alarma con la nueva hora
+    this.alarmBackground.scheduleAlarm(alarm).then((notificationId: number) => {
+      alarm.notificationId = notificationId;
       this.saveAlarms();
     });
 

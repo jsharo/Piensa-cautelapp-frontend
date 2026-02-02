@@ -546,7 +546,8 @@ export class ConfigurationPage implements OnInit, ViewWillEnter, OnDestroy {
     this.isConnectingWiFi = false;
     this.waitingForWiFiConfirmation = false;
     
-    this.showToast('✅ Dispositivo conectado a WiFi exitosamente!', 'success');
+    // NO mostrar toast aquí - la notificación nativa ya se muestra desde app.component
+    // this.showToast('✅ Dispositivo conectado a WiFi exitosamente!', 'success');
     
     // 🔄 IMPORTANTE: Primero verificar si el dispositivo ya existe en BD
     const deviceId = this.connectedDevice?.name || 'CautelApp-D1';

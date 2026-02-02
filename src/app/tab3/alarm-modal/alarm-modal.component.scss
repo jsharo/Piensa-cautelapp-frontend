@@ -169,6 +169,53 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 
   .custom-datetime {
     --background: #{$white};
+    --wheel-highlight-background: #{$white};
+    --wheel-fade-background-rgb: 255, 255, 255;
+    
+    // Fondo blanco para el selector de hora
+    &::part(wheel-item) {
+      background: $white !important;
+    }
+    
+    &::part(wheel-item active) {
+      background: $white !important;
+    }
+  }
+}
+
+// Estilos globales para el ion-datetime del modal - eliminar gradiente
+::ng-deep {
+  .custom-datetime {
+    // Fondo blanco para todos los elementos del selector
+    ion-picker-column-option,
+    .picker-opt,
+    .picker-item {
+      background: $white !important;
+    }
+    
+    // Mantener el color de los números
+    ion-picker-column-option {
+      color: $text !important;
+    }
+    
+    // Eliminar el gradiente/difuminado del wheel picker
+    .datetime-wheel,
+    ion-picker-internal {
+      background: $white !important;
+      
+      &::before,
+      &::after {
+        display: none !important;
+      }
+    }
+    
+    // Eliminar máscaras con gradiente
+    .picker-highlight,
+    .datetime-highlight {
+      background: transparent !important;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
   }
 }
 
@@ -258,22 +305,12 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
       align-items: center;
       justify-content: center;
       transition: all 0.3s ease;
+      // Color gris claro para categorías no seleccionadas
+      background: linear-gradient(135deg, #D1D5DB 0%, #9CA3AF 100%);
 
       ion-icon {
         font-size: 24px;
         color: $white;
-      }
-
-      &.medicamento {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-      }
-
-      &.cita {
-        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-      }
-
-      &.otro {
-        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
       }
     }
 
@@ -300,6 +337,8 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     &.enhanced {
       .category-icon {
         transform: scale(1.1);
+        // Color teal para la categoría seleccionada
+        background: linear-gradient(135deg, $teal 0%, color.adjust($teal, $lightness: -10%) 100%);
       }
 
       span {
