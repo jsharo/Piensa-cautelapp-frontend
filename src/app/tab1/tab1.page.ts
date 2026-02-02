@@ -61,13 +61,15 @@ export class Tab1Page implements OnInit, OnDestroy {
     // Solicitar permisos de notificaciones locales
     await this.localNotificationService.requestPermissions();
     
-    // Cargar notificaciones iniciales
+    // IMPORTANTE: Cargar notificaciones iniciales y esperar a que termine
+    // ANTES de iniciar el polling para evitar que notificaciones históricas
+    // se consideren "nuevas" cuando un usuario se une a un grupo
     await this.loadNotifications();
     
     // Conectar a SSE para recibir notificaciones y BPM en tiempo real
     this.connectToSSE();
     
-    // Iniciar polling cada 10 segundos para verificar nuevas notificaciones
+    // Iniciar polling DESPUÉS de cargar las notificaciones iniciales
     this.startPolling();
   }
   
@@ -173,7 +175,8 @@ export class Tab1Page implements OnInit, OnDestroy {
   }
   
   /**
-   * Verifica si hay nuevas notificaciones y envía notificaciones locales
+   * Verifica si hay nuevas notificaciones y las actualiza en la UI
+   * NO envía notificaciones nativas porque esas solo deben enviarse por SSE en tiempo real
    */
   private async checkForNewNotifications() {
     const user = this.auth.getCurrentUser();
@@ -185,13 +188,14 @@ export class Tab1Page implements OnInit, OnDestroy {
           !this.previousNotificationIds.has(n.id_notificacion)
         );
         
-        // Enviar notificación local para cada nueva notificación
+        // Solo actualizar los IDs conocidos (NO enviar notificaciones nativas)
+        // Las notificaciones nativas solo se envían cuando llegan por SSE en tiempo real
         for (const notification of newNotifications) {
-          await this.sendLocalNotificationForAlert(notification);
           this.previousNotificationIds.add(notification.id_notificacion);
+          console.log('[Tab1] Nueva notificación detectada en polling (sin notificación nativa):', notification.id_notificacion);
         }
         
-        // Actualizar la UI
+        // Actualizar la UI con todas las notificaciones
         this.notificaciones = notifications.map(n => this.transformNotification(n));
       },
       error: (error) => {
@@ -238,26 +242,34 @@ export class Tab1Page implements OnInit, OnDestroy {
     }
   }
 
-  async loadNotifications() {
+  async loadNotifications(): Promise<void> {
     const user = this.auth.getCurrentUser();
     if (!user) return;
 
     this.isLoading = true;
-    this.notificationService.getUserNotifications(user.id_usuario).subscribe({
-      next: (notifications: Notification[]) => {
-        this.notificaciones = notifications.map(n => this.transformNotification(n));
-        
-        // Guardar IDs para detectar nuevas notificaciones en el polling
-        this.previousNotificationIds = new Set(notifications.map(n => n.id_notificacion));
-        
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error cargando notificaciones:', error);
-        this.isLoading = false;
-        // Mantener notificaciones vacías en caso de error
-        this.notificaciones = [];
-      }
+    
+    return new Promise((resolve) => {
+      this.notificationService.getUserNotifications(user.id_usuario).subscribe({
+        next: (notifications: Notification[]) => {
+          this.notificaciones = notifications.map(n => this.transformNotification(n));
+          
+          // IMPORTANTE: Guardar TODAS las notificaciones actuales como "ya vistas"
+          // Esto previene que se envíen notificaciones nativas para notificaciones históricas
+          // cuando un usuario se une a un grupo por primera vez
+          this.previousNotificationIds = new Set(notifications.map(n => n.id_notificacion));
+          
+          console.log(`[Tab1] Notificaciones cargadas: ${notifications.length} (marcadas como ya vistas)`);
+          this.isLoading = false;
+          resolve();
+        },
+        error: (error) => {
+          console.error('Error cargando notificaciones:', error);
+          this.isLoading = false;
+          // Mantener notificaciones vacías en caso de error
+          this.notificaciones = [];
+          resolve(); // Resolver igual para no bloquear la inicialización
+        }
+      });
     });
   }
 

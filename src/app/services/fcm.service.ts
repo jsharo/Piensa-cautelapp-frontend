@@ -88,14 +88,12 @@ export class FcmService {
     PushNotifications.addListener(
       'pushNotificationReceived',
       async (notification: PushNotificationSchema) => {
-        console.log('📥 Notificación recibida (foreground):', notification);
+        console.log('📥 Notificación FCM recibida (foreground):', notification);
         
-        // Mostrar notificación local con sonido
-        await this.localNotificationService.sendEmergencyNotification(
-          notification.title || 'Notificación',
-          notification.body || '',
-          notification.data
-        );
+        // NO mostrar notificación aquí porque SSE ya la maneja en Tab1
+        // FCM solo debe funcionar cuando la app está en background/cerrada
+        // Android automáticamente mostrará la notificación en esos casos
+        console.log('⚠️ Notificación FCM ignorada en foreground (SSE la maneja)');
       }
     );
 

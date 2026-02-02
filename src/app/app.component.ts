@@ -106,35 +106,11 @@ export class AppComponent {
       // NO vincular automáticamente - esperar a que el usuario ingrese datos del adulto mayor
       // El modal se mostrará en tab2.page.ts después de recibir este evento
 
-      // Mostrar toast al usuario
-      const toast = await this.toastController.create({
-        header: '🔗 Dispositivo Conectado',
-        message: `Tu pulsera CautelApp se ha conectado a WiFi (${event.ssid}) con señal ${event.rssi} dBm`,
-        duration: 5000,
-        position: 'top',
-        color: 'success',
-        buttons: [
-          {
-            text: 'Ver',
-            handler: () => {
-              console.log('Ver detalles de conexión');
-              // Aquí podrías navegar a una página de detalles
-            }
-          },
-          {
-            text: 'OK',
-            role: 'cancel'
-          }
-        ]
-      });
-
-      await toast.present();
-
-      // También enviar notificación local si estamos en plataforma nativa
+      // Solo enviar notificación nativa (sin toast ni duplicados)
       try {
         await this.localNotificationService.sendEmergencyNotification(
-          'Dispositivo Conectado',
-          `Tu pulsera se ha conectado a WiFi: ${event.ssid}`,
+          '🔗 Dispositivo Conectado',
+          `Tu pulsera CautelApp se ha conectado a WiFi: ${event.ssid}`,
           { type: 'device_connection', event }
         );
       } catch (error) {
