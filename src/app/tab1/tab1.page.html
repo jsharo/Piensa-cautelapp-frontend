@@ -61,7 +61,7 @@
           <div class="noti-info">
             <div class="noti-titulo">
               <span [ngClass]="['badge', noti.tipo + '-badge']">
-                {{ noti.tipo === 'emergencia' ? 'Emergencia' : noti.tipo === 'panico' ? 'Botón de Pánico' : 'Ayuda' }}
+                {{ noti.tipo === 'emergencia' ? 'Emergencia' : noti.tipo === 'ayuda' ? 'Botón de Ayuda' : 'Ayuda' }}
               </span>
               <span *ngIf="noti.isShared" class="shared-badge" title="Dispositivo compartido">
                 <ion-icon name="share-social"></ion-icon>

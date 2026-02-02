@@ -5,6 +5,12 @@ import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { DeviceConnectionEventsService } from './device-connection-events.service';
 
+// Forward declaration para evitar dependencia circular
+export interface FcmServiceInterface {
+  initializePushNotifications(userId: number): Promise<void>;
+  removeToken(userId: number): Promise<void>;
+}
+
 export interface User {
   id_usuario: number;
   nombre: string;
@@ -43,12 +49,22 @@ export class AuthService {
   private apiUrl = environment.apiUrl || 'http://localhost:3000/api';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  
+  // Referencia al FCM Service (inyección manual para evitar dependencia circular)
+  private fcmService: FcmServiceInterface | null = null;
 
   constructor(
     private http: HttpClient,
     private deviceConnectionEvents: DeviceConnectionEventsService
   ) {
     this.loadStoredUser();
+  }
+
+  /**
+   * Establece la referencia al FCM Service (llamado desde AppComponent)
+   */
+  setFcmService(fcmService: FcmServiceInterface): void {
+    this.fcmService = fcmService;
   }
 
   /**
@@ -76,7 +92,7 @@ export class AuthService {
    */
   register(data: RegisterData): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/register`, data).pipe(
-      tap(response => this.handleAuthResponse(response, false))
+      tap(async (response) => await this.handleAuthResponse(response, false))
     );
   }
 
@@ -85,7 +101,7 @@ export class AuthService {
    */
   login(data: LoginData): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, data).pipe(
-      tap(response => this.handleAuthResponse(response, data.remember || false))
+      tap(async (response) => await this.handleAuthResponse(response, data.remember || false))
     );
   }
 
@@ -104,7 +120,19 @@ export class AuthService {
   /**
    * Cierra sesión
    */
-  logout(): void {
+  async logout(): Promise<void> {
+    const currentUser = this.getCurrentUser();
+    
+    // Eliminar token FCM del backend
+    if (this.fcmService && currentUser) {
+      try {
+        await this.fcmService.removeToken(currentUser.id_usuario);
+        console.log('✅ Token FCM eliminado en logout');
+      } catch (error) {
+        console.error('Error eliminando token FCM en logout:', error);
+      }
+    }
+    
     // Desconectar eventos SSE
     this.deviceConnectionEvents.disconnect();
     this.clearSession();
@@ -114,7 +142,7 @@ export class AuthService {
   /**
    * Maneja la respuesta de autenticación
    */
-  private handleAuthResponse(response: LoginResponse, remember: boolean): void {
+  private async handleAuthResponse(response: LoginResponse, remember: boolean): Promise<void> {
     // Guardar token
     localStorage.setItem('access_token', response.access_token);
     
@@ -133,6 +161,23 @@ export class AuthService {
 
     // Conectar a eventos SSE del dispositivo
     this.deviceConnectionEvents.connect(response.access_token);
+
+    // Inicializar FCM después del login (con delay)
+    if (this.fcmService && response.user.id_usuario) {
+      try {
+        // Delay para asegurar que todo esté listo
+        setTimeout(async () => {
+          try {
+            await this.fcmService!.initializePushNotifications(response.user.id_usuario);
+            console.log('✅ FCM inicializado después del login');
+          } catch (error) {
+            console.error('Error inicializando FCM después del login:', error);
+          }
+        }, 1500);
+      } catch (error) {
+        console.error('Error configurando inicialización de FCM:', error);
+      }
+    }
   }
 
   /**

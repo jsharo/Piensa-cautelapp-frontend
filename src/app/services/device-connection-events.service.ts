@@ -27,51 +27,61 @@ export class DeviceConnectionEventsService {
    * Requiere un token JWT válido
    */
   connect(token: string): void {
-    if (this.isConnected) {
-      console.log('[DeviceConnectionEvents] Ya está conectado');
-      return;
-    }
+    try {
+      if (this.isConnected) {
+        console.log('[DeviceConnectionEvents] Ya está conectado');
+        return;
+      }
 
-    const url = `${environment.apiUrl}/device/events/connection`;
-    console.log('[DeviceConnectionEvents] Conectando a:', url);
+      if (!token || token.trim() === '') {
+        console.warn('[DeviceConnectionEvents] Token vacío, no se puede conectar');
+        return;
+      }
 
-    // Crear EventSource con el token en la URL (EventSource no soporta headers)
-    // Alternativa: pasar token como query param
-    this.eventSource = new EventSource(`${url}?token=${token}`);
+      const url = `${environment.apiUrl}/device/events/connection`;
+      console.log('[DeviceConnectionEvents] Conectando a:', url);
 
-    this.eventSource.onopen = () => {
-      this.ngZone.run(() => {
-        this.isConnected = true;
-        console.log('[DeviceConnectionEvents] Conexión SSE establecida');
-      });
-    };
+      // Crear EventSource con el token en la URL (EventSource no soporta headers)
+      // Alternativa: pasar token como query param
+      this.eventSource = new EventSource(`${url}?token=${token}`);
 
-    this.eventSource.onmessage = (event) => {
-      this.ngZone.run(() => {
-        try {
-          const data: DeviceConnectionEvent = JSON.parse(event.data);
-          console.log('[DeviceConnectionEvents] Evento recibido:', data);
-          this.connectionSubject.next(data);
-        } catch (error) {
-          console.error('[DeviceConnectionEvents] Error parseando evento:', error);
-        }
-      });
-    };
+      this.eventSource.onopen = () => {
+        this.ngZone.run(() => {
+          this.isConnected = true;
+          console.log('[DeviceConnectionEvents] Conexión SSE establecida');
+        });
+      };
 
-    this.eventSource.onerror = (error) => {
-      this.ngZone.run(() => {
-        console.error('[DeviceConnectionEvents] Error en conexión SSE:', error);
-        this.isConnected = false;
-        // Intentar reconectar después de 5 segundos
-        setTimeout(() => {
-          if (token) {
-            console.log('[DeviceConnectionEvents] Intentando reconectar...');
-            this.disconnect();
-            this.connect(token);
+      this.eventSource.onmessage = (event) => {
+        this.ngZone.run(() => {
+          try {
+            const data: DeviceConnectionEvent = JSON.parse(event.data);
+            console.log('[DeviceConnectionEvents] Evento recibido:', data);
+            this.connectionSubject.next(data);
+          } catch (error) {
+            console.error('[DeviceConnectionEvents] Error parseando evento:', error);
           }
-        }, 5000);
-      });
-    };
+        });
+      };
+
+      this.eventSource.onerror = (error) => {
+        this.ngZone.run(() => {
+          console.error('[DeviceConnectionEvents] Error en conexión SSE:', error);
+          this.isConnected = false;
+          // Intentar reconectar después de 5 segundos
+          setTimeout(() => {
+            if (token) {
+              console.log('[DeviceConnectionEvents] Intentando reconectar...');
+              this.disconnect();
+              this.connect(token);
+            }
+          }, 5000);
+        });
+      };
+    } catch (error) {
+      console.error('[DeviceConnectionEvents] Error al intentar conectar SSE:', error);
+      this.isConnected = false;
+    }
   }
 
   /**

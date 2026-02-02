@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
+  appId: 'com.cautelapp.app',
   appName: 'PIENSA-Cautelapp-Frontend',
   webDir: 'www',
   server: {
@@ -20,6 +20,9 @@ const config: CapacitorConfig = {
       repeat: true,
       interval: 60, // Verificar cada 60 segundos
       autoStart: true
+    },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"]
     }
   }
 };

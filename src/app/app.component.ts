@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { LocalNotificationService } from './services/local-notification.service';
 import { DeviceConnectionEventsService } from './services/device-connection-events.service';
 import { AuthService } from './services/auth.service';
+import { FcmService } from './services/fcm.service';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -20,13 +21,28 @@ export class AppComponent {
     private localNotificationService: LocalNotificationService,
     private deviceConnectionEvents: DeviceConnectionEventsService,
     private toastController: ToastController,
-    private authService: AuthService
+    private authService: AuthService,
+    private fcmService: FcmService
   ) {
     this.initializeApp();
   }
 
   async initializeApp() {
+    // Capturar errores no manejados globalmente
+    window.addEventListener('error', (event) => {
+      console.error('🚨 Error global capturado:', event.error);
+      console.error('Mensaje:', event.message);
+      console.error('Archivo:', event.filename);
+      console.error('Línea:', event.lineno);
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('🚨 Promise rechazada no manejada:', event.reason);
+    });
+
     this.platform.ready().then(async () => {
+      console.log('🚀 Plataforma lista, inicializando app...');
+      
       // Configurar Status Bar
       try {
         await StatusBar.setOverlaysWebView({ overlay: true });
@@ -44,9 +60,39 @@ export class AppComponent {
         console.error('Error solicitando permisos de notificaciones:', e);
       }
 
+      // Vincular FCM Service con Auth Service
+      this.authService.setFcmService(this.fcmService);
+
+      // Inicializar FCM si el usuario está autenticado
+      this.initializeFCMIfAuthenticated();
+
       // Escuchar eventos de conexión del dispositivo ESP32
       this.setupDeviceConnectionListener();
     });
+  }
+
+  /**
+   * Inicializa FCM si hay un usuario autenticado
+   */
+  private async initializeFCMIfAuthenticated() {
+    try {
+      const currentUser = this.authService.getCurrentUser();
+      
+      if (currentUser && currentUser.id_usuario) {
+        console.log('👤 Usuario autenticado detectado, inicializando FCM...');
+        
+        // Pequeño delay para asegurar que la plataforma esté completamente lista
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        await this.fcmService.initializePushNotifications(currentUser.id_usuario);
+      } else {
+        console.log('⚠️ No hay usuario autenticado, FCM se inicializará después del login');
+      }
+    } catch (error) {
+      console.error('Error inicializando FCM en app.component:', error);
+      console.error('Stack trace:', error);
+      // No re-lanzar el error para evitar que crashee la app
+    }
   }
 
   /**

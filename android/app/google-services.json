@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "945225800830",
+    "project_id": "cautelapp",
+    "storage_bucket": "cautelapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:945225800830:android:914d7929262a94c3e78c2f",
+        "android_client_info": {
+          "package_name": "com.cautelapp.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDory-ruSOHjG2B_dAQy3h6EAJ3RK4alX8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

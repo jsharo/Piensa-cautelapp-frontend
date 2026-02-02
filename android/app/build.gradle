@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "io.ionic.starter"
+    namespace "com.cautelapp.app"
     compileSdk 36
     defaultConfig {
-        applicationId "io.ionic.starter"
+        applicationId "com.cautelapp.app"
         minSdkVersion 24
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
