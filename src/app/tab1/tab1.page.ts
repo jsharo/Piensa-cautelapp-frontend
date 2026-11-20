@@ -111,8 +111,8 @@ export class Tab1Page implements OnInit, OnDestroy {
         
         // Verificar si es una actualización de BPM
         if (data.tipo === 'BPM_UPDATE' && data.pulso !== undefined) {
-          this.currentBpm = data.pulso;
-          this.currentAdultoName = data.usuario;
+          this.currentBpm = data.pulso === null ? null : data.pulso;
+          this.currentAdultoName = data.pulso === null ? null : data.usuario;
           console.log(`[Tab1] 💓 BPM actualizado: ${data.pulso} (${data.usuario})`);
         }
         // Si es una notificación de emergencia
