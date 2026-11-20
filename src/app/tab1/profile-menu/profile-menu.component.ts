@@ -65,13 +65,21 @@ export class ProfileMenuComponent implements OnInit {
     }
   }
 
+  private loggingOut = false;
+
   async logout() {
+    if (this.loggingOut) {
+      return;
+    }
+    this.loggingOut = true;
     try {
-      this.authService.logout();
+      await this.authService.logout();
       await this.popoverController.dismiss();
-      this.router.navigate(['/login']);
+      await this.router.navigateByUrl('/login', { replaceUrl: true });
     } catch (error) {
       console.error('Error logging out:', error);
+    } finally {
+      this.loggingOut = false;
     }
   }
 }

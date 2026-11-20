@@ -378,7 +378,7 @@ export class Tab1Page implements OnInit, OnDestroy {
   }
 
   async logout() {
-    this.auth.logout();
-    this.router.navigate(['/login']);
+    await this.auth.logout();
+    await this.router.navigateByUrl('/login', { replaceUrl: true });
   }
 }

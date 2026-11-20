@@ -52,9 +52,9 @@ export class ProfilePage implements OnInit {
     });
   }
 
-  logout() {
-    this.auth.logout();
-    this.navCtrl.navigateRoot('/login', { replaceUrl: true });
+  async logout() {
+    await this.auth.logout();
+    await this.navCtrl.navigateRoot('/login', { replaceUrl: true });
   }
 
   openEmailEdit() {

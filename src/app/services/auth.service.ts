@@ -4,6 +4,14 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { DeviceConnectionEventsService } from './device-connection-events.service';
+import {
+  clearStoredSession,
+  getAccessToken,
+  getOrCreateDeviceKey,
+  getStoredUserRaw,
+  persistSession,
+  storeCurrentUser,
+} from './token-store';
 
 // Forward declaration para evitar dependencia circular
 export interface FcmServiceInterface {
@@ -40,6 +48,7 @@ export interface LoginData {
   email: string;
   contrasena: string;
   remember?: boolean;
+  dispositivo?: string;
 }
 
 @Injectable({
@@ -72,7 +81,7 @@ export class AuthService {
    */
   private loadStoredUser(): void {
     const token = this.getToken();
-    const userStr = localStorage.getItem('currentUser');
+    const userStr = getStoredUserRaw();
     
     if (token && userStr) {
       try {
@@ -100,7 +109,10 @@ export class AuthService {
    * Inicia sesión
    */
   login(data: LoginData): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, data).pipe(
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, {
+      ...data,
+      dispositivo: data.dispositivo || getOrCreateDeviceKey(),
+    }).pipe(
       tap(async (response) => await this.handleAuthResponse(response, data.remember || false))
     );
   }
@@ -112,7 +124,7 @@ export class AuthService {
     return this.http.get<User>(`${this.apiUrl}/auth/me`).pipe(
       tap(user => {
         this.currentUserSubject.next(user);
-        localStorage.setItem('currentUser', JSON.stringify(user));
+        storeCurrentUser(JSON.stringify(user));
       })
     );
   }
@@ -122,19 +134,16 @@ export class AuthService {
    */
   async logout(): Promise<void> {
     const currentUser = this.getCurrentUser();
-    
-    // Eliminar token FCM del backend
-    if (this.fcmService && currentUser) {
-      try {
-        await this.fcmService.removeToken(currentUser.id_usuario);
-        console.log('✅ Token FCM eliminado en logout');
-      } catch (error) {
-        console.error('Error eliminando token FCM en logout:', error);
-      }
-    }
-    
-    // Desconectar eventos SSE
+    const token = this.getToken();
     this.deviceConnectionEvents.disconnect();
+    if (this.fcmService && currentUser) {
+      void this.fcmService.removeToken(currentUser.id_usuario);
+    }
+    if (token) {
+      this.http.post(`${this.apiUrl}/auth/logout`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).subscribe({ error: () => undefined });
+    }
     this.clearSession();
     this.currentUserSubject.next(null);
   }
@@ -143,18 +152,7 @@ export class AuthService {
    * Maneja la respuesta de autenticación
    */
   private async handleAuthResponse(response: LoginResponse, remember: boolean): Promise<void> {
-    // Guardar token
-    localStorage.setItem('access_token', response.access_token);
-    
-    // Guardar usuario
-    localStorage.setItem('currentUser', JSON.stringify(response.user));
-    
-    // Guardar preferencia de recordar
-    if (remember) {
-      localStorage.setItem('rememberSession', 'true');
-    } else {
-      localStorage.removeItem('rememberSession');
-    }
+    persistSession(response.access_token, JSON.stringify(response.user), remember);
     
     // Actualizar estado
     this.currentUserSubject.next(response.user);
@@ -184,16 +182,14 @@ export class AuthService {
    * Limpia la sesión
    */
   private clearSession(): void {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('rememberSession');
+    clearStoredSession();
   }
 
   /**
    * Obtiene el token de acceso
    */
   getToken(): string | null {
-    return localStorage.getItem('access_token');
+    return getAccessToken();
   }
 
   /**
@@ -215,7 +211,7 @@ export class AuthService {
    */
   setCurrentUser(user: User): void {
     this.currentUserSubject.next(user);
-    localStorage.setItem('currentUser', JSON.stringify(user));
+    storeCurrentUser(JSON.stringify(user));
   }
 
   /**
@@ -225,7 +221,7 @@ export class AuthService {
     return this.http.patch<User>(`${this.apiUrl}/user/${id}`, data).pipe(
       tap(user => {
         this.currentUserSubject.next(user);
-        localStorage.setItem('currentUser', JSON.stringify(user));
+        storeCurrentUser(JSON.stringify(user));
       })
     );
   }

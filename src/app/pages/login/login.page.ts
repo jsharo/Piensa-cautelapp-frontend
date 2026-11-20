@@ -3,6 +3,7 @@ import { IonicModule, NavController, ToastController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
+import { getRememberPreference } from '../../services/token-store';
 
 @Component({
   selector: 'app-login',
@@ -29,7 +30,7 @@ export class LoginPage implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Componente inicializado
+    this.remember = getRememberPreference();
   }
 
   get canSubmit(): boolean {
@@ -105,16 +106,9 @@ export class LoginPage implements OnInit {
       contrasena: this.password,
       remember: this.remember
     }).subscribe({
-      next: async (response) => {
+      next: async () => {
         this.loading = false;
-        
-        // Login exitoso
-        await this.showToast('¡Bienvenido! Iniciando sesión...', 'primary');
-        
-        // Navegar a tabs
-        setTimeout(() => {
-          this.navCtrl.navigateRoot('/tabs', { replaceUrl: true });
-        }, 500);
+        await this.navCtrl.navigateRoot('/tabs', { replaceUrl: true });
       },
       error: async (error) => {
         this.loading = false;

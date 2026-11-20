@@ -8,6 +8,7 @@ import {
 } from '@capacitor/push-notifications';
 import { Platform } from '@ionic/angular/standalone';
 import { environment } from '../../environments/environment';
+import { getAccessToken } from './token-store';
 import { Router } from '@angular/router';
 import { LocalNotificationService } from './local-notification.service';
 
@@ -159,13 +160,13 @@ export class FcmService {
    * Elimina el token FCM del backend (logout)
    */
   async removeToken(userId: number): Promise<void> {
+    const token = getAccessToken();
     try {
-      // Eliminar listeners
       await PushNotifications.removeAllListeners();
-      
-      // Eliminar token del backend
+
       await this.http.delete(
-        `${environment.apiUrl}/user/fcm-token/${userId}`
+        `${environment.apiUrl}/user/fcm-token/${userId}`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       ).toPromise();
 
       console.log('✅ Token FCM eliminado del backend');
